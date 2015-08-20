@@ -19,4 +19,39 @@
     		<scope>test</scope>
     	</dependency>
     </dependencies>
+    
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.9.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-artifacts</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>${jcuda.libDir}/JCudaRuntime-${jcuda.os}-${jcuda.arch}.${jcuda.ext}</file>
+                                    <type>${jcuda.ext}</type>
+                                    <classifier>JCudaRuntime-nativeLibrary</classifier>
+                                </artifact>
+                                <artifact>
+                                    <file>${jcuda.libDir}/JCudaDriver-${jcuda.os}-${jcuda.arch}.${jcuda.ext}</file>
+                                    <type>${jcuda.ext}</type>
+                                    <classifier>JCudaDriver-nativeLibrary</classifier>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    
 </project>
