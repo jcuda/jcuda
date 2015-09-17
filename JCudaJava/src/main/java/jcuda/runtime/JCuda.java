@@ -40,7 +40,7 @@ public class JCuda
     /**
      * CUDA runtime version
      */
-    public static final int CUDART_VERSION = 7000;
+    public static final int CUDART_VERSION = 7050;
 
     /**
      * Default page-locked allocation flag
@@ -78,7 +78,12 @@ public class JCuda
      */
     public static final int cudaHostRegisterMapped         = 0x02;
 
+    /** 
+     * Memory-mapped I/O space 
+     */
+    public static final int cudaHostRegisterIoMemory       = 0x04;
 
+    
     /**
      * Default peer addressing enable flag
      */
@@ -3607,6 +3612,17 @@ public class JCuda
      *         memory may be obtained by calling cudaHostGetDevicePointer(). This
      *         feature is available only on GPUs with compute capability greater than
      *         or equal to 1.1.
+     *       </p>
+     *     </li>
+     *   </ul>
+     *   </p>
+     *   <ul>
+     *     <li>
+     *       <p>cudaHostRegisterIoMemory: 
+     *        The passed memory pointer is treated as
+     *        pointing to some memory-mapped I/O space, e.g. belonging to a
+     *        third-party PCIe device, and it will marked as non cache-coherent and
+     *        contiguous.
      *       </p>
      *     </li>
      *   </ul>
@@ -10705,6 +10721,7 @@ public class JCuda
      *     device from <tt>peerDevice</tt>, a separate symmetric call to
      *     cudaDeviceEnablePeerAccess() is required.
      *   </p>
+     *   <p>Each device can support a system-wide maximum of eight peer connections.
      *   <p>Peer access is not supported in 32 bit
      *     applications.
      *   </p>

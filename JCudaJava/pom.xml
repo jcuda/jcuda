@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.jcuda</groupId>
         <artifactId>jcuda-parent</artifactId>
-        <version>0.7.0b-SNAPSHOT</version>
+        <version>0.7.5</version>
         <relativePath>../../jcuda-common/JCudaParentPOM/pom.xml</relativePath>
     </parent>
 
@@ -19,8 +19,8 @@
     		<scope>test</scope>
     	</dependency>
     </dependencies>
-    
-    
+
+
     <build>
         <plugins>
             <plugin>
@@ -53,5 +53,5 @@
             </plugin>
         </plugins>
     </build>
-    
+
 </project>

@@ -37,7 +37,7 @@ import jcuda.*;
 public class JCudaDriver
 {
     /** The CUDA version */
-    public static final int CUDA_VERSION = 7000;
+    public static final int CUDA_VERSION = 7050;
 
     /**
      * If set, host memory is portable between CUDA contexts.
@@ -82,6 +82,20 @@ public class JCudaDriver
      */
     public static final int CU_MEMPEERREGISTER_DEVICEMAP  = 0x02;
 
+    /**
+     * If set, the passed memory pointer is treated as pointing to some
+     * memory-mapped I/O space, e.g. belonging to a third-party PCIe device.
+     * On Windows the flag is a no-op.
+     * On Linux that memory is marked as non cache-coherent for the GPU and
+     * is expected to be physically contiguous. It may return
+     * CUDA_ERROR_NOT_PERMITTED if run as an unprivileged user,
+     * CUDA_ERROR_NOT_SUPPORTED on older Linux kernel versions.
+     * On all other platforms, it is not supported and CUDA_ERROR_NOT_SUPPORTED
+     * is returned.
+     * Flag for ::cuMemHostRegister()
+     */
+    public static final int CU_MEMHOSTREGISTER_IOMEMORY   =  0x04;
+    
     /**
      * If set, the CUDA array is a collection of layers, where each layer is either a 1D
      * or a 2D array and the Depth member of CUDA_ARRAY3D_DESCRIPTOR specifies the number
@@ -2660,6 +2674,15 @@ public class JCudaDriver
      *   </p>
      *   <ul>
      *     <li>
+     *       <p>CU_MEMHOSTREGISTER_IOMEMORY:
+     *       The pointer is treated as pointing to some
+     *       I/O memory space, e.g. the PCI Express resource of a 3rd party device. 
+     *       </p>
+     *     </li>
+     *   </ul>
+     *   </p>
+     *   <ul>
+     *     <li>
      *       <p>CU_MEMHOSTALLOC_WRITECOMBINED:
      *         Allocates the memory as write-combined (WC). WC memory can be
      *         transferred across the PCI Express bus more quickly on some
@@ -2720,7 +2743,8 @@ public class JCudaDriver
      *
      * @return CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_CONTEXT, CUDA_ERROR_INVALID_VALUE,
-     * CUDA_ERROR_OUT_OF_MEMORY
+     * CUDA_ERROR_OUT_OF_MEMORY, CUDA_ERROR_HOST_MEMORY_ALREADY_REGISTERED,
+     * CUDA_ERROR_NOT_PERMITTED, CUDA_ERROR_NOT_SUPPORTED 
      *
      * @see JCudaDriver#cuArray3DCreate
      * @see JCudaDriver#cuArray3DGetDescriptor
@@ -11057,6 +11081,8 @@ public class JCudaDriver
      *     is unidirectional and that in order to access memory from the current
      *     context in <tt>peerContext</tt>, a separate symmetric call to
      *     cuCtxEnablePeerAccess() is required.
+     *   <p>
+     *   There is a system-wide maximum of eight peer connections per device.
      *   </p>
      *   <p>Returns CUDA_ERROR_PEER_ACCESS_UNSUPPORTED
      *     if cuDeviceCanAccessPeer() indicates that the CUdevice of the current
