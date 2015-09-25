@@ -8035,7 +8035,7 @@ public class JCuda
      * </pre>
      * <div>
      *   <p>Exit and clean up from CUDA launches.
-     *     DeprecatedNote that this function is
+     *     Deprecated Note that this function is
      *     deprecated because its name does not reflect its behavior. Its
      *     functionality is identical to the
      *     non-deprecated function cudaDeviceReset(),
@@ -8067,6 +8067,8 @@ public class JCuda
      * @return cudaSuccess
      *
      * @see JCuda#cudaDeviceReset
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cudaThreadExit()
     {
@@ -8085,7 +8087,7 @@ public class JCuda
      * </pre>
      * <div>
      *   <p>Wait for compute device to finish.
-     *     DeprecatedNote that this function is
+     *     Deprecated Note that this function is
      *     deprecated because its name does not reflect its behavior. Its
      *     functionality is similar to the
      *     non-deprecated function
@@ -8111,6 +8113,8 @@ public class JCuda
      * @return cudaSuccess
      *
      * @see JCuda#cudaDeviceSynchronize
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cudaThreadSynchronize()
     {
@@ -8128,7 +8132,7 @@ public class JCuda
      * </pre>
      * <div>
      *   <p>Set resource limits.
-     *     DeprecatedNote that this function is
+     *     Deprecated Note that this function is
      *     deprecated because its name does not reflect its behavior. Its
      *     functionality is identical to the
      *     non-deprecated function cudaDeviceSetLimit(),
@@ -8206,6 +8210,8 @@ public class JCuda
      * @return cudaSuccess, cudaErrorUnsupportedLimit, cudaErrorInvalidValue
      *
      * @see JCuda#cudaDeviceSetLimit
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cudaThreadSetLimit(int limit, long value)
     {
@@ -8224,7 +8230,7 @@ public class JCuda
      * <div>
      *   <p>Returns the preferred cache configuration
      *     for the current device.
-     *     DeprecatedNote that this function is
+     *     Deprecated Note that this function is
      *     deprecated because its name does not reflect its behavior. Its
      *     functionality is identical to the
      *     non-deprecated function
@@ -8275,6 +8281,8 @@ public class JCuda
      * @return cudaSuccess, cudaErrorInitializationError
      *
      * @see JCuda#cudaDeviceGetCacheConfig
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cudaThreadGetCacheConfig(int pCacheConfig[])
     {
@@ -8293,7 +8301,7 @@ public class JCuda
      * <div>
      *   <p>Sets the preferred cache configuration
      *     for the current device.
-     *     DeprecatedNote that this function is
+     *     Deprecated Note that this function is
      *     deprecated because its name does not reflect its behavior. Its
      *     functionality is identical to the
      *     non-deprecated function
@@ -8355,6 +8363,8 @@ public class JCuda
      * @return cudaSuccess, cudaErrorInitializationError
      *
      * @see JCuda#cudaDeviceSetCacheConfig
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cudaThreadSetCacheConfig(int cacheConfig)
     {
@@ -8375,7 +8385,7 @@ public class JCuda
      * </pre>
      * <div>
      *   <p>Returns resource limits.
-     *     DeprecatedNote that this function is
+     *     Deprecated Note that this function is
      *     deprecated because its name does not reflect its behavior. Its
      *     functionality is identical to the
      *     non-deprecated function cudaDeviceGetLimit(),
@@ -8418,6 +8428,8 @@ public class JCuda
      * @return cudaSuccess, cudaErrorUnsupportedLimit, cudaErrorInvalidValue
      *
      * @see JCuda#cudaDeviceGetLimit
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cudaThreadGetLimit(long pValue[], int limit)
     {
@@ -9899,6 +9911,8 @@ public class JCuda
      *
      * @see JCuda#cudaGraphicsGLRegisterBuffer
      * @see JCuda#cudaGraphicsGLRegisterImage
+     * 
+     * @deprecated Deprecated as of CUDA 5.0
      */
     public static int cudaGLSetGLDevice(int device)
     {
@@ -10184,9 +10198,16 @@ public class JCuda
      * @return cudaSuccess, cudaErrorInitializationError
      *
      * @see JCuda#cudaGraphicsGLRegisterBuffer
+     * 
+     * @deprecated Deprecated as of CUDA 3.0
      */
     public static int cudaGLRegisterBufferObject(int bufObj)
     {
+        if (true)
+        {
+            throw new UnsupportedOperationException(
+                "This function is deprecated as of CUDA 3.0");
+        }
         return checkResult(cudaGLRegisterBufferObjectNative(bufObj));
     }
     private static native int cudaGLRegisterBufferObjectNative(int bufObj);
@@ -10231,6 +10252,8 @@ public class JCuda
      * @return cudaSuccess, cudaErrorMapBufferObjectFailed
      *
      * @see JCuda#cudaGraphicsMapResources
+     * 
+     * @deprecated Deprecated as of CUDA 3.0
      */
     public static int cudaGLMapBufferObject(Pointer devPtr, int bufObj)
     {
@@ -10276,6 +10299,8 @@ public class JCuda
      * cudaErrorUnmapBufferObjectFailed
      *
      * @see JCuda#cudaGraphicsUnmapResources
+     * 
+     * @deprecated Deprecated as of CUDA 3.0
      */
     public static int cudaGLUnmapBufferObject(int bufObj)
     {
@@ -10319,6 +10344,8 @@ public class JCuda
      * @return cudaSuccess
      *
      * @see JCuda#cudaGraphicsUnregisterResource
+     * 
+     * @deprecated Deprecated as of CUDA 3.0
      */
     public static int cudaGLUnregisterBufferObject(int bufObj)
     {
@@ -10394,6 +10421,8 @@ public class JCuda
      * cudaErrorUnknown
      *
      * @see JCuda#cudaGraphicsResourceSetMapFlags
+     * 
+     * @deprecated Deprecated as of CUDA 3.0
      */
     public static int cudaGLSetBufferObjectMapFlags(int bufObj, int flags)
     {
@@ -10444,6 +10473,8 @@ public class JCuda
      * @return cudaSuccess, cudaErrorMapBufferObjectFailed
      *
      * @see JCuda#cudaGraphicsMapResources
+     * 
+     * @deprecated Deprecated as of CUDA 3.0
      */
     public static int cudaGLMapBufferObjectAsync(Pointer devPtr, int bufObj, cudaStream_t stream)
     {
@@ -10491,6 +10522,8 @@ public class JCuda
      * cudaErrorUnmapBufferObjectFailed
      *
      * @see JCuda#cudaGraphicsUnmapResources
+     * 
+     * @deprecated Deprecated as of CUDA 3.0
      */
     public static int cudaGLUnmapBufferObjectAsync(int bufObj, cudaStream_t stream)
     {

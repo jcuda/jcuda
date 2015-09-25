@@ -630,6 +630,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuDeviceGetName
      * @see JCudaDriver#cuDeviceGet
      * @see JCudaDriver#cuDeviceTotalMem
+     * 
+     * @deprecated Deprecated as of CUDA 5.0, replaced with {@link JCudaDriver#cuDeviceGetAttribute(int[], int, CUdevice)}
      */
     public static int cuDeviceComputeCapability(int major[], int minor[], CUdevice dev)
     {
@@ -813,6 +815,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuDeviceGetName
      * @see JCudaDriver#cuDeviceGet
      * @see JCudaDriver#cuDeviceTotalMem
+     * 
+     * @deprecated Deprecated as of CUDA 5.0, replaced with {@link JCudaDriver#cuDeviceGetAttribute(int[], int, CUdevice)}
      */
     public static int cuDeviceGetProperties(CUdevprop prop, CUdevice dev)
     {
@@ -1567,6 +1571,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuCtxSetCacheConfig
      * @see JCudaDriver#cuCtxSetLimit
      * @see JCudaDriver#cuCtxSynchronize
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cuCtxAttach(CUcontext pctx, int flags)
     {
@@ -1619,6 +1625,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuCtxSetCacheConfig
      * @see JCudaDriver#cuCtxSetLimit
      * @see JCudaDriver#cuCtxSynchronize
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cuCtxDetach(CUcontext ctx)
     {
@@ -7769,7 +7777,7 @@ public class JCudaDriver
      * <div>
      *   <p>Sets the block-dimensions for the
      *     function.
-     *     DeprecatedSpecifies the <tt>x</tt>, <tt>y</tt>, and <tt>z</tt> dimensions of the thread blocks that are
+     *     Deprecated Specifies the <tt>x</tt>, <tt>y</tt>, and <tt>z</tt> dimensions of the thread blocks that are
      *     created when the kernel given by <tt>hfunc</tt> is launched.
      *   </p>
      *   <div>
@@ -7802,6 +7810,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuLaunchGrid
      * @see JCudaDriver#cuLaunchGridAsync
      * @see JCudaDriver#cuLaunchKernel
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cuFuncSetBlockShape(CUfunction hfunc, int x, int y, int z)
     {
@@ -7822,7 +7832,7 @@ public class JCudaDriver
      * <div>
      *   <p>Sets the dynamic shared-memory size for
      *     the function.
-     *     DeprecatedSets through <tt>bytes</tt>
+     *     Deprecated Sets through <tt>bytes</tt>
      *     the amount of dynamic shared memory that will be available to each
      *     thread block when the kernel given by <tt>hfunc</tt> is launched.
      *   </p>
@@ -7854,6 +7864,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuLaunchGrid
      * @see JCudaDriver#cuLaunchGridAsync
      * @see JCudaDriver#cuLaunchKernel
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cuFuncSetSharedSize(CUfunction hfunc, int bytes)
     {
@@ -9201,7 +9213,7 @@ public class JCudaDriver
      * </pre>
      * <div>
      *   <p>Creates a texture reference.
-     *     DeprecatedCreates a texture reference
+     *     Deprecated Creates a texture reference
      *     and returns its handle in <tt>*pTexRef</tt>. Once created, the
      *     application must call cuTexRefSetArray() or cuTexRefSetAddress() to
      *     associate the reference with allocated memory. Other texture reference
@@ -9217,6 +9229,8 @@ public class JCudaDriver
      * CUDA_ERROR_INVALID_CONTEXT, CUDA_ERROR_INVALID_VALUE
      *
      * @see JCudaDriver#cuTexRefDestroy
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cuTexRefCreate(CUtexref pTexRef)
     {
@@ -9235,7 +9249,7 @@ public class JCudaDriver
      * </pre>
      * <div>
      *   <p>Destroys a texture reference.
-     *     DeprecatedDestroys the texture reference
+     *     Deprecated Destroys the texture reference
      *     specified by <tt>hTexRef</tt>.
      *   </p>
      * </div>
@@ -9246,6 +9260,8 @@ public class JCudaDriver
      * CUDA_ERROR_INVALID_CONTEXT, CUDA_ERROR_INVALID_VALUE
      *
      * @see JCudaDriver#cuTexRefCreate
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cuTexRefDestroy(CUtexref hTexRef)
     {
@@ -11183,7 +11199,7 @@ public class JCudaDriver
      * </pre>
      * <div>
      *   <p>Sets the parameter size for the function.
-     *     DeprecatedSets through <tt>numbytes</tt>
+     *     Deprecated Sets through <tt>numbytes</tt>
      *     the total size in bytes needed by the function parameters of the kernel
      *     corresponding to <tt>hfunc</tt>.
      *   </p>
@@ -11213,6 +11229,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuLaunchGrid
      * @see JCudaDriver#cuLaunchGridAsync
      * @see JCudaDriver#cuLaunchKernel
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cuParamSetSize(CUfunction hfunc, int numbytes)
     {
@@ -11234,7 +11252,7 @@ public class JCudaDriver
      * <div>
      *   <p>Adds an integer parameter to the
      *     function's argument list.
-     *     DeprecatedSets an integer parameter that
+     *     Deprecated Sets an integer parameter that
      *     will be specified the next time the kernel corresponding to <tt>hfunc</tt> will be invoked. <tt>offset</tt> is a byte offset.
      *   </p>
      *   <div>
@@ -11264,6 +11282,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuLaunchGrid
      * @see JCudaDriver#cuLaunchGridAsync
      * @see JCudaDriver#cuLaunchKernel
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cuParamSeti(CUfunction hfunc, int offset, int value)
     {
@@ -11285,7 +11305,7 @@ public class JCudaDriver
      * <div>
      *   <p>Adds a floating-point parameter to the
      *     function's argument list.
-     *     DeprecatedSets a floating-point parameter
+     *     Deprecated Sets a floating-point parameter
      *     that will be specified the next time the kernel corresponding to <tt>hfunc</tt> will be invoked. <tt>offset</tt> is a byte offset.
      *   </p>
      *   <div>
@@ -11315,6 +11335,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuLaunchGrid
      * @see JCudaDriver#cuLaunchGridAsync
      * @see JCudaDriver#cuLaunchKernel
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cuParamSetf(CUfunction hfunc, int offset, float value)
     {
@@ -11336,7 +11358,7 @@ public class JCudaDriver
      * <div>
      *   <p>Adds arbitrary data to the function's
      *     argument list.
-     *     DeprecatedCopies an arbitrary amount of
+     *     Deprecated Copies an arbitrary amount of
      *     data (specified in <tt>numbytes</tt>) from <tt>ptr</tt> into the
      *     parameter space of the kernel corresponding to <tt>hfunc</tt>. <tt>offset</tt> is a byte offset.
      *   </p>
@@ -11368,6 +11390,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuLaunchGrid
      * @see JCudaDriver#cuLaunchGridAsync
      * @see JCudaDriver#cuLaunchKernel
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cuParamSetv(CUfunction hfunc, int offset, Pointer ptr, int numbytes)
     {
@@ -11389,7 +11413,7 @@ public class JCudaDriver
      * <div>
      *   <p>Adds a texture-reference to the function's
      *     argument list.
-     *     DeprecatedMakes the CUDA array or linear
+     *     Deprecated Makes the CUDA array or linear
      *     memory bound to the texture reference <tt>hTexRef</tt> available to a
      *     device program as a texture. In this version of CUDA, the
      *     texture-reference must be obtained via cuModuleGetTexRef() and the <tt>texunit</tt> parameter must be set to CU_PARAM_TR_DEFAULT.
@@ -11411,6 +11435,7 @@ public class JCudaDriver
      * @return CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_CONTEXT, CUDA_ERROR_INVALID_VALUE
      *
+     * @deprecated Deprecated in CUDA
      */
     public static int cuParamSetTexRef(CUfunction hfunc, int texunit, CUtexref hTexRef)
     {
@@ -11539,7 +11564,7 @@ public class JCudaDriver
      * </pre>
      * <div>
      *   <p>Launches a CUDA function.
-     *     DeprecatedInvokes the kernel <tt>f</tt>
+     *     Deprecated Invokes the kernel <tt>f</tt>
      *     on a 1 x 1 x 1 grid of blocks. The block contains the number of threads
      *     specified by a previous call to cuFuncSetBlockShape().
      *   </p>
@@ -11571,6 +11596,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuLaunchGrid
      * @see JCudaDriver#cuLaunchGridAsync
      * @see JCudaDriver#cuLaunchKernel
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cuLaunch(CUfunction f)
     {
@@ -11591,7 +11618,7 @@ public class JCudaDriver
      * </pre>
      * <div>
      *   <p>Launches a CUDA function.
-     *     DeprecatedInvokes the kernel <tt>f</tt>
+     *     Deprecated Invokes the kernel <tt>f</tt>
      *     on a <tt>grid_width</tt> x <tt>grid_height</tt> grid of blocks. Each
      *     block contains the number of threads specified by a previous call to
      *     cuFuncSetBlockShape().
@@ -11626,6 +11653,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuLaunch
      * @see JCudaDriver#cuLaunchGridAsync
      * @see JCudaDriver#cuLaunchKernel
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cuLaunchGrid(CUfunction f, int grid_width, int grid_height)
     {
@@ -11647,7 +11676,7 @@ public class JCudaDriver
      * </pre>
      * <div>
      *   <p>Launches a CUDA function.
-     *     DeprecatedInvokes the kernel <tt>f</tt>
+     *     Deprecated Invokes the kernel <tt>f</tt>
      *     on a <tt>grid_width</tt> x <tt>grid_height</tt> grid of blocks. Each
      *     block contains the number of threads specified by a previous call to
      *     cuFuncSetBlockShape().
@@ -11688,6 +11717,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuLaunch
      * @see JCudaDriver#cuLaunchGrid
      * @see JCudaDriver#cuLaunchKernel
+     * 
+     * @deprecated Deprecated in CUDA
      */
     public static int cuLaunchGridAsync(CUfunction f, int grid_width, int grid_height, CUstream hStream)
     {
@@ -12626,6 +12657,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuGLMapBufferObjectAsync
      * @see JCudaDriver#cuGLUnmapBufferObjectAsync
      * @see JCudaDriver#cuGLSetBufferObjectMapFlags
+     * 
+     * @deprecated Deprecated as of CUDA 3.0
      */
     public static int cuGLInit()
     {
@@ -12680,6 +12713,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuGLMapBufferObjectAsync
      * @see JCudaDriver#cuGLUnmapBufferObjectAsync
      * @see JCudaDriver#cuGLSetBufferObjectMapFlags
+     * 
+     * @deprecated Deprecated as of CUDA 5.0
      */
     public static int cuGLCtxCreate( CUcontext pCtx, int Flags, CUdevice device )
     {
@@ -12980,9 +13015,16 @@ public class JCudaDriver
      * CUDA_ERROR_INVALID_CONTEXT, CUDA_ERROR_ALREADY_MAPPED
      *
      * @see JCudaDriver#cuGraphicsGLRegisterBuffer
+     * 
+     * @deprecated Deprecated as of CUDA 3.0
      */
     public static int cuGLRegisterBufferObject( int bufferobj )
     {
+        if (true)
+        {
+            throw new UnsupportedOperationException(
+                "This function is deprecated as of CUDA 3.0");
+        }
         return checkResult(cuGLRegisterBufferObjectNative(bufferobj));
     }
     private static native int cuGLRegisterBufferObjectNative(int bufferobj);
@@ -13033,6 +13075,8 @@ public class JCudaDriver
      * CUDA_ERROR_MAP_FAILED
      *
      * @see JCudaDriver#cuGraphicsMapResources
+     * 
+     * @deprecated Deprecated as of CUDA 3.0
      */
     public static int cuGLMapBufferObject( CUdeviceptr dptr, long size[],  int bufferobj )
     {
@@ -13079,6 +13123,8 @@ public class JCudaDriver
      * CUDA_ERROR_INVALID_CONTEXT, CUDA_ERROR_INVALID_VALUE
      *
      * @see JCudaDriver#cuGraphicsUnmapResources
+     * 
+     * @deprecated Deprecated as of CUDA 3.0
      */
     public static int cuGLUnmapBufferObject( int bufferobj )
     {
@@ -13125,6 +13171,8 @@ public class JCudaDriver
      * CUDA_ERROR_INVALID_CONTEXT, CUDA_ERROR_INVALID_VALUE
      *
      * @see JCudaDriver#cuGraphicsUnregisterResource
+     * 
+     * @deprecated Deprecated as of CUDA 3.0
      */
     public static int cuGLUnregisterBufferObject( int bufferobj )
     {
@@ -13205,6 +13253,8 @@ public class JCudaDriver
      * CUDA_ERROR_ALREADY_MAPPED, CUDA_ERROR_INVALID_CONTEXT,
      *
      * @see JCudaDriver#cuGraphicsResourceSetMapFlags
+     * 
+     * @deprecated Deprecated as of CUDA 3.0
      */
     public static int cuGLSetBufferObjectMapFlags( int buffer, int Flags )
     {
@@ -13260,6 +13310,8 @@ public class JCudaDriver
      * CUDA_ERROR_MAP_FAILED
      *
      * @see JCudaDriver#cuGraphicsMapResources
+     * 
+     * @deprecated Deprecated as of CUDA 3.0
      */
     public static int cuGLMapBufferObjectAsync( CUdeviceptr dptr, long size[],  int buffer, CUstream hStream)
     {
@@ -13308,6 +13360,8 @@ public class JCudaDriver
      * CUDA_ERROR_INVALID_CONTEXT, CUDA_ERROR_INVALID_VALUE
      *
      * @see JCudaDriver#cuGraphicsUnmapResources
+     * 
+     * @deprecated Deprecated as of CUDA 3.0
      */
     public static int cuGLUnmapBufferObjectAsync( int buffer, CUstream hStream )
     {
