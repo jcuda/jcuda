@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/../../jcuda-common/JCudaCommon_CMake_flags.txt)
+
 project(JCudaDriver)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../jcuda-common/JCudaCommon_CMake.txt)
