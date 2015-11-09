@@ -23,6 +23,87 @@
 
     <build>
         <plugins>
+        
+            <!--
+                Copy the relevant native libraries from the ${jcuda.libDir} (which
+                is the default output directory of CMake) into a "/lib" subdirectory
+                of the build directory of this library, so that they may be packaged 
+                into a JAR 
+            --> 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.4.3</version>
+
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${jcuda.libDir}</directory>
+                                    <includes>
+                                        <include>*JCudaRuntime*.dll</include>
+                                        <include>*JCudaRuntime*.dylib</include>
+                                        <include>*JCudaRuntime*.so</include>
+                                        <include>*JCudaDriver*.dll</include>
+                                        <include>*JCudaDriver*.dylib</include>
+                                        <include>*JCudaDriver*.so</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+        
+                </executions>
+            </plugin>
+            
+        
+            <!--
+                Pack all native libraries of from the build directory of this 
+                library into a JAR with the classifier "natives", e.g. into
+                a JAR called "jcuda-0.7.5-natives.jar"
+            --> 
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <id>package-natives</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classesDirectory>${project.build.directory}</classesDirectory>
+                            <classifier>natives</classifier>
+                            <includes>
+                                <include>**/*JCudaRuntime*.dll</include>
+                                <include>**/*JCudaRuntime*.dylib</include>
+                                <include>**/*JCudaRuntime*.so</include>
+                                <include>**/*JCudaDriver*.dll</include>
+                                <include>**/*JCudaDriver*.dylib</include>
+                                <include>**/*JCudaDriver*.so</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--
+                Attach the artifact with the "natives" classifier to this artifact,
+                so that e.g. the "jcuda-0.7.5-natives.jar" will be installed 
+                alongside the "jcuda-0.7.5.jar"
+            --> 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
@@ -37,20 +118,16 @@
                         <configuration>
                             <artifacts>
                                 <artifact>
-                                    <file>${jcuda.libDir}/JCudaRuntime-${jcuda.os}-${jcuda.arch}.${jcuda.ext}</file>
-                                    <type>${jcuda.ext}</type>
-                                    <classifier>JCudaRuntime-nativeLibrary</classifier>
-                                </artifact>
-                                <artifact>
-                                    <file>${jcuda.libDir}/JCudaDriver-${jcuda.os}-${jcuda.arch}.${jcuda.ext}</file>
-                                    <type>${jcuda.ext}</type>
-                                    <classifier>JCudaDriver-nativeLibrary</classifier>
+                                    <file>${project.build.directory}/${project.artifactId}-${project.version}-natives.jar</file>
+                                    <type>jar</type>
+                                    <classifier>natives</classifier>
                                 </artifact>
                             </artifacts>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
+
         </plugins>
     </build>
 
