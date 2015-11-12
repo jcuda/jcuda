@@ -1,0 +1,61 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.jcuda</groupId>
+        <artifactId>jcuda-parent</artifactId>
+        <version>0.7.5</version>
+        <relativePath>../../jcuda-common/JCudaParentPOM/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>JCudaDriver-native</artifactId>
+
+    <build>
+        <plugins>
+
+            <!-- Configure the JAR plugin to never be executed -->
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <id>default-jar</id>
+                        <phase>never</phase>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>2.3.1</version>
+                <executions>
+                
+                    <!-- Skip the default installation, as there is no JAR -->
+                    <execution>
+                        <id>default-install</id>
+                        <phase>never</phase>
+                    </execution>
+
+                    <execution>
+                        <id>install-native</id>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <phase>install</phase>
+                        <configuration>
+                            <groupId>org.jcuda</groupId>
+                            <artifactId>JCudaDriver-${jcuda.os}-${jcuda.arch}</artifactId>
+                            <version>${project.version}</version>
+                            <packaging>${jcuda.ext}</packaging>
+                            <file>${project.basedir}/nativeLibrary/JCudaDriver-${jcuda.os}-${jcuda.arch}.${jcuda.ext}</file>
+                            <generatePom>true</generatePom>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
