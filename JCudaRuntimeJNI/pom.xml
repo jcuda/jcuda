@@ -26,7 +26,7 @@
                 <executions>
                     <execution>
                         <id>attach-artifacts</id>
-                        <phase>compile</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>attach-artifact</goal>
                         </goals>
