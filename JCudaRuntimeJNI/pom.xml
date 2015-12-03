@@ -14,10 +14,10 @@
     <build>
         <plugins>
 
-            <!-- 
+            <!--
                 Attach the native library as an artifact with, with the
-                classifier indicating the OS/architecture, so that it 
-                will be installed alongside the main JAR 
+                classifier indicating the OS/architecture, so that it
+                will be installed alongside the main JAR
             -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -33,7 +33,7 @@
                         <configuration>
                             <artifacts>
                                 <artifact>
-                                    <file>./nativeLibrary/JCudaRuntime-${jcuda.os}-${jcuda.arch}.${jcuda.ext}</file>
+                                    <file>./nativeLibrary/${jcuda.prefix}JCudaRuntime-${jcuda.os}-${jcuda.arch}.${jcuda.ext}</file>
                                     <classifier>${jcuda.os}-${jcuda.arch}</classifier>
                                     <type>${jcuda.ext}</type>
                                 </artifact>
@@ -42,7 +42,7 @@
                     </execution>
                 </executions>
             </plugin>
-            
+
         </plugins>
     </build>
 
