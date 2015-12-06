@@ -12259,7 +12259,7 @@ public class JCudaDriver
 
     public static int cuPointerSetAttribute(Pointer value, int attribute, CUdeviceptr ptr)
     {
-        return checkResult(cuPointerSetAttribute(value, attribute, ptr));
+        return checkResult(cuPointerSetAttributeNative(value, attribute, ptr));
     }
     private static native int cuPointerSetAttributeNative(Pointer value, int attribute, CUdeviceptr ptr);
 
@@ -14141,7 +14141,7 @@ public class JCudaDriver
      */
     public static int cuCtxGetSharedMemConfig(int pConfig[])
     {
-        return checkResult(cuCtxGetSharedMemConfig(pConfig));
+        return checkResult(cuCtxGetSharedMemConfigNative(pConfig));
     }
     private static native int cuCtxGetSharedMemConfigNative(int pConfig[]);
 

@@ -6761,11 +6761,6 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamAddCallbackNative
 JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamAttachMemAsyncNative
   (JNIEnv *env, jclass cls, jobject hStream, jobject dptr, jlong length, jint flags)
 {
-    // XXX Function is not available in CUDA 6.0
-    ThrowByName(env, "java/lang/UnsupportedOperaionException",
-        "Function cuStreamAttachMemAsync is not available in CUDA 6.0RC");
-    return JCUDA_INTERNAL_ERROR;
-/*
     if (hStream == NULL)
     {
         ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hStream' is null for cuStreamAttachMemAsync");
@@ -6784,7 +6779,6 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamAttachMemAsyncNativ
     int result = cuStreamAttachMemAsync(nativeHStream, nativeDptr, (size_t)length, (unsigned int)flags);
 
     return result;
-//*/
 }
 
 

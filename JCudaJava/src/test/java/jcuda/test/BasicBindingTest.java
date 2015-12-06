@@ -81,6 +81,11 @@ public class BasicBindingTest
                 logWarning("Missing " + method);
                 return false;
             }
+            else if (e.getCause() instanceof Error)
+            {
+                logWarning("Error in " + method + ": " + e.getCause());
+                return false;
+            }
             //logWarning("InvocationTargetException for " + method + 
             //    ": "+e.getMessage());
             //e.printStackTrace();
