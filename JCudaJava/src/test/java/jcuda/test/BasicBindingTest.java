@@ -29,12 +29,20 @@ public class BasicBindingTest
         logInfo("Testing " + c);
 
         boolean passed = true;
-        int modifiers = Modifier.PUBLIC | Modifier.STATIC;
         for (Method method : c.getMethods())
         {
-            if ((method.getModifiers() & modifiers) == modifiers)
+            if (!method.isAnnotationPresent(Deprecated.class))
             {
-                passed &= testMethod(method);
+                int modifiers = method.getModifiers();
+                if (Modifier.isPublic(modifiers) && 
+                    Modifier.isStatic(modifiers))
+                {
+                    passed &= testMethod(method);
+                }
+            }
+            else
+            {
+                logInfo("Skipping @Deprecated method: "+method);
             }
         }
         logInfo("Testing " + c + " done");

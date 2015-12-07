@@ -80,6 +80,7 @@ public class JCudaDriver
      * @deprecated This value has been added in CUDA 4.0 RC,
      * and removed in CUDA 4.0 RC2
      */
+    @Deprecated
     public static final int CU_MEMPEERREGISTER_DEVICEMAP  = 0x02;
 
     /**
@@ -109,6 +110,7 @@ public class JCudaDriver
      * the number of slices, not the depth of a 3D array.
      * @deprecated use CUDA_ARRAY3D_LAYERED
      */
+    @Deprecated
     public static final int CUDA_ARRAY3D_2DARRAY = 0x01;
 
 
@@ -174,6 +176,7 @@ public class JCudaDriver
      * @deprecated This flag was only present in CUDA 5.0.25 (release candidate)
      * and may be removed (or added again) in future releases
      */
+    @Deprecated
     public static final int CU_STREAM_CALLBACK_NONBLOCKING  = 0x00;
 
     /**
@@ -184,6 +187,7 @@ public class JCudaDriver
      * @deprecated This flag was only present in CUDA 5.0.25 (release candidate)
      * and may be removed (or added again) in future releases
      */
+    @Deprecated
     public static final int CU_STREAM_CALLBACK_BLOCKING     = 0x01;
 
     /**
@@ -342,6 +346,7 @@ public class JCudaDriver
      * and should not be required any more. It may be
      * removed in future releases.
      */
+    @Deprecated
     public static int align(int value, int alignment)
     {
         return (((value) + (alignment) - 1) & ~((alignment) - 1));
@@ -633,6 +638,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated as of CUDA 5.0, replaced with {@link JCudaDriver#cuDeviceGetAttribute(int[], int, CUdevice)}
      */
+    @Deprecated
     public static int cuDeviceComputeCapability(int major[], int minor[], CUdevice dev)
     {
         return checkResult(cuDeviceComputeCapabilityNative(major, minor, dev));
@@ -818,6 +824,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated as of CUDA 5.0, replaced with {@link JCudaDriver#cuDeviceGetAttribute(int[], int, CUdevice)}
      */
+    @Deprecated
     public static int cuDeviceGetProperties(CUdevprop prop, CUdevice dev)
     {
         return checkResult(cuDeviceGetPropertiesNative(prop, dev));
@@ -1574,6 +1581,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cuCtxAttach(CUcontext pctx, int flags)
     {
         return checkResult(cuCtxAttachNative(pctx, flags));
@@ -1628,6 +1636,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cuCtxDetach(CUcontext ctx)
     {
         return checkResult(cuCtxDetachNative(ctx));
@@ -7813,6 +7822,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cuFuncSetBlockShape(CUfunction hfunc, int x, int y, int z)
     {
         return checkResult(cuFuncSetBlockShapeNative(hfunc, x, y, z));
@@ -7867,6 +7877,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cuFuncSetSharedSize(CUfunction hfunc, int bytes)
     {
         return checkResult(cuFuncSetSharedSizeNative(hfunc, bytes));
@@ -9232,6 +9243,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cuTexRefCreate(CUtexref pTexRef)
     {
         return checkResult(cuTexRefCreateNative(pTexRef));
@@ -9263,6 +9275,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cuTexRefDestroy(CUtexref hTexRef)
     {
         return checkResult(cuTexRefDestroyNative(hTexRef));
@@ -11232,6 +11245,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cuParamSetSize(CUfunction hfunc, int numbytes)
     {
         return checkResult(cuParamSetSizeNative(hfunc, numbytes));
@@ -11285,6 +11299,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cuParamSeti(CUfunction hfunc, int offset, int value)
     {
         return checkResult(cuParamSetiNative(hfunc, offset, value));
@@ -11338,6 +11353,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cuParamSetf(CUfunction hfunc, int offset, float value)
     {
         return checkResult(cuParamSetfNative(hfunc, offset, value));
@@ -11393,6 +11409,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cuParamSetv(CUfunction hfunc, int offset, Pointer ptr, int numbytes)
     {
         return checkResult(cuParamSetvNative(hfunc, offset, ptr, numbytes));
@@ -11437,6 +11454,7 @@ public class JCudaDriver
      *
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cuParamSetTexRef(CUfunction hfunc, int texunit, CUtexref hTexRef)
     {
         return checkResult(cuParamSetTexRefNative(hfunc, texunit, hTexRef));
@@ -11599,6 +11617,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cuLaunch(CUfunction f)
     {
         return checkResult(cuLaunchNative(f));
@@ -11656,6 +11675,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cuLaunchGrid(CUfunction f, int grid_width, int grid_height)
     {
         return checkResult(cuLaunchGridNative(f, grid_width, grid_height));
@@ -11720,6 +11740,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cuLaunchGridAsync(CUfunction f, int grid_width, int grid_height, CUstream hStream)
     {
         return checkResult(cuLaunchGridAsyncNative(f, grid_width, grid_height, hStream));
@@ -12660,6 +12681,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated as of CUDA 3.0
      */
+    @Deprecated
     public static int cuGLInit()
     {
         return checkResult(cuGLInitNative());
@@ -12716,6 +12738,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated as of CUDA 5.0
      */
+    @Deprecated
     public static int cuGLCtxCreate( CUcontext pCtx, int Flags, CUdevice device )
     {
         return checkResult(cuGLCtxCreateNative(pCtx, Flags, device));
@@ -13018,6 +13041,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated as of CUDA 3.0
      */
+    @Deprecated
     public static int cuGLRegisterBufferObject( int bufferobj )
     {
         if (true)
@@ -13078,6 +13102,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated as of CUDA 3.0
      */
+    @Deprecated
     public static int cuGLMapBufferObject( CUdeviceptr dptr, long size[],  int bufferobj )
     {
         return checkResult(cuGLMapBufferObjectNative(dptr, size, bufferobj));
@@ -13126,6 +13151,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated as of CUDA 3.0
      */
+    @Deprecated
     public static int cuGLUnmapBufferObject( int bufferobj )
     {
         return checkResult(cuGLUnmapBufferObjectNative(bufferobj));
@@ -13174,6 +13200,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated as of CUDA 3.0
      */
+    @Deprecated
     public static int cuGLUnregisterBufferObject( int bufferobj )
     {
         return checkResult(cuGLUnregisterBufferObjectNative(bufferobj));
@@ -13256,6 +13283,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated as of CUDA 3.0
      */
+    @Deprecated
     public static int cuGLSetBufferObjectMapFlags( int buffer, int Flags )
     {
         return checkResult((cuGLSetBufferObjectMapFlagsNative(buffer, Flags)));
@@ -13313,6 +13341,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated as of CUDA 3.0
      */
+    @Deprecated
     public static int cuGLMapBufferObjectAsync( CUdeviceptr dptr, long size[],  int buffer, CUstream hStream)
     {
         return checkResult((cuGLMapBufferObjectAsyncNative(dptr, size, buffer, hStream)));
@@ -13363,6 +13392,7 @@ public class JCudaDriver
      * 
      * @deprecated Deprecated as of CUDA 3.0
      */
+    @Deprecated
     public static int cuGLUnmapBufferObjectAsync( int buffer, CUstream hStream )
     {
         return checkResult((cuGLUnmapBufferObjectAsyncNative(buffer, hStream)));

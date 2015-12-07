@@ -146,6 +146,7 @@ public class JCuda
      * Device flag - Use blocking synchronization
      * @deprecated As of CUDA 4.0 and replaced by cudaDeviceScheduleBlockingSync
      */
+    @Deprecated
     public static final int cudaDeviceBlockingSync         = 0x04;
 
     /**
@@ -208,6 +209,7 @@ public class JCuda
      * @deprecated This flag was only present in CUDA 5.0.25 (release candidate)
      * and may be removed (or added again) in future releases
      */
+    @Deprecated
     public static final int cudaStreamCallbackNonblocking  = 0x00;
 
     /**
@@ -216,6 +218,7 @@ public class JCuda
      * @deprecated This flag was only present in CUDA 5.0.25 (release candidate)
      * and may be removed (or added again) in future releases
      */
+    @Deprecated
     public static final int cudaStreamCallbackBlocking     = 0x01;
 
     /**
@@ -8070,6 +8073,7 @@ public class JCuda
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cudaThreadExit()
     {
         return checkResult(cudaThreadExitNative());
@@ -8116,6 +8120,7 @@ public class JCuda
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cudaThreadSynchronize()
     {
         return checkResult(cudaThreadSynchronizeNative());
@@ -8213,6 +8218,7 @@ public class JCuda
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cudaThreadSetLimit(int limit, long value)
     {
         return checkResult(cudaThreadSetLimitNative(limit, value));
@@ -8284,6 +8290,7 @@ public class JCuda
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cudaThreadGetCacheConfig(int pCacheConfig[])
     {
         return checkResult(cudaThreadGetCacheConfigNative(pCacheConfig));
@@ -8366,6 +8373,7 @@ public class JCuda
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cudaThreadSetCacheConfig(int cacheConfig)
     {
         return checkResult(cudaThreadSetCacheConfigNative(cacheConfig));
@@ -8431,6 +8439,7 @@ public class JCuda
      * 
      * @deprecated Deprecated in CUDA
      */
+    @Deprecated
     public static int cudaThreadGetLimit(long pValue[], int limit)
     {
         return checkResult(cudaThreadGetLimitNative(pValue, limit));
@@ -9705,6 +9714,7 @@ public class JCuda
      *
      * @deprecated This function is deprecated as of CUDA 7.0
      */
+    @Deprecated
     public static int cudaConfigureCall(dim3 gridDim, dim3 blockDim, long sharedMem, cudaStream_t stream)
     {
         return checkResult(cudaConfigureCallNative(gridDim, blockDim, sharedMem, stream));
@@ -9754,6 +9764,7 @@ public class JCuda
      *
      * @deprecated This function is deprecated as of CUDA 7.0
      */
+    @Deprecated
     public static int cudaSetupArgument(Pointer arg, long size, long offset)
     {
         return checkResult(cudaSetupArgumentNative(arg, size, offset));
@@ -9914,6 +9925,7 @@ public class JCuda
      * 
      * @deprecated Deprecated as of CUDA 5.0
      */
+    @Deprecated
     public static int cudaGLSetGLDevice(int device)
     {
         return checkResult(cudaGLSetGLDeviceNative(device));
@@ -10201,6 +10213,7 @@ public class JCuda
      * 
      * @deprecated Deprecated as of CUDA 3.0
      */
+    @Deprecated
     public static int cudaGLRegisterBufferObject(int bufObj)
     {
         if (true)
@@ -10255,6 +10268,7 @@ public class JCuda
      * 
      * @deprecated Deprecated as of CUDA 3.0
      */
+    @Deprecated
     public static int cudaGLMapBufferObject(Pointer devPtr, int bufObj)
     {
         return checkResult(cudaGLMapBufferObjectNative(devPtr, bufObj));
@@ -10302,6 +10316,7 @@ public class JCuda
      * 
      * @deprecated Deprecated as of CUDA 3.0
      */
+    @Deprecated
     public static int cudaGLUnmapBufferObject(int bufObj)
     {
         return checkResult(cudaGLUnmapBufferObjectNative(bufObj));
@@ -10347,6 +10362,7 @@ public class JCuda
      * 
      * @deprecated Deprecated as of CUDA 3.0
      */
+    @Deprecated
     public static int cudaGLUnregisterBufferObject(int bufObj)
     {
         return checkResult(cudaGLUnregisterBufferObjectNative(bufObj));
@@ -10424,6 +10440,7 @@ public class JCuda
      * 
      * @deprecated Deprecated as of CUDA 3.0
      */
+    @Deprecated
     public static int cudaGLSetBufferObjectMapFlags(int bufObj, int flags)
     {
         return checkResult(cudaGLSetBufferObjectMapFlagsNative(bufObj, flags));
@@ -10476,6 +10493,7 @@ public class JCuda
      * 
      * @deprecated Deprecated as of CUDA 3.0
      */
+    @Deprecated
     public static int cudaGLMapBufferObjectAsync(Pointer devPtr, int bufObj, cudaStream_t stream)
     {
         return checkResult(cudaGLMapBufferObjectAsyncNative(devPtr, bufObj, stream));
@@ -10525,6 +10543,7 @@ public class JCuda
      * 
      * @deprecated Deprecated as of CUDA 3.0
      */
+    @Deprecated
     public static int cudaGLUnmapBufferObjectAsync(int bufObj, cudaStream_t stream)
     {
         return checkResult(cudaGLUnmapBufferObjectAsyncNative(bufObj, stream));
