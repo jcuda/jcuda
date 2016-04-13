@@ -34,6 +34,14 @@
             <classifier>${jcuda.os}-${jcuda.arch}</classifier>
             <type>${jcuda.ext}</type>
         </dependency>
+		
+		<dependency>
+            <groupId>org.jcuda</groupId>
+            <artifactId>JNvrtc-native</artifactId>
+            <version>${project.version}</version>
+            <classifier>${jcuda.os}-${jcuda.arch}</classifier>
+            <type>${jcuda.ext}</type>
+        </dependency>
 
     </dependencies>
 
@@ -71,6 +79,15 @@
                                     <overWrite>true</overWrite>
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
                                     <destFileName>${jcuda.prefix}JCudaDriver-${jcuda.os}-${jcuda.arch}.${jcuda.ext}</destFileName>
+                                </artifactItem>
+								<artifactItem>
+                                    <groupId>org.jcuda</groupId>
+                                    <artifactId>JNvrtc-native</artifactId>
+                                    <classifier>${jcuda.os}-${jcuda.arch}</classifier>
+                                    <type>${jcuda.ext}</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                                    <destFileName>${jcuda.prefix}JNvrtc-${jcuda.os}-${jcuda.arch}.${jcuda.ext}</destFileName>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
