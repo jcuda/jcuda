@@ -7,9 +7,11 @@
 #include <cstring>
 #include <string>
 #include <iostream>
+#include <clocale>
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
 {
+	std::setlocale(LC_ALL, "C");
     JNIEnv *env = NULL;
     if (jvm->GetEnv((void **)&env, JNI_VERSION_1_4))
     {
