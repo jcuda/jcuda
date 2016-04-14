@@ -1986,7 +1986,10 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuModuleLoadDataExNative
     }
     // Although it should be possible to pass 'null' for these parameters
     // when numOptions==0, the driver crashes when they are 'null', so
-    // this case is checked here as well.
+    // this case is checked here as well. 
+    // At the moment, it is checked on Java side: When numOptions==0,
+    // and the options or optionValues are null, then they will be 
+    // replaced by non-null (but empty) arrays.
     if (options == NULL)
     {
         ThrowByName(env, "java/lang/NullPointerException", "Parameter 'options' is null for cuModuleLoadDataEx");

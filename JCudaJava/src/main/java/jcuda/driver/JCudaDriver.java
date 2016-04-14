@@ -27,6 +27,8 @@
 
 package jcuda.driver;
 
+import java.util.Arrays;
+
 import jcuda.*;
 
 /**
@@ -369,8 +371,46 @@ public class JCudaDriver
     }
     private static native int cuModuleLoadDataJITNative(CUmodule module, Pointer pointer, JITOptions jitOptions);
 
-
-
+    
+    /**
+     * A wrapper function for
+     * {@link JCudaDriver#cuModuleLoadDataEx(CUmodule, Pointer, int, int[], Pointer)}
+     * which allows passing in the image data as a string.
+     * 
+     * @param module Returned module
+     * @param image Module data to load
+     * @param numOptions Number of options
+     * @param options Options for JIT
+     * @param optionValues Option values for JIT
+     * @return The return code from <code>cuModuleLoadDataEx</code>
+     * 
+     * @see #cuModuleLoadDataEx(CUmodule, Pointer, int, int[], Pointer)
+     */
+    public static int cuModuleLoadDataEx(CUmodule phMod, String string, int numOptions, int options[], Pointer optionValues)
+    {
+        byte bytes[] = string.getBytes();
+        byte image[] = Arrays.copyOf(bytes, bytes.length+1);
+        return cuModuleLoadDataEx(phMod, Pointer.to(image), numOptions, options, optionValues);
+    }
+        
+    
+    /**
+     * A wrapper function for {@link #cuModuleLoadData(CUmodule, byte[])}
+     * that converts the given string into a zero-terminated byte array.
+     * 
+     * @param module The module
+     * @param string The data. May not be <code>null</code>.
+     * @return The return code from <code>cuModuleLoadData</code> 
+     * 
+     * @see #cuModuleLoadData(CUmodule, byte[])
+     */
+    public static int cuModuleLoadData(CUmodule module, String string)
+    {
+        byte bytes[] = string.getBytes();
+        byte image[] = Arrays.copyOf(bytes, bytes.length+1);
+        return cuModuleLoadData(module, image);
+    }
+    
     /**
      * <pre>
      * Gets the string description of an error code
@@ -2219,7 +2259,23 @@ public class JCudaDriver
      */
     public static int cuModuleLoadDataEx (CUmodule phMod, Pointer p, int numOptions, int options[], Pointer optionValues)
     {
-        return checkResult(cuModuleLoadDataExNative(phMod, p, numOptions, options, optionValues));
+        // Although it should be possible to pass 'null' for these parameters
+        // when numOptions==0, the driver crashes when they are 'null', so
+        // they are replaced by non-null (but empty) arrays here.
+        // Also see the corresponding notes in the native method.
+        if (numOptions == 0)
+        {
+            if (options == null)
+            {
+                options = new int[0];
+            }
+            if (optionValues == null)
+            {
+                optionValues = Pointer.to(new int[0]);
+            }
+        }
+        return checkResult(cuModuleLoadDataExNative(
+            phMod, p, numOptions, options, optionValues));
     }
     private static native int cuModuleLoadDataExNative(CUmodule phMod, Pointer p, int numOptions, int options[], Pointer optionValues);
 
