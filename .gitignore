@@ -1,1 +1,7 @@
 JCudaJava/target/
+JCudaDriverJNI/target/
+JCudaDriverJNI/nativeLibrary/
+JCudaRuntimeJNI/target/
+JCudaRuntimeJNI/nativeLibrary/
+JNvrtcJNI/target/
+JNvrtcJNI/nativeLibrary/
