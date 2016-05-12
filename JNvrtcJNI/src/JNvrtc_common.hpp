@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <jni.h>
 #include <nvrtc.h>
+#include <stdint.h>
 
 #include "Logger.hpp"
 #include "PointerUtils.hpp"
