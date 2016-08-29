@@ -1,0 +1,43 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.jcuda</groupId>
+        <artifactId>jcuda-parent</artifactId>
+        <version>0.7.5c</version>
+        <relativePath>../jcuda-common/JCudaParentPOM/pom.xml</relativePath>
+    </parent>
+	<packaging>pom</packaging>
+
+    <artifactId>jcuda-natives</artifactId>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.0.2</version>
+                <executions>
+                    <execution>
+                        <id>create-native-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classesDirectory>nativeLibraries\${jcuda.os}\${jcuda.arch}</classesDirectory>
+                            <classifier>${jcuda.os}-${jcuda.arch}</classifier>
+                            <includes>
+                                <include>lib/*JCudaRuntime*</include>
+                                <include>lib/*JCudaDriver*</include>
+                                <include>lib/*JNvrtc*</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
