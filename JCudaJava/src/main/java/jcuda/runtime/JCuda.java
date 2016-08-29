@@ -43,6 +43,17 @@ public class JCuda
     public static final int CUDART_VERSION = 7050;
 
     /**
+     * Returns an unspecified string that will be appended to native 
+     * library names for disambiguation
+     * 
+     * @return The JCuda version  
+     */
+    public static String getJCudaVersion()
+    {
+        return "0.7.5c";
+    }
+    
+    /**
      * Default page-locked allocation flag
      */
     public static final int cudaHostAllocDefault           = 0x00;
@@ -380,7 +391,10 @@ public class JCuda
     {
         if (!initialized)
         {
-            LibUtils.loadLibrary("JCudaRuntime");
+            String libraryBaseName = "JCudaRuntime-" + getJCudaVersion();
+            String libraryName = 
+                LibUtils.createPlatformLibraryName(libraryBaseName);
+            LibUtils.loadLibrary(libraryName);
             initialized = true;
         }
     }

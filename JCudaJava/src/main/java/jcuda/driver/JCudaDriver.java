@@ -29,7 +29,11 @@ package jcuda.driver;
 
 import java.util.Arrays;
 
-import jcuda.*;
+import jcuda.CudaException;
+import jcuda.LibUtils;
+import jcuda.LogLevel;
+import jcuda.Pointer;
+import jcuda.runtime.JCuda;
 
 /**
  * Java bindings for the NVidia CUDA driver API.<br />
@@ -272,7 +276,10 @@ public class JCudaDriver
 
     static
     {
-        LibUtils.loadLibrary("JCudaDriver");
+        String libraryBaseName = "JCudaDriver-" + JCuda.getJCudaVersion();
+        String libraryName = 
+            LibUtils.createPlatformLibraryName(libraryBaseName);
+        LibUtils.loadLibrary(libraryName);
     }
 
     /* Private constructor to prevent instantiation */

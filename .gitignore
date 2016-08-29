@@ -1,1 +1,6 @@
-JCudaJava/target/
+/JCudaJava/target/
+/JCudaJava/.settings
+/JCudaJava/.classpath
+/JCudaJava/.project
+/target
+/nativeLibraries
