@@ -29,6 +29,7 @@ package jcuda.nvrtc;
 import jcuda.CudaException;
 import jcuda.LibUtils;
 import jcuda.LogLevel;
+import jcuda.runtime.JCuda;
 
 /**
  * Java bindings for NVRTC, the NVIDIA CUDA RunTime Compiler
@@ -52,7 +53,10 @@ public class JNvrtc
     // Initialize the native library.
     static
     {
-        LibUtils.loadLibrary("JNvrtc");
+        String libraryBaseName = "JNvrtc-" + JCuda.getJCudaVersion();
+        String libraryName = 
+            LibUtils.createPlatformLibraryName(libraryBaseName);
+        LibUtils.loadLibrary(libraryName);
     }
 
     /**
@@ -278,7 +282,6 @@ public class JNvrtc
         return checkResult(nvrtcGetProgramLogNative(prog, log));
     }
     private static native int nvrtcGetProgramLogNative(nvrtcProgram prog, String log[]);
-
 
     
 }
