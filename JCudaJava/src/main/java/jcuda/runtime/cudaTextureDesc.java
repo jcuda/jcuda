@@ -26,6 +26,8 @@
  */
 package jcuda.runtime;
 
+import java.util.Arrays;
+
 /**
  * CUDA texture descriptor
  */
@@ -56,6 +58,11 @@ public class cudaTextureDesc
      * Perform sRGB->linear conversion during texture read
      */
     public int sRGB;
+
+    /**
+     * Texture Border Color
+     */
+    public float borderColor[] = new float[4];
 
     /**
      * Indicates whether texture reads are normalized or not
@@ -135,7 +142,8 @@ public class cudaTextureDesc
             cudaTextureAddressMode.stringFor(addressMode[2])+"]"+f);
         sb.append("filterMode="+cudaTextureFilterMode.stringFor(filterMode)+f);
         sb.append("readMode="+cudaTextureReadMode.stringFor(readMode)+f);
-        sb.append("sRGB=["+sRGB+f);
+        sb.append("sRGB="+sRGB+f);
+        sb.append("borderColor="+Arrays.toString(borderColor)+f);
         sb.append("normalizedCoords="+normalizedCoords+f);
         sb.append("maxAnisotropy="+maxAnisotropy+f);
         sb.append("mipmapFilterMode="+cudaTextureFilterMode.stringFor(mipmapFilterMode)+f);

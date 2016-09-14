@@ -1,7 +1,7 @@
 /*
  * JCuda - Java bindings for NVIDIA CUDA driver and runtime API
  *
- * Copyright (c) 2009-2015 Marco Hutter - http://www.jcuda.org
+ * Copyright (c) 2009-2016 Marco Hutter - http://www.jcuda.org
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -35,7 +35,7 @@
 extern "C" {
 #endif
 #undef jcuda_runtime_JCuda_CUDART_VERSION
-#define jcuda_runtime_JCuda_CUDART_VERSION 7000L
+#define jcuda_runtime_JCuda_CUDART_VERSION 8000L
 #undef jcuda_runtime_JCuda_cudaHostAllocDefault
 #define jcuda_runtime_JCuda_cudaHostAllocDefault 0L
 #undef jcuda_runtime_JCuda_cudaHostAllocPortable
@@ -50,6 +50,8 @@ extern "C" {
 #define jcuda_runtime_JCuda_cudaHostRegisterPortable 1L
 #undef jcuda_runtime_JCuda_cudaHostRegisterMapped
 #define jcuda_runtime_JCuda_cudaHostRegisterMapped 2L
+#undef jcuda_runtime_JCuda_cudaHostRegisterIoMemory
+#define jcuda_runtime_JCuda_cudaHostRegisterIoMemory 4L
 #undef jcuda_runtime_JCuda_cudaPeerAccessDefault
 #define jcuda_runtime_JCuda_cudaPeerAccessDefault 0L
 #undef jcuda_runtime_JCuda_cudaStreamDefault
@@ -136,6 +138,8 @@ extern "C" {
 #define jcuda_runtime_JCuda_cudaOccupancyDefault 0L
 #undef jcuda_runtime_JCuda_cudaOccupancyDisableCachingOverride
 #define jcuda_runtime_JCuda_cudaOccupancyDisableCachingOverride 1L
+#undef jcuda_runtime_JCuda_cudaCpuDeviceId
+#define jcuda_runtime_JCuda_cudaCpuDeviceId -1L
     /*
     * Class:     jcuda_runtime_JCuda
     * Method:    setLogLevel
@@ -207,6 +211,14 @@ extern "C" {
     */
     JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaDeviceGetAttributeNative
         (JNIEnv *, jclass, jintArray, jint, jint);
+
+    /*
+    * Class:     jcuda_runtime_JCuda
+    * Method:    cudaDeviceGetP2PAttributeNative
+    * Signature: ([IIII)I
+    */
+    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaDeviceGetP2PAttributeNative
+        (JNIEnv *, jclass, jintArray, jint, jint, jint);
 
     /*
     * Class:     jcuda_runtime_JCuda
@@ -506,22 +518,6 @@ extern "C" {
 
     /*
     * Class:     jcuda_runtime_JCuda
-    * Method:    cudaMemcpyToSymbolNative
-    * Signature: (Ljava/lang/String;Ljcuda/Pointer;JJI)I
-    */
-    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemcpyToSymbolNative
-        (JNIEnv *, jclass, jstring, jobject, jlong, jlong, jint);
-
-    /*
-    * Class:     jcuda_runtime_JCuda
-    * Method:    cudaMemcpyFromSymbolNative
-    * Signature: (Ljcuda/Pointer;Ljava/lang/String;JJI)I
-    */
-    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemcpyFromSymbolNative
-        (JNIEnv *, jclass, jobject, jstring, jlong, jlong, jint);
-
-    /*
-    * Class:     jcuda_runtime_JCuda
     * Method:    cudaMemcpyAsyncNative
     * Signature: (Ljcuda/Pointer;Ljcuda/Pointer;JILjcuda/runtime/cudaStream_t;)I
     */
@@ -575,22 +571,6 @@ extern "C" {
     */
     JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemcpy2DFromArrayAsyncNative
         (JNIEnv *, jclass, jobject, jlong, jobject, jlong, jlong, jlong, jlong, jint, jobject);
-
-    /*
-    * Class:     jcuda_runtime_JCuda
-    * Method:    cudaMemcpyToSymbolAsyncNative
-    * Signature: (Ljava/lang/String;Ljcuda/Pointer;JJILjcuda/runtime/cudaStream_t;)I
-    */
-    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemcpyToSymbolAsyncNative
-        (JNIEnv *, jclass, jstring, jobject, jlong, jlong, jint, jobject);
-
-    /*
-    * Class:     jcuda_runtime_JCuda
-    * Method:    cudaMemcpyFromSymbolAsyncNative
-    * Signature: (Ljcuda/Pointer;Ljava/lang/String;JJILjcuda/runtime/cudaStream_t;)I
-    */
-    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemcpyFromSymbolAsyncNative
-        (JNIEnv *, jclass, jobject, jstring, jlong, jlong, jint, jobject);
 
     /*
     * Class:     jcuda_runtime_JCuda
@@ -978,19 +958,19 @@ extern "C" {
 
     /*
     * Class:     jcuda_runtime_JCuda
-    * Method:    cudaGetSymbolAddressNative
-    * Signature: (Ljcuda/Pointer;Ljava/lang/String;)I
+    * Method:    cudaMemPrefetchAsyncNative
+    * Signature: (Ljcuda/Pointer;JILjcuda/runtime/cudaStream_t;)I
     */
-    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGetSymbolAddressNative
-        (JNIEnv *, jclass, jobject, jstring);
+    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemPrefetchAsyncNative
+        (JNIEnv *, jclass, jobject, jlong, jint, jobject);
 
     /*
     * Class:     jcuda_runtime_JCuda
-    * Method:    cudaGetSymbolSizeNative
-    * Signature: ([JLjava/lang/String;)I
+    * Method:    cudaMemAdviseNative
+    * Signature: (Ljcuda/Pointer;JII)I
     */
-    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGetSymbolSizeNative
-        (JNIEnv *, jclass, jlongArray, jstring);
+    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemAdviseNative
+        (JNIEnv *, jclass, jobject, jlong, jint, jint);
 
     /*
     * Class:     jcuda_runtime_JCuda
@@ -1042,27 +1022,11 @@ extern "C" {
 
     /*
     * Class:     jcuda_runtime_JCuda
-    * Method:    cudaGetTextureReferenceNative
-    * Signature: (Ljcuda/runtime/textureReference;Ljava/lang/String;)I
-    */
-    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGetTextureReferenceNative
-        (JNIEnv *, jclass, jobject, jstring);
-
-    /*
-    * Class:     jcuda_runtime_JCuda
     * Method:    cudaBindSurfaceToArrayNative
     * Signature: (Ljcuda/runtime/surfaceReference;Ljcuda/runtime/cudaArray;Ljcuda/runtime/cudaChannelFormatDesc;)I
     */
     JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaBindSurfaceToArrayNative
         (JNIEnv *, jclass, jobject, jobject, jobject);
-
-    /*
-    * Class:     jcuda_runtime_JCuda
-    * Method:    cudaGetSurfaceReferenceNative
-    * Signature: (Ljcuda/runtime/surfaceReference;Ljava/lang/String;)I
-    */
-    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGetSurfaceReferenceNative
-        (JNIEnv *, jclass, jobject, jstring);
 
     /*
     * Class:     jcuda_runtime_JCuda
@@ -1146,22 +1110,6 @@ extern "C" {
 
     /*
     * Class:     jcuda_runtime_JCuda
-    * Method:    cudaFuncGetAttributesNative
-    * Signature: (Ljcuda/runtime/cudaFuncAttributes;Ljava/lang/String;)I
-    */
-    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaFuncGetAttributesNative
-        (JNIEnv *, jclass, jobject, jstring);
-
-    /*
-    * Class:     jcuda_runtime_JCuda
-    * Method:    cudaLaunchNative
-    * Signature: (Ljava/lang/String;)I
-    */
-    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaLaunchNative
-        (JNIEnv *, jclass, jstring);
-
-    /*
-    * Class:     jcuda_runtime_JCuda
     * Method:    cudaGLSetGLDeviceNative
     * Signature: (I)I
     */
@@ -1191,14 +1139,6 @@ extern "C" {
     */
     JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGraphicsGLRegisterBufferNative
         (JNIEnv *, jclass, jobject, jint, jint);
-
-    /*
-    * Class:     jcuda_runtime_JCuda
-    * Method:    cudaGLRegisterBufferObjectNative
-    * Signature: (I)I
-    */
-    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGLRegisterBufferObjectNative
-        (JNIEnv *, jclass, jint);
 
     /*
     * Class:     jcuda_runtime_JCuda

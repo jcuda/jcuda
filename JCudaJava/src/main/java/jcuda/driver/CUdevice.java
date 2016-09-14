@@ -50,6 +50,16 @@ public class CUdevice extends NativePointerObject
     }
 
     /**
+     * Package-private constructor to create a CUdevice with the given
+     * value as its internal pointer. This is ONLY used for 
+     * {@link JCudaDriver#CU_DEVICE_CPU}
+     */
+    CUdevice(long value)
+    {
+        super(value);
+    }
+
+    /**
      * Returns a String representation of this object.
      *
      * @return A String representation of this object.

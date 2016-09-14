@@ -4,3 +4,5 @@
 /JCudaJava/.project
 /target
 /nativeLibraries
+/.project
+/.settings

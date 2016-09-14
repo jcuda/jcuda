@@ -492,10 +492,39 @@ public class CUdevice_attribute
     public static final int CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD = 84;
 
     /**
-     * Undocumented
+     * Unique id for a group of devices on the same multi-GPU board
      */
     public static final int CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD_GROUP_ID = 85;
 
+    /**
+     * Link between the device and the host supports native atomic 
+     * operations (this is a placeholder attribute, and is not supported 
+     * on any current hardware)
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_HOST_NATIVE_ATOMIC_SUPPORTED = 86;
+    
+    /** 
+     * Ratio of single precision performance (in floating-point operations 
+     * per second) to double precision performance 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_SINGLE_TO_DOUBLE_PRECISION_PERF_RATIO = 87;
+    
+    /** 
+     * Device supports coherently accessing pageable memory without 
+     * calling cudaHostRegister on it 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS = 88;
+    
+    /**
+     * Device can coherently access managed memory concurrently with the CPU 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_CONCURRENT_MANAGED_ACCESS = 89;
+    
+    /**
+     * Device supports compute preemption. 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_COMPUTE_PREEMPTION_SUPPORTED = 90;
+    
     /**
      * Returns the String identifying the given CUdevice_attribute
      *
@@ -591,6 +620,11 @@ public class CUdevice_attribute
             case CU_DEVICE_ATTRIBUTE_MANAGED_MEMORY : return "CU_DEVICE_ATTRIBUTE_MANAGED_MEMORY";
             case CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD : return "CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD";
             case CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD_GROUP_ID : return "CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD_GROUP_ID";
+            case CU_DEVICE_ATTRIBUTE_HOST_NATIVE_ATOMIC_SUPPORTED : return "CU_DEVICE_ATTRIBUTE_HOST_NATIVE_ATOMIC_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_SINGLE_TO_DOUBLE_PRECISION_PERF_RATIO : return "CU_DEVICE_ATTRIBUTE_SINGLE_TO_DOUBLE_PRECISION_PERF_RATIO";
+            case CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS : return "CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS";
+            case CU_DEVICE_ATTRIBUTE_CONCURRENT_MANAGED_ACCESS : return "CU_DEVICE_ATTRIBUTE_CONCURRENT_MANAGED_ACCESS";
+            case CU_DEVICE_ATTRIBUTE_COMPUTE_PREEMPTION_SUPPORTED : return "CU_DEVICE_ATTRIBUTE_COMPUTE_PREEMPTION_SUPPORTED";
         }
         return "INVALID CUdevice_attribute: "+n;
     }

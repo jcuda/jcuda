@@ -35,7 +35,7 @@
 extern "C" {
 #endif
 #undef jcuda_driver_JCudaDriver_CUDA_VERSION
-#define jcuda_driver_JCudaDriver_CUDA_VERSION 7000L
+#define jcuda_driver_JCudaDriver_CUDA_VERSION 8000L
 #undef jcuda_driver_JCudaDriver_CU_MEMHOSTALLOC_PORTABLE
 #define jcuda_driver_JCudaDriver_CU_MEMHOSTALLOC_PORTABLE 1L
 #undef jcuda_driver_JCudaDriver_CU_MEMHOSTALLOC_DEVICEMAP
@@ -48,6 +48,8 @@ extern "C" {
 #define jcuda_driver_JCudaDriver_CU_MEMHOSTREGISTER_DEVICEMAP 2L
 #undef jcuda_driver_JCudaDriver_CU_MEMPEERREGISTER_DEVICEMAP
 #define jcuda_driver_JCudaDriver_CU_MEMPEERREGISTER_DEVICEMAP 2L
+#undef jcuda_driver_JCudaDriver_CU_MEMHOSTREGISTER_IOMEMORY
+#define jcuda_driver_JCudaDriver_CU_MEMHOSTREGISTER_IOMEMORY 4L
 #undef jcuda_driver_JCudaDriver_CUDA_ARRAY3D_LAYERED
 #define jcuda_driver_JCudaDriver_CUDA_ARRAY3D_LAYERED 1L
 #undef jcuda_driver_JCudaDriver_CUDA_ARRAY3D_2DARRAY
@@ -1060,6 +1062,14 @@ extern "C" {
 
     /*
     * Class:     jcuda_driver_JCudaDriver
+    * Method:    cuTexRefSetBorderColorNative
+    * Signature: (Ljcuda/driver/CUtexref;[F)I
+    */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuTexRefSetBorderColorNative
+        (JNIEnv *, jclass, jobject, jfloatArray);
+
+    /*
+    * Class:     jcuda_driver_JCudaDriver
     * Method:    cuTexRefSetFlagsNative
     * Signature: (Ljcuda/driver/CUtexref;I)I
     */
@@ -1145,6 +1155,14 @@ extern "C" {
     */
     JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuTexRefGetMaxAnisotropyNative
         (JNIEnv *, jclass, jintArray, jobject);
+
+    /*
+    * Class:     jcuda_driver_JCudaDriver
+    * Method:    cuTexRefGetBorderColorNative
+    * Signature: ([FLjcuda/driver/CUtexref;)I
+    */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuTexRefGetBorderColorNative
+        (JNIEnv *, jclass, jfloatArray, jobject);
 
     /*
     * Class:     jcuda_driver_JCudaDriver
@@ -1241,6 +1259,14 @@ extern "C" {
     */
     JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDeviceCanAccessPeerNative
         (JNIEnv *, jclass, jintArray, jobject, jobject);
+
+    /*
+    * Class:     jcuda_driver_JCudaDriver
+    * Method:    cuDeviceGetP2PAttributeNative
+    * Signature: ([IILjcuda/driver/CUdevice;Ljcuda/driver/CUdevice;)I
+    */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDeviceGetP2PAttributeNative
+        (JNIEnv *, jclass, jintArray, jint, jobject, jobject);
 
     /*
     * Class:     jcuda_driver_JCudaDriver
@@ -1412,6 +1438,22 @@ extern "C" {
 
     /*
     * Class:     jcuda_driver_JCudaDriver
+    * Method:    cuMemPrefetchAsyncNative
+    * Signature: (Ljcuda/driver/CUdeviceptr;JLjcuda/driver/CUdevice;Ljcuda/driver/CUstream;)I
+    */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemPrefetchAsyncNative
+        (JNIEnv *, jclass, jobject, jlong, jobject, jobject);
+
+    /*
+    * Class:     jcuda_driver_JCudaDriver
+    * Method:    cuMemAdviseNative
+    * Signature: (Ljcuda/driver/CUdeviceptr;JILjcuda/driver/CUdevice;)I
+    */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemAdviseNative
+        (JNIEnv *, jclass, jobject, jlong, jint, jobject);
+
+    /*
+    * Class:     jcuda_driver_JCudaDriver
     * Method:    cuPointerSetAttributeNative
     * Signature: (Ljcuda/Pointer;ILjcuda/driver/CUdeviceptr;)I
     */
@@ -1545,14 +1587,6 @@ extern "C" {
     */
     JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphicsGLRegisterImageNative
         (JNIEnv *, jclass, jobject, jint, jint, jint);
-
-    /*
-    * Class:     jcuda_driver_JCudaDriver
-    * Method:    cuGLRegisterBufferObjectNative
-    * Signature: (I)I
-    */
-    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGLRegisterBufferObjectNative
-        (JNIEnv *, jclass, jint);
 
     /*
     * Class:     jcuda_driver_JCudaDriver

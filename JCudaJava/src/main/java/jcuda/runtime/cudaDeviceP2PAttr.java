@@ -1,7 +1,7 @@
 /*
  * JCuda - Java bindings for NVIDIA CUDA driver and runtime API
  *
- * Copyright (c) 2009-2015 Marco Hutter - http://www.jcuda.org
+ * Copyright (c) 2009-2016 Marco Hutter - http://www.jcuda.org
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -24,68 +24,50 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package jcuda.runtime;
 
 /**
- * Memcpy kinds.
- *
- * @see jcuda.runtime.JCuda#cudaMemcpy
- * @see jcuda.runtime.cudaMemcpy3DParms
+ * CUDA device P2P attributes
  */
-public class cudaMemcpyKind
+public class cudaDeviceP2PAttr
 {
-
     /**
-     * Host   -> Host
+     * A relative value indicating the performance of the link between two devices 
      */
-    public static final int cudaMemcpyHostToHost = 0;
+    public static final int cudaDevP2PAttrPerformanceRank              = 1;
 
     /**
-     * Host   -> Device
+     * Peer access is enabled 
      */
-    public static final int cudaMemcpyHostToDevice = 1;
-
+    public static final int cudaDevP2PAttrAccessSupported              = 2;
+    
     /**
-     * Device -> Host
+     * Native atomic operation over the link supported 
      */
-    public static final int cudaMemcpyDeviceToHost = 2;
+    public static final int cudaDevP2PAttrNativeAtomicSupported        = 3;  
 
     /**
-     * Device -> Device
-     */
-    public static final int cudaMemcpyDeviceToDevice = 3;
-
-    /**
-     * Direction of the transfer is inferred from the pointer values.
-     * Requires unified virtual addressing.
-     */
-    public static final int cudaMemcpyDefault = 4;
-
-    /**
-     * Returns the String identifying the given cudaMemcpyKind
+     * Returns the String identifying the given cudaDeviceP2PAttr
      *
-     * @param k The cudaMemcpyKind
-     * @return The String identifying the given cudaMemcpyKind
+     * @param k The cudaDeviceP2PAttr
+     * @return The String identifying the given cudaDeviceP2PAttr
      */
     public static String stringFor(int k)
     {
         switch (k)
         {
-            case cudaMemcpyHostToHost: return "cudaMemcpyHostToHost";
-            case cudaMemcpyHostToDevice: return "cudaMemcpyHostToDevice";
-            case cudaMemcpyDeviceToHost: return "cudaMemcpyDeviceToHost";
-            case cudaMemcpyDeviceToDevice: return "cudaMemcpyDeviceToDevice";
-            case cudaMemcpyDefault: return "cudaMemcpyDefault";
+            case cudaDevP2PAttrPerformanceRank : return "cudaDevP2PAttrPerformanceRank";
+            case cudaDevP2PAttrAccessSupported : return "cudaDevP2PAttrAccessSupported";
+            case cudaDevP2PAttrNativeAtomicSupported : return "cudaDevP2PAttrNativeAtomicSupported";
         }
-        return "INVALID cudaMemcpyKind: "+k;
+        return "INVALID cudaDeviceP2PAttr: "+k;
     }
 
     /**
      * Private constructor to prevent instantiation.
      */
-    private cudaMemcpyKind()
+    private cudaDeviceP2PAttr()
     {
-    }
 
-}
+    }
+};

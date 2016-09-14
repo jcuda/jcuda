@@ -43,7 +43,7 @@ import jcuda.runtime.JCuda;
 public class JCudaDriver
 {
     /** The CUDA version */
-    public static final int CUDA_VERSION = 7050;
+    public static final int CUDA_VERSION = 8000;
 
     /**
      * If set, host memory is portable between CUDA contexts.
@@ -241,6 +241,11 @@ public class JCudaDriver
      * ::CU_LAUNCH_PARAM_BUFFER_SIZE is not zero.
      */
     public static final Pointer CU_LAUNCH_PARAM_BUFFER_SIZE = new ConstantPointer(2); //   ((void*)0x02)
+
+    /**
+     * Device that represents the CPU
+     */
+    public static final CUdevice CU_DEVICE_CPU = new CUdevice(-1);
 
 
     /**
@@ -9923,6 +9928,38 @@ public class JCudaDriver
     }
     private static native int cuTexRefSetMaxAnisotropyNative(CUtexref hTexRef, int maxAniso);
 
+
+    /**
+     * Sets the border color for a texture reference<br>
+     * <br>
+     * Specifies the value of the RGBA color via the pBorderColor to the texture reference
+     * hTexRef. The color value supports only float type and holds color components in
+     * the following sequence:<br>
+     * pBorderColor[0] holds 'R' component<br>
+     * pBorderColor[1] holds 'G' component<br>
+     * pBorderColor[2] holds 'B' component<br>
+     * pBorderColor[3] holds 'A' component<br>
+     * <br>
+     * Note that the color values can be set only when the Address mode is set to
+     * CU_TR_ADDRESS_MODE_BORDER using ::cuTexRefSetAddressMode.
+     * Applications using integer border color values have to "reinterpret_cast" their values to float.
+     *
+     * @param hTexRef Texture reference
+     * @param pBorderColor RGBA color
+     * @return CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_CONTEXT, CUDA_ERROR_INVALID_VALUE
+     *
+     * @see JCudaDriver#cuTexRefSetAddressMode
+     * @see JCudaDriver#cuTexRefGetAddressMode
+     * @see JCudaDriver#cuTexRefGetBorderColor
+     */
+    public static int cuTexRefSetBorderColor(CUtexref hTexRef, float pBorderColor[])
+    {
+        return checkResult(cuTexRefSetBorderColorNative(hTexRef, pBorderColor));
+    }
+    private static native int cuTexRefSetBorderColorNative(CUtexref hTexRef, float pBorderColor[]);
+
+
     /**
      * Sets the flags for a texture reference.
      *
@@ -10412,6 +10449,32 @@ public class JCudaDriver
     }
     private static native int cuTexRefGetMaxAnisotropyNative(int pmaxAniso[], CUtexref hTexRef);
 
+    /**
+     * brief Gets the border color used by a texture reference<br>
+     * <br>
+     * Returns in pBorderColor, values of the RGBA color used by
+     * the texture reference hTexRef.
+     * The color value is of type float and holds color components in
+     * the following sequence:<br>
+     * pBorderColor[0] holds 'R' component<br>
+     * pBorderColor[1] holds 'G' component<br>
+     * pBorderColor[2] holds 'B' component<br>
+     * pBorderColor[3] holds 'A' component<br>
+     *
+     * @param hTexRef Texture reference
+     * @param pBorderColor Returned Type and Value of RGBA color
+     * @return CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_CONTEXT, CUDA_ERROR_INVALID_VALUE
+     *
+     * @see JCudaDriver#cuTexRefSetAddressMode
+     * @see JCudaDriver#cuTexRefSetAddressMode
+     * @see JCudaDriver#cuTexRefSetBorderColor
+     */
+    public static int cuTexRefGetBorderColor(float pBorderColor[], CUtexref hTexRef)
+    {
+        return checkResult(cuTexRefGetBorderColorNative(pBorderColor, hTexRef));
+    }
+    private static native int cuTexRefGetBorderColorNative(float pBorderColor[], CUtexref hTexRef);
 
     /**
      * Gets the flags used by a texture reference.
@@ -11153,6 +11216,42 @@ public class JCudaDriver
     }
     private static native int cuDeviceCanAccessPeerNative(int canAccessPeer[], CUdevice dev, CUdevice peerDev);
 
+
+    /**
+     * Queries attributes of the link between two devices.<br>
+     * <br>
+     * Returns in *value the value of the requested attribute attrib of the
+     * link between srcDevice and dstDevice. The supported attributes are:
+     * <ul>
+     * <li>CU_DEVICE_P2P_ATTRIBUTE_PERFORMANCE_RANK: A relative value indicating the
+     *   performance of the link between two devices.</li>
+     * <li>CU_DEVICE_P2P_ATTRIBUTE_ACCESS_SUPPORTED P2P: 1 if P2P Access is enable.</li>
+     * <li>CU_DEVICE_P2P_ATTRIBUTE_NATIVE_ATOMIC_SUPPORTED: 1 if Atomic operations over
+     *   the link are supported.</li>
+     * </ul>
+     * Returns ::CUDA_ERROR_INVALID_DEVICE if srcDevice or dstDevice are not valid
+     * or if they represent the same device.<br>
+     *<br>
+     * Returns ::CUDA_ERROR_INVALID_VALUE if attrib is not valid or if value is
+     * a null pointer.<br>
+     *
+     * @param value         Returned value of the requested attribute
+     * @param attrib        The requested attribute of the link between \p srcDevice and \p dstDevice.
+     * @param srcDevice     The source device of the target link.
+     * @param dstDevice     The destination device of the target link.
+     *
+     * @return CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_DEVICE, CUDA_ERROR_INVALID_VALUE
+     *
+     * @see JCudaDriver#cuCtxEnablePeerAccess
+     * @see JCudaDriver#cuCtxDisablePeerAccess
+     * @see JCudaDriver#cuCtxCanAccessPeer
+     */
+    public static int cuDeviceGetP2PAttribute(int value[], int attrib, CUdevice srcDevice, CUdevice dstDevice)
+    {
+        return checkResult(cuDeviceGetP2PAttributeNative(value, attrib, srcDevice, dstDevice));
+    }
+    private static native int cuDeviceGetP2PAttributeNative(int value[], int attrib, CUdevice srcDevice, CUdevice dstDevice);
 
     /**
      * Enables direct access to memory allocations in a peer context.
@@ -12341,6 +12440,171 @@ public class JCudaDriver
     private static native int cuPointerGetAttributeNative(Pointer data, int attribute, CUdeviceptr ptr);
 
 
+    /**
+     * Prefetches memory to the specified destination device<br>
+     * <br>
+     * Prefetches memory to the specified destination device. devPtr is the
+     * base device pointer of the memory to be prefetched and dstDevice is the
+     * destination device. count specifies the number of bytes to copy.
+     * hStream is the stream in which the operation is enqueued.<br>
+     * <br>
+     * Passing in CU_DEVICE_CPU for dstDevice will prefetch the data to CPU memory.<br>
+     * <br>
+     * If no physical memory has been allocated for this region, then this memory region
+     * will be populated and mapped on the destination device. If there's insufficient
+     * memory to prefetch the desired region, the Unified Memory driver may evict pages
+     * belonging to other memory regions to make room. If there's no memory that can be
+     * evicted, then the Unified Memory driver will prefetch less than what was requested.
+     * <br>
+     * <br>
+     * In the normal case, any mappings to the previous location of the migrated pages are
+     * removed and mappings for the new location are only setup on the dstDevice.
+     * The application can exercise finer control on these mappings using ::cudaMemAdvise.<br>
+     * <br>
+     * Note that this function is asynchronous with respect to the host and all work
+     * on other devices.<br>
+     *
+     * @param devPtr Pointer to be prefetched
+     * @param count Size in bytes
+     * @param dstDevice Destination device to prefetch to
+     * @param hStream Stream to enqueue prefetch operation
+     *
+     * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_INVALID_DEVICE
+     *
+     * @see JCudaDriver#cuMemcpy
+     * @see JCudaDriver#cuMemcpyPeer
+     * @see JCudaDriver#cuMemcpyAsync
+     * @see JCudaDriver#cuMemcpy3DPeerAsync
+     * @see JCudaDriver#cuMemAdvise
+     */
+    public static int cuMemPrefetchAsync(CUdeviceptr devPtr, long count, CUdevice dstDevice, CUstream hStream)
+    {
+        return checkResult(cuMemPrefetchAsyncNative(devPtr, count, dstDevice, hStream));
+    }
+    private static native int cuMemPrefetchAsyncNative(CUdeviceptr devPtr, long count, CUdevice dstDevice, CUstream hStream);
+
+
+    /**
+     * Advise about the usage of a given memory range<br>
+     * <br>
+     * Advise the Unified Memory subsystem about the usage pattern for the memory range
+     * starting at devPtr with a size of count bytes.<br>
+     * <br>
+     * The advice parameter can take the following values:
+     * <ul>
+     * <li> CU_MEM_ADVISE_SET_READ_MOSTLY: This implies that the data is mostly going to be read
+     * from and only occasionally written to. This allows the driver to create read-only
+     * copies of the data in a processor's memory when that processor accesses it. Similarly,
+     * if cuMemPrefetchAsync is called on this region, it will create a read-only copy of
+     * the data on the destination processor. When a processor writes to this data, all copies
+     * of the corresponding page are invalidated except for the one where the write occurred.
+     * The device argument is ignored for this advice.
+     * <li>
+     * <li>CU_MEM_ADVISE_UNSET_READ_MOSTLY: Undoes the effect of ::CU_MEM_ADVISE_SET_READ_MOSTLY. Any read
+     * duplicated copies of the data will be freed no later than the next write access to that data.
+     * </li>
+     * <li>CU_MEM_ADVISE_SET_PREFERRED_LOCATION: This advice sets the preferred location for the
+     * data to be the memory belonging to device. Passing in CU_DEVICE_CPU for device sets the
+     * preferred location as CPU memory. Setting the preferred location does not cause data to
+     * migrate to that location immediately. Instead, it guides the migration policy when a fault
+     * occurs on that memory region. If the data is already in its preferred location and the
+     * faulting processor can establish a mapping without requiring the data to be migrated, then
+     * the migration will be avoided. On the other hand, if the data is not in its preferred location
+     * or if a direct mapping cannot be established, then it will be migrated to the processor accessing
+     * it. It is important to note that setting the preferred location does not prevent data prefetching
+     * done using ::cuMemPrefetchAsync.
+     * Having a preferred location can override the thrash detection and resolution logic in the Unified
+     * Memory driver. Normally, if a page is detected to be constantly thrashing between CPU and GPU
+     * memory say, the page will eventually be pinned to CPU memory by the Unified Memory driver. But
+     * if the preferred location is set as GPU memory, then the page will continue to thrash indefinitely.
+     * When the Unified Memory driver has to evict pages from a certain location on account of that
+     * memory being oversubscribed, the preferred location will be used to decide the destination to which
+     * a page should be evicted to.
+     * If ::CU_MEM_ADVISE_SET_READ_MOSTLY is also set on this memory region or any subset of it, the preferred
+     * location will be ignored for that subset.
+     * </li>
+     * <li>CU_MEM_ADVISE_UNSET_PREFERRED_LOCATION: Undoes the effect of ::CU_MEM_ADVISE_SET_PREFERRED_LOCATION
+     * and changes the preferred location to none.
+     * </li>
+     * <li>CU_MEM_ADVISE_SET_ACCESSED_BY: This advice implies that the data will be accessed by device.
+     * This does not cause data migration and has no impact on the location of the data per se. Instead,
+     * it causes the data to always be mapped in the specified processor's page tables, as long as the
+     * location of the data permits a mapping to be established. If the data gets migrated for any reason,
+     * the mappings are updated accordingly.
+     * This advice is useful in scenarios where data locality is not important, but avoiding faults is.
+     * Consider for example a system containing multiple GPUs with peer-to-peer access enabled, where the
+     * data located on one GPU is occasionally accessed by other GPUs. In such scenarios, migrating data
+     * over to the other GPUs is not as important because the accesses are infrequent and the overhead of
+     * migration may be too high. But preventing faults can still help improve performance, and so having
+     * a mapping set up in advance is useful. Note that on CPU access of this data, the data may be migrated
+     * to CPU memory because the CPU typically cannot access GPU memory directly. Any GPU that had the
+     * ::CU_MEM_ADVISE_SET_ACCESSED_BY flag set for this data will now have its mapping updated to point to the
+     * page in CPU memory.
+     * </li>
+     * <li>CU_MEM_ADVISE_UNSET_ACCESSED_BY: Undoes the effect of CU_MEM_ADVISE_SET_ACCESSED_BY. The current set of
+     * mappings may be removed at any time causing accesses to result in page faults.
+     * </li>
+     * </ul>
+     * Passing in ::CU_DEVICE_CPU for device will set the advice for the CPU.<br>
+     * <br>
+     * Note that this function is asynchronous with respect to the host and all work
+     * on other devices.
+     *
+     * @param devPtr Pointer to memory to set the advice for
+     * @param count  Size in bytes of the memory range
+     * @param advice Advice to be applied for the specified memory range
+     * @param device Device to apply the advice for
+     *
+     * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_INVALID_DEVICE
+     *
+     * @see JCudaDriver#cuMemcpy
+     * @see JCudaDriver#cuMemcpyPeer
+     * @see JCudaDriver#cuMemcpyAsync
+     * @see JCudaDriver#cuMemcpy3DPeerAsync
+     * @see JCudaDriver#cuMemPrefetchAsync
+     */
+    public static int cuMemAdvise(CUdeviceptr devPtr, long count, int advice, CUdevice device)
+    {
+        return checkResult(cuMemAdviseNative(devPtr, count, advice, device));
+    }
+    private static native int cuMemAdviseNative(CUdeviceptr devPtr, long count, int advice, CUdevice device);
+
+    /**
+     * Set attributes on a previously allocated memory region<br>
+     * <br>
+     * The supported attributes are:
+     * <br>
+     * <ul>
+     * <li>CU_POINTER_ATTRIBUTE_SYNC_MEMOPS:
+     *
+     *      A boolean attribute that can either be set (1) or unset (0). When set,
+     *      the region of memory that ptr points to is guaranteed to always synchronize
+     *      memory operations that are synchronous. If there are some previously initiated
+     *      synchronous memory operations that are pending when this attribute is set, the
+     *      function does not return until those memory operations are complete.
+     *      See further documentation in the section titled "API synchronization behavior"
+     *      to learn more about cases when synchronous memory operations can
+     *      exhibit asynchronous behavior.
+     *      value will be considered as a pointer to an unsigned integer to which this attribute is to be set.
+     * </li>
+     * </ul>
+     * @param value     Pointer to memory containing the value to be set
+     * @param attribute Pointer attribute to set
+     * @param ptr       Pointer to a memory region allocated using CUDA memory allocation APIs
+     *
+     * @return CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_CONTEXT, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_INVALID_DEVICE
+     *
+     * @see JCudaDriver#cuPointerGetAttribute,
+     * @see JCudaDriver#cuPointerGetAttributes,
+     * @see JCudaDriver#cuMemAlloc,
+     * @see JCudaDriver#cuMemFree,
+     * @see JCudaDriver#cuMemAllocHost,
+     * @see JCudaDriver#cuMemFreeHost,
+     * @see JCudaDriver#cuMemHostAlloc,
+     * @see JCudaDriver#cuMemHostRegister,
+     * @see JCudaDriver#cuMemHostUnregister
+     */
     public static int cuPointerSetAttribute(Pointer value, int attribute, CUdeviceptr ptr)
     {
         return checkResult(cuPointerSetAttributeNative(value, attribute, ptr));
@@ -12348,6 +12612,40 @@ public class JCudaDriver
     private static native int cuPointerSetAttributeNative(Pointer value, int attribute, CUdeviceptr ptr);
 
 
+    /**
+     * Returns information about a pointer.<br>
+     * <br>
+     * The supported attributes are (refer to ::cuPointerGetAttribute for attribute descriptions and restrictions):
+     * <ul>
+     * <li>CU_POINTER_ATTRIBUTE_CONTEXT</li>
+     * <li>CU_POINTER_ATTRIBUTE_MEMORY_TYPE</li>
+     * <li>CU_POINTER_ATTRIBUTE_DEVICE_POINTER</li>
+     * <li>CU_POINTER_ATTRIBUTE_HOST_POINTER</li>
+     * <li>CU_POINTER_ATTRIBUTE_SYNC_MEMOPS</li>
+     * <li>CU_POINTER_ATTRIBUTE_BUFFER_ID</li>
+     * <li>CU_POINTER_ATTRIBUTE_IS_MANAGED</li>
+     * </ul>
+     * Unlike ::cuPointerGetAttribute, this function will not return an error when the ptr
+     * encountered is not a valid CUDA pointer. Instead, the attributes are assigned default NULL values
+     * and CUDA_SUCCESS is returned.<br>
+     *<br>
+     * If ptr was not allocated by, mapped by, or registered with a ::CUcontext which uses UVA
+     * (Unified Virtual Addressing), ::CUDA_ERROR_INVALID_CONTEXT is returned.
+     * <br>
+     *
+     * @param numAttributes Number of attributes to query
+     * @param attributes An array of attributes to query
+     * (numAttributes and the number of attributes in this array should match)
+     * @param data A two-dimensional array containing pointers to memory
+     * locations where the result of each attribute query will be written to.
+     * @param ptr Pointer to query
+     *
+     * @return CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_INVALID_CONTEXT,
+     * CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_INVALID_DEVICE
+     *
+     * @see JCudaDriver#cuPointerGetAttribute,
+     * @see JCudaDriver#cuPointerSetAttribute
+     */
     public static int cuPointerGetAttributes(int numAttributes, int attributes[], Pointer data, CUdeviceptr ptr)
     {
         return checkResult(cuPointerGetAttributesNative(numAttributes, attributes, data, ptr));
@@ -13107,14 +13405,9 @@ public class JCudaDriver
     @Deprecated
     public static int cuGLRegisterBufferObject( int bufferobj )
     {
-        if (true)
-        {
-            throw new UnsupportedOperationException(
-                "This function is deprecated as of CUDA 3.0");
-        }
-        return checkResult(cuGLRegisterBufferObjectNative(bufferobj));
+        throw new UnsupportedOperationException(
+            "This function is deprecated as of CUDA 3.0");
     }
-    private static native int cuGLRegisterBufferObjectNative(int bufferobj);
 
 
     /**

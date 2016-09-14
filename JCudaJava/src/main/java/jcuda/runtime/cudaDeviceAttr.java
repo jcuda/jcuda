@@ -453,6 +453,29 @@ public class cudaDeviceAttr
     public static final int cudaDevAttrMultiGpuBoardGroupID           = 85;
 
     /**
+     * Link between the device and the host supports native atomic operations
+     */
+    public static final int cudaDevAttrHostNativeAtomicSupported      = 86;
+
+    /**
+     * Ratio of single precision performance (in floating-point operations
+     * per second) to double precision performance
+     */
+    public static final int cudaDevAttrSingleToDoublePrecisionPerfRatio = 87;
+
+    /**
+     * Device supports coherently accessing pageable memory without calling
+     * cudaHostRegister on it
+     */
+    public static final int cudaDevAttrPageableMemoryAccess           = 88;
+
+    /**
+     * Device can coherently access managed memory concurrently with the CPU
+     */
+    public static final int cudaDevAttrConcurrentManagedAccess        = 89;
+
+
+    /**
      * Returns the String identifying the given cudaDeviceAttr
      *
      * @param n The cudaDeviceAttr
@@ -546,6 +569,10 @@ public class cudaDeviceAttr
             case cudaDevAttrManagedMemory                    : return "cudaDevAttrManagedMemory";
             case cudaDevAttrIsMultiGpuBoard                  : return "cudaDevAttrIsMultiGpuBoard";
             case cudaDevAttrMultiGpuBoardGroupID             : return "cudaDevAttrMultiGpuBoardGroupID";
+            case cudaDevAttrHostNativeAtomicSupported        : return "cudaDevAttrHostNativeAtomicSupported";
+            case cudaDevAttrSingleToDoublePrecisionPerfRatio : return "cudaDevAttrSingleToDoublePrecisionPerfRatio";
+            case cudaDevAttrPageableMemoryAccess             : return "cudaDevAttrPageableMemoryAccess";
+            case cudaDevAttrConcurrentManagedAccess          : return "cudaDevAttrConcurrentManagedAccess";
         }
         return "INVALID cudaDeviceAttr: "+n;
     }

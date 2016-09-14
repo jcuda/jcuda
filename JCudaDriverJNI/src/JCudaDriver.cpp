@@ -162,6 +162,7 @@ jfieldID CUDA_TEXTURE_DESC_mipmapFilterMode; // CUfilter_mode
 jfieldID CUDA_TEXTURE_DESC_mipmapLevelBias; // float
 jfieldID CUDA_TEXTURE_DESC_minMipmapLevelClamp; // float
 jfieldID CUDA_TEXTURE_DESC_maxMipmapLevelClamp; // float
+jfieldID CUDA_TEXTURE_DESC_borderColor; // float[4]
 
 jclass CUdevice_class;
 jmethodID CUdevice_constructor;
@@ -358,7 +359,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, CUDA_TEXTURE_DESC_mipmapLevelBias,     "mipmapLevelBias",     "F")) return JNI_ERR;
     if (!init(env, cls, CUDA_TEXTURE_DESC_minMipmapLevelClamp, "minMipmapLevelClamp", "F")) return JNI_ERR;
     if (!init(env, cls, CUDA_TEXTURE_DESC_maxMipmapLevelClamp, "maxMipmapLevelClamp", "F")) return JNI_ERR;
-
+    if (!init(env, cls, CUDA_TEXTURE_DESC_borderColor,         "borderColor",         "[F")) return JNI_ERR;
 
     // Obtain the constructor of the CUdevice class
     if (!init(env, cls, "jcuda/driver/CUdevice")) return JNI_ERR;
@@ -1014,6 +1015,14 @@ CUDA_TEXTURE_DESC getCUDA_TEXTURE_DESC(JNIEnv *env, jobject texDesc)
     nativeTexDesc.minMipmapLevelClamp = (float)env->GetFloatField(texDesc, CUDA_TEXTURE_DESC_minMipmapLevelClamp);
     nativeTexDesc.maxMipmapLevelClamp = (float)env->GetFloatField(texDesc, CUDA_TEXTURE_DESC_maxMipmapLevelClamp);
 
+    jfloatArray borderColor = (jfloatArray)env->GetObjectField(texDesc, CUDA_TEXTURE_DESC_borderColor);
+    jfloat *nativeBorderColor = (jfloat*)env->GetPrimitiveArrayCritical(borderColor, NULL);
+    for (int i = 0; i<4; i++)
+    {
+        nativeTexDesc.borderColor[i] = (float)nativeBorderColor[i];
+    }
+    env->ReleasePrimitiveArrayCritical(borderColor, nativeBorderColor, JNI_ABORT);
+
     return nativeTexDesc;
 }
 
@@ -1026,9 +1035,9 @@ void setCUDA_TEXTURE_DESC(JNIEnv *env, jobject texDesc, CUDA_TEXTURE_DESC &nativ
 {
     jintArray addressMode = (jintArray)env->GetObjectField(texDesc, CUDA_TEXTURE_DESC_addressMode);
     jint *nativeAddressMode = (jint*)env->GetPrimitiveArrayCritical(addressMode, NULL);
-    for (int i=0; i<3; i++)
+    for (int i = 0; i<3; i++)
     {
-         nativeAddressMode[i] = (jint)nativeTexDesc.addressMode[i];
+        nativeAddressMode[i] = (jint)nativeTexDesc.addressMode[i];
     }
     env->ReleasePrimitiveArrayCritical(addressMode, nativeAddressMode, 0);
 
@@ -1039,6 +1048,15 @@ void setCUDA_TEXTURE_DESC(JNIEnv *env, jobject texDesc, CUDA_TEXTURE_DESC &nativ
     env->SetFloatField(texDesc, CUDA_TEXTURE_DESC_mipmapLevelBias, (jfloat)nativeTexDesc.mipmapLevelBias);
     env->SetFloatField(texDesc, CUDA_TEXTURE_DESC_minMipmapLevelClamp, (jfloat)nativeTexDesc.minMipmapLevelClamp);
     env->SetFloatField(texDesc, CUDA_TEXTURE_DESC_maxMipmapLevelClamp, (jfloat)nativeTexDesc.maxMipmapLevelClamp);
+
+    jfloatArray borderColor = (jfloatArray)env->GetObjectField(texDesc, CUDA_TEXTURE_DESC_borderColor);
+    jfloat *nativeBorderColor = (jfloat*)env->GetPrimitiveArrayCritical(borderColor, NULL);
+    for (int i = 0; i<4; i++)
+    {
+        nativeBorderColor[i] = (jfloat)nativeTexDesc.borderColor[i];
+    }
+    env->ReleasePrimitiveArrayCritical(borderColor, nativeBorderColor, 0);
+
 }
 
 
@@ -5043,6 +5061,39 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuTexRefSetMaxAnisotropyNat
     return result;
 }
 
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuTexRefSetBorderColorNative
+* Signature: (Ljcuda/driver/CUtexref;[F)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuTexRefSetBorderColorNative
+(JNIEnv *env, jclass cls, jobject hTexRef, jfloatArray pBorderColor)
+{
+    if (hTexRef == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hTexRef' is null for cuTexRefSetBorderColor");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (pBorderColor == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'pBorderColor' is null for cuTexRefSetBorderColor");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuTexRefSetBorderColor\n");
+
+    CUtexref nativeHTexRef = (CUtexref)getNativePointerValue(env, hTexRef);
+    jsize length = env->GetArrayLength(pBorderColor);
+    if (length != 4)
+    {
+        ThrowByName(env, "java/lang/IllegalArgumentException", "Parameter 'pBorderColor' must have length 4");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    jfloat *nativePBorderColor = (jfloat*)env->GetPrimitiveArrayCritical(pBorderColor, NULL);
+    int result = cuTexRefSetBorderColor(nativeHTexRef, nativePBorderColor);
+    env->ReleasePrimitiveArrayCritical(pBorderColor, nativePBorderColor, JNI_ABORT);
+
+    return result;
+}
 
 
 
@@ -5381,6 +5432,40 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuTexRefGetMaxAnisotropyNat
     int result = cuTexRefGetMaxAnisotropy(&nativePmaxAniso, nativeHTexRef);
 
     if (!set(env, pMaxAniso, 0, (jint)nativePmaxAniso)) return JCUDA_INTERNAL_ERROR;
+    return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuTexRefGetBorderColorNative
+* Signature: ([FLjcuda/driver/CUtexref;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuTexRefGetBorderColorNative
+(JNIEnv *env, jclass cls, jfloatArray pBorderColor, jobject hTexRef)
+{
+    if (pBorderColor == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'pBorderColor' is null for cuTexRefGetBorderColor");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (hTexRef == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hTexRef' is null for cuTexRefGetBorderColor");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuTexRefGetBorderColor\n");
+
+    CUtexref nativeHTexRef = (CUtexref)getNativePointerValue(env, hTexRef);
+    jsize length = env->GetArrayLength(pBorderColor);
+    if (length != 4)
+    {
+        ThrowByName(env, "java/lang/IllegalArgumentException", "Parameter 'pBorderColor' must have length 4");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    jfloat *nativePBorderColor = (jfloat*)env->GetPrimitiveArrayCritical(pBorderColor, NULL);
+    int result = cuTexRefGetBorderColor(nativePBorderColor, nativeHTexRef);
+    env->ReleasePrimitiveArrayCritical(pBorderColor, nativePBorderColor, 0);
+
     return result;
 }
 
@@ -5754,6 +5839,50 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDeviceCanAccessPeerNative
     if (!set(env, canAccessPeer, 0, nativeCanAccessPeer)) return JCUDA_INTERNAL_ERROR;
     return result;
 }
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuDeviceGetP2PAttributeNative
+* Signature: ([IILjcuda/driver/CUdevice;Ljcuda/driver/CUdevice;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDeviceGetP2PAttributeNative
+(JNIEnv *env, jclass cls, jintArray value, jint attrib, jobject srcDevice, jobject dstDevice)
+{
+    // XXX Missing function
+    ThrowByName(env, "java/lang/UnsupportedOperationException", "This function is not implemented in CUDA 8.0.27");
+    return JCUDA_INTERNAL_ERROR;
+    /*
+
+    if (value == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'value' is null for cuDeviceGetP2PAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (srcDevice == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'srcDevice' is null for cuDeviceGetP2PAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (dstDevice == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'dstDevice' is null for cuDeviceGetP2PAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuDeviceGetP2PAttribute\n");
+
+    int nativeValue;
+    CUdevice_P2PAttribute nativeAttrib = (CUdevice_P2PAttribute)attrib;
+    CUdevice nativeSrcDevice = (CUdevice)(intptr_t)getNativePointerValue(env, srcDevice);
+    CUdevice nativeDstDevice = (CUdevice)(intptr_t)getNativePointerValue(env, dstDevice);
+
+    int result = cuDeviceGetP2PAttribute(&nativeValue, nativeAttrib, nativeSrcDevice, nativeDstDevice);
+
+    if (!set(env, value, 0, nativeValue)) return JCUDA_INTERNAL_ERROR;
+    return result;
+
+    */
+}
+
 
 /*
  * Class:     jcuda_driver_JCudaDriver
@@ -6496,6 +6625,67 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuPointerGetAttributeNative
     // host memory.
 
     if (!releasePointerData(env, dataPointerData, 0)) return JCUDA_INTERNAL_ERROR;
+    return result;
+}
+
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuMemPrefetchAsyncNative
+* Signature: (Ljcuda/driver/CUdeviceptr;JLjcuda/driver/CUdevice;Ljcuda/driver/CUstream;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemPrefetchAsyncNative
+(JNIEnv *env, jclass cls, jobject devPtr, jlong count, jobject dstDevice, jobject hStream)
+{
+    if (devPtr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'devPtr' is null for cuMemPrefetchAsync");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (dstDevice == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'ptr' is null for cuMemPrefetchAsync");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuMemPrefetchAsync\n");
+
+    CUdeviceptr nativeDevPtr = (CUdeviceptr)getPointer(env, devPtr);
+    long nativeCount = (long)count;
+    CUdevice nativeDstDevice = (CUdevice)(intptr_t)getNativePointerValue(env, dstDevice);
+    CUstream nativeHStream = (CUstream)getNativePointerValue(env, hStream);
+
+    int result = cuMemPrefetchAsync(nativeDevPtr, nativeCount, nativeDstDevice, nativeHStream);
+
+    return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuMemAdviseNative
+* Signature: (Ljcuda/driver/CUdeviceptr;JILjcuda/driver/CUdevice;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemAdviseNative
+(JNIEnv *env, jclass cls, jobject devPtr, jlong count, jint advice, jobject device)
+{
+    if (devPtr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'devPtr' is null for cuMemAdvise");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (device == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'ptr' is null for cuMemAdvise");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuMemAdvise\n");
+
+    CUdeviceptr nativeDevPtr = (CUdeviceptr)getPointer(env, devPtr);
+    long nativeCount = (long)count;
+    CUmem_advise nativeAdvice = (CUmem_advise)advice;
+    CUdevice nativeDevice = (CUdevice)(intptr_t)getNativePointerValue(env, device);
+
+    int result = cuMemAdvise(nativeDevPtr, nativeCount, nativeAdvice, nativeDevice);
+
     return result;
 }
 

@@ -45,6 +45,8 @@ public class CUcomputemode
     /**
      * Compute-exclusive-thread mode (Only one context used by a
      * single thread can be present on this device at a time)
+     * 
+     * @deprecated Removed in CUDA 8.0.27
      */
     public static final int CU_COMPUTEMODE_EXCLUSIVE  = 1;
 

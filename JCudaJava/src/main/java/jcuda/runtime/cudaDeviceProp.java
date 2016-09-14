@@ -369,6 +369,29 @@ public class cudaDeviceProp
     public int multiGpuBoardGroupID;
 
     /**
+     * Link between the device and the host supports native atomic operations
+     */
+    public int hostNativeAtomicSupported;
+
+    /**
+     * Ratio of single precision performance (in floating-point operations
+     * per second) to double precision performance
+     */
+    public int singleToDoublePrecisionPerfRatio;
+
+    /**
+     * Device supports coherently accessing pageable memory without calling
+     * cudaHostRegister on it
+     */
+    public int pageableMemoryAccess;
+
+    /**
+     * Device can coherently access managed memory concurrently with the CPU
+     */
+    public int concurrentManagedAccess;
+
+
+    /**
      * Returns the String describing the name of this cudaDeviceProp
      *
      * @return String The String describing the name of this cudaDeviceProp
@@ -483,7 +506,11 @@ public class cudaDeviceProp
             "regsPerMultiprocessor="+regsPerMultiprocessor+f+
             "managedMemory="+managedMemory+f+
             "isMultiGpuBoard="+isMultiGpuBoard+f+
-            "multiGpuBoardGroupID="+multiGpuBoardGroupID+f;
+            "multiGpuBoardGroupID="+multiGpuBoardGroupID+f+
+            "hostNativeAtomicSupported="+hostNativeAtomicSupported+f+
+            "singleToDoublePrecisionPerfRatio="+singleToDoublePrecisionPerfRatio+f+
+            "pageableMemoryAccess="+pageableMemoryAccess+f+
+            "concurrentManagedAccess="+concurrentManagedAccess+f;
     }
 
     /**

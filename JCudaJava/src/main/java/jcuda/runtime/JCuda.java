@@ -40,7 +40,7 @@ public class JCuda
     /**
      * CUDA runtime version
      */
-    public static final int CUDART_VERSION = 7050;
+    public static final int CUDART_VERSION = 8000;
 
     /**
      * Returns an unspecified string that will be appended to native 
@@ -50,7 +50,7 @@ public class JCuda
      */
     public static String getJCudaVersion()
     {
-        return "0.7.5c";
+        return "0.8.0RC";
     }
     
     /**
@@ -332,6 +332,10 @@ public class JCuda
      */
     public static final int cudaOccupancyDisableCachingOverride = 0x01;
 
+    /**
+     * Device id that represents the CPU
+     */
+    public static final int cudaCpuDeviceId = -1;
 
     /**
      * Private inner class for the constant stream values
@@ -1191,6 +1195,17 @@ public class JCuda
      *         the number of maximum resident threads per multiprocessor.
      *       </p>
      *     </li>
+     *     <li>streamPrioritiesSupported is 1 if the device supports stream priorities, or 0 if it is not supported.</li>
+     *     <li>globalL1CacheSupported is 1 if the device supports caching of globals in L1 cache, or 0 if it is not supported.</li>
+     *     <li>localL1CacheSupported is 1 if the device supports caching of locals in L1 cache, or 0 if it is not supported.</li>
+     *     <li>sharedMemPerMultiprocessor is the maximum amount of shared memory available to a multiprocessor in bytes; this amount is shared by all thread blocks simultaneously resident on a multiprocessor;</li>
+     *     <li>regsPerMultiprocessor is the maximum number of 32-bit registers available to a multiprocessor; this number is shared by all thread blocks simultaneously resident on a multiprocessor;</li>
+     *     <li>managedMemory is 1 if the device supports allocating managed memory on this system, or 0 if it is not supported.</li>
+     *     <li>isMultiGpuBoard is 1 if the device is on a multi-GPU board (e.g. Gemini cards), and 0 if not;</li>
+     *     <li>multiGpuBoardGroupID is a unique identifier for a group of devices associated with the same board. Devices on the same multi-GPU board will share the same identifier;</li>
+     *     <li>singleToDoublePrecisionPerfRatio is the ratio of single precision performance (in floating-point operations per second) to double precision performance.</li>
+     *     <li>pageableMemoryAccess is 1 if the device supports coherently accessing pageable memory without calling cudaHostRegister on it, and 0 otherwise.</li>
+     *     <li>concurrentManagedAccess is 1 if the device can coherently access managed memory concurrently with the CPU, and 0 otherwise.</li>
      *   </ul>
      *   </p>
      * </div>
@@ -1630,6 +1645,18 @@ public class JCuda
      *         Minor compute capability version number;
      *       </p>
      *     </li>
+     *     <li>cudaDevAttrStreamPrioritiesSupported: 1 if the device supports stream priorities, or 0 if not;</li>
+     *     <li>cudaDevAttrGlobalL1CacheSupported: 1 if device supports caching globals in L1 cache, 0 if not;</li>
+     *     <li>cudaDevAttrGlobalL1CacheSupported: 1 if device supports caching locals in L1 cache, 0 if not;</li>
+     *     <li>cudaDevAttrMaxSharedMemoryPerMultiprocessor: Maximum amount of shared memory available to a multiprocessor in bytes; this amount is shared by all thread blocks simultaneously resident on a multiprocessor;</li>
+     *     <li>cudaDevAttrMaxRegistersPerMultiprocessor: Maximum number of 32-bit registers available to a multiprocessor; this number is shared by all thread blocks simultaneously resident on a multiprocessor;</li>
+     *     <li>cudaDevAttrManagedMemSupported: 1 if device supports allocating managed memory, 0 if not;</li>
+     *     <li>cudaDevAttrIsMultiGpuBoard: 1 if device is on a multi-GPU board, 0 if not;</li>
+     *     <li>cudaDevAttrMultiGpuBoardGroupID: Unique identifier for a group of devices on the same multi-GPU board;</li>
+     *     <li>cudaDevAttrHostNativeAtomicSupported: 1 if the link between the device and the host supports native atomic operations;</li>
+     *     <li>cudaDevAttrSingleToDoublePrecisionPerfRatio: Ratio of single precision performance (in floating-point operations per second) to double precision performance;</li>
+     *     <li>cudaDevAttrPageableMemoryAccess: 1 if the device supports coherently accessing pageable memory without calling cudaHostRegister on it, and 0 otherwise.</li>
+     *     <li>cudaDevAttrConcurrentManagedAccess: 1 if the device can coherently access managed memory concurrently with the CPU, and 0 otherwise.</li>
      *   </ul>
      *   </p>
      *   <div>
@@ -1660,6 +1687,46 @@ public class JCuda
     }
     private static native int cudaDeviceGetAttributeNative(int value[], int cudaDeviceAttr_attr, int device);
 
+
+    /**
+     * Queries attributes of the link between two devices.<br>
+     * <br>
+     * Returns in *value the value of the requested attribute attrib of the
+     * link between srcDevice and dstDevice. The supported attributes are:
+     * <ul>
+     * <li>CudaDevP2PAttrPerformanceRank: A relative value indicating the
+     *   performance of the link between two devices. Lower value means better
+     *   performance (0 being the value used for most performant link).
+     * </li>
+     * <li>CudaDevP2PAttrAccessSupported: 1 if peer access is enabled.</li>
+     * <li>CudaDevP2PAttrNativeAtomicSupported: 1 if native atomic operations over
+     *   the link are supported.
+     * </li>
+     * </ul>
+     * <br>
+     * Returns ::cudaErrorInvalidDevice if srcDevice or dstDevice are not valid
+     * or if they represent the same device.<br>
+     * <br>
+     * Returns ::cudaErrorInvalidValue if attrib is not valid or if value is
+     * a null pointer.
+     * <br>
+     *
+     * @param value     Returned value of the requested attribute
+     * @param attrib    The requested attribute of the link between srcDevice and dstDevice.
+     * @param srcDevice The source device of the target link.
+     * @param dstDevice The destination device of the target link.
+     *
+     * @return cudaSuccess, cudaErrorInvalidDevice, cudaErrorInvalidValue
+     *
+     * @see JCuda#cudaCtxEnablePeerAccess
+     * @see JCuda#cudaCtxDisablePeerAccess
+     * @see JCuda#cudaCtxCanAccessPeer
+     */
+    public static int cudaDeviceGetP2PAttribute(int value[], int attr, int srcDevice, int dstDevice)
+    {
+        return checkResult(cudaDeviceGetP2PAttributeNative(value, attr, srcDevice, dstDevice));
+    }
+    private static native int cudaDeviceGetP2PAttributeNative(int value[], int attr, int srcDevice, int dstDevice);
 
     /**
      * Select compute-device which best matches criteria.
@@ -5102,17 +5169,14 @@ public class JCuda
      * @see JCuda#cudaMemcpy2DFromArrayAsync
      * @see JCuda#cudaMemcpyToSymbolAsync
      * @see JCuda#cudaMemcpyFromSymbolAsync
+     *
+     * @deprecated This function is no longer supported as of CUDA 5.0
      */
     public static int cudaMemcpyToSymbol(String symbol, Pointer src, long count, long offset, int cudaMemcpyKind_kind)
     {
-        if (true)
-        {
-            throw new UnsupportedOperationException(
-                "This function is no longer supported as of CUDA 5.0");
-        }
-        return checkResult(cudaMemcpyToSymbolNative(symbol, src, count, offset, cudaMemcpyKind_kind));
+        throw new UnsupportedOperationException(
+            "This function is no longer supported as of CUDA 5.0");
     }
-    private static native int cudaMemcpyToSymbolNative(String symbol, Pointer src, long count, long offset, int cudaMemcpyKind_kind);
 
     /**
      * [C++ API] Copies data from the given symbol on the device
@@ -5189,17 +5253,14 @@ public class JCuda
      * @see JCuda#cudaMemcpy2DFromArrayAsync
      * @see JCuda#cudaMemcpyToSymbolAsync
      * @see JCuda#cudaMemcpyFromSymbolAsync
+     *
+     * @deprecated This function is no longer supported as of CUDA 5.0
      */
     public static int cudaMemcpyFromSymbol(Pointer dst, String symbol, long count, long offset, int cudaMemcpyKind_kind)
     {
-        if (true)
-        {
-            throw new UnsupportedOperationException(
-                "This function is no longer supported as of CUDA 5.0");
-        }
-        return checkResult(cudaMemcpyFromSymbolNative(dst, symbol, count, offset, cudaMemcpyKind_kind));
+        throw new UnsupportedOperationException(
+            "This function is no longer supported as of CUDA 5.0");
     }
-    private static native int cudaMemcpyFromSymbolNative(Pointer dst, String symbol, long count, long offset, int cudaMemcpyKind_kind);
 
 
     /**
@@ -5874,17 +5935,14 @@ public class JCuda
      * @see JCuda#cudaMemcpyFromArrayAsync
      * @see JCuda#cudaMemcpy2DFromArrayAsync
      * @see JCuda#cudaMemcpyFromSymbolAsync
+     *
+     * @deprecated This function is no longer supported as of CUDA 5.0
      */
     public static int cudaMemcpyToSymbolAsync(String symbol, Pointer src, long count, long offset, int cudaMemcpyKind_kind, cudaStream_t stream)
     {
-        if (true)
-        {
-            throw new UnsupportedOperationException(
-                "This function is no longer supported as of CUDA 5.0");
-        }
-        return checkResult(cudaMemcpyToSymbolAsyncNative(symbol, src, count, offset, cudaMemcpyKind_kind, stream));
+        throw new UnsupportedOperationException(
+            "This function is no longer supported as of CUDA 5.0");
     }
-    private static native int cudaMemcpyToSymbolAsyncNative(String symbol, Pointer src, long count, long offset, int cudaMemcpyKind_kind, cudaStream_t stream);
 
     /**
      * [C++ API] Copies data from the given symbol on the device
@@ -5972,17 +6030,14 @@ public class JCuda
      * @see JCuda#cudaMemcpyFromArrayAsync
      * @see JCuda#cudaMemcpy2DFromArrayAsync
      * @see JCuda#cudaMemcpyToSymbolAsync
+     *
+     * @deprecated This function is no longer supported as of CUDA 5.0
      */
     public static int cudaMemcpyFromSymbolAsync(Pointer dst, String symbol, long count, long offset, int cudaMemcpyKind_kind, cudaStream_t stream)
     {
-        if (true)
-        {
-            throw new UnsupportedOperationException(
-                "This function is no longer supported as of CUDA 5.0");
-        }
-        return checkResult(cudaMemcpyFromSymbolAsyncNative(dst, symbol, count, offset, cudaMemcpyKind_kind, stream));
+        throw new UnsupportedOperationException(
+            "This function is no longer supported as of CUDA 5.0");
     }
-    private static native int cudaMemcpyFromSymbolAsyncNative(Pointer dst, String symbol, long count, long offset, int cudaMemcpyKind_kind, cudaStream_t stream);
 
 
 
@@ -6290,19 +6345,18 @@ public class JCuda
     private static native int cudaPeekAtLastErrorNative();
 
     /**
-     * <code><pre>
-     * \brief Returns the string representation of an error code enum name
-     *
+     * Returns the string representation of an error code enum name<br>
+     * <br>
      * Returns a string containing the name of an error code in the enum, or NULL
      * if the error code is not valid.
+     * <br>
+     * @param error - Error code to convert to string
+     * @return The string, or NULL if the error code is not valid.
      *
-     * \param error - Error code to convert to string
-     *
-     * \return
-     * \p char* pointer to a NULL-terminated string, or NULL if the error code is not valid.
-     *
-     * \sa ::cudaGetErrorString, ::cudaGetLastError, ::cudaPeekAtLastError, ::cudaError
-     * </pre></code>
+     * @see JCuda#cudaGetErrorString
+     * @see JCuda#cudaGetLastError
+     * @see JCuda#cudaPeekAtLastError
+     * {@link cudaError}
      */
     public static String cudaGetErrorName(int error)
     {
@@ -8084,7 +8138,7 @@ public class JCuda
      * @return cudaSuccess
      *
      * @see JCuda#cudaDeviceReset
-     * 
+     *
      * @deprecated Deprecated in CUDA
      */
     @Deprecated
@@ -8496,17 +8550,14 @@ public class JCuda
      *
      * @see JCuda#cudaGetSymbolAddress
      * @see JCuda#cudaGetSymbolSize
+     *
+     * @deprecated This function is no longer supported as of CUDA 5.0
      */
     public static int cudaGetSymbolAddress(Pointer devPtr, String symbol)
     {
-        if (true)
-        {
-            throw new UnsupportedOperationException(
-                "This function is no longer supported as of CUDA 5.0");
-        }
-        return checkResult(cudaGetSymbolAddressNative(devPtr, symbol));
+        throw new UnsupportedOperationException(
+            "This function is no longer supported as of CUDA 5.0");
     }
-    private static native int cudaGetSymbolAddressNative(Pointer devPtr, String symbol);
 
     /**
      * [C++ API] Finds the size of the object associated with a CUDA symbol
@@ -8544,17 +8595,147 @@ public class JCuda
      *
      * @see JCuda#cudaGetSymbolAddress
      * @see JCuda#cudaGetSymbolSize
+     *
+     * @deprecated This function is no longer supported as of CUDA 5.0
      */
     public static int cudaGetSymbolSize(long size[], String symbol)
     {
-        if (true)
-        {
-            throw new UnsupportedOperationException(
-                "This function is no longer supported as of CUDA 5.0");
-        }
-        return checkResult(cudaGetSymbolSizeNative(size, symbol));
+        throw new UnsupportedOperationException(
+            "This function is no longer supported as of CUDA 5.0");
     }
-    private static native int cudaGetSymbolSizeNative(long size[], String symbol);
+
+
+    /**
+     * Prefetches memory to the specified destination device
+     * <br>
+     * Prefetches memory to the specified destination device.  devPtr is the
+     * base device pointer of the memory to be prefetched and dstDevice is the
+     * destination device. count specifies the number of bytes to copy. stream
+     * is the stream in which the operation is enqueued.<br>
+     * <br>
+     * Passing in cudaCpuDeviceId for dstDevice will prefetch the data to CPU memory.<br>
+     * <br>
+     * If no physical memory has been allocated for this region, then this memory region
+     * will be populated and mapped on the destination device. If there's insufficient
+     * memory to prefetch the desired region, the Unified Memory driver may evict pages
+     * belonging to other memory regions to make room. If there's no memory that can be
+     * evicted, then the Unified Memory driver will prefetch less than what was requested.<br>
+     * <br>
+     * In the normal case, any mappings to the previous location of the migrated pages are
+     * removed and mappings for the new location are only setup on the dstDevice.
+     * The application can exercise finer control on these mappings using ::cudaMemAdvise.<br>
+     * <br>
+     * Note that this function is asynchronous with respect to the host and all work
+     * on other devices.
+     *
+     * @param devPtr    Pointer to be prefetched
+     * @param count     Size in bytes
+     * @param dstDevice Destination device to prefetch to
+     * @param stream    Stream to enqueue prefetch operation
+     *
+     * @return cudaSuccess, cudaErrorInvalidValue, cudaErrorInvalidDevice
+     *
+     * @see JCuda#cudaMemcpy
+     * @see JCuda#cudaMemcpyPeer
+     * @see JCuda#cudaMemcpyAsync
+     * @see JCuda#cudaMemcpy3DPeerAsync
+     * @see JCuda#cudaMemAdvise
+     */
+    public static int cudaMemPrefetchAsync(Pointer devPtr, long count, int dstDevice, cudaStream_t stream)
+    {
+        return checkResult(cudaMemPrefetchAsyncNative(devPtr, count, dstDevice, stream));
+    }
+    private static native int cudaMemPrefetchAsyncNative(Pointer devPtr, long count, int dstDevice, cudaStream_t stream);
+
+    /**
+     * Advise about the usage of a given memory range<br>
+     * <br>
+     * Advise the Unified Memory subsystem about the usage pattern for the
+     * memory range starting at devPtr with a size of count bytes.
+     * <ul>
+     * <li>cudaMemAdviseSetReadMostly: This implies that the data is mostly
+     * going to be read from and only occasionally written to. This allows the
+     * driver to create read-only copies of the data in a processor's memory
+     * when that processor accesses it. Similarly, if cudaMemPrefetchAsync is
+     * called on this region, it will create a read-only copy of the data on the
+     * destination processor. When a processor writes to this data, all copies
+     * of the corresponding page are invalidated except for the one where the
+     * write occurred. The device argument is ignored for this advice.</li>
+     * <li>cudaMemAdviceUnsetReadMostly: Undoes the effect of
+     * cudaMemAdviceReadMostly. Any read duplicated copies of the data will be
+     * freed no later than the next write access to that data.</li>
+     * <li>cudaMemAdviseSetPreferredLocation: This advice sets the preferred
+     * location for the data to be the memory belonging to device. Passing in
+     * cudaCpuDeviceId for device sets the preferred location as CPU memory.
+     * Setting the preferred location does not cause data to migrate to that
+     * location immediately. Instead, it guides the migration policy when a
+     * fault occurs on that memory region. If the data is already in its
+     * preferred location and the faulting processor can establish a mapping
+     * without requiring the data to be migrated, then the migration will be
+     * avoided. On the other hand, if the data is not in its preferred location
+     * or if a direct mapping cannot be established, then it will be migrated to
+     * the processor accessing it. It is important to note that setting the
+     * preferred location does not prevent data prefetching done using
+     * cudaMemPrefetchAsync. Having a preferred location can override the thrash
+     * detection and resolution logic in the Unified Memory driver. Normally, if
+     * a page is detected to be constantly thrashing between CPU and GPU memory
+     * say, the page will eventually be pinned to CPU memory by the Unified
+     * Memory driver. But if the preferred location is set as GPU memory, then
+     * the page will continue to thrash indefinitely. When the Unified Memory
+     * driver has to evict pages from a certain location on account of that
+     * memory being oversubscribed, the preferred location will be used to
+     * decide the destination to which a page should be evicted to. If
+     * cudaMemAdviseSetReadMostly is also set on this memory region or any
+     * subset of it, the preferred location will be ignored for that
+     * subset.</li>
+     * <li>cudaMemAdviseUnsetPreferredLocation: Undoes the effect of
+     * cudaMemAdviseSetPreferredLocation and changes the preferred location to
+     * none.</li>
+     * <li>cudaMemAdviseSetAccessedBy: This advice implies that the data will be
+     * accessed by device. This does not cause data migration and has no impact
+     * on the location of the data per se. Instead, it causes the data to always
+     * be mapped in the specified processor's page tables, as long as the
+     * location of the data permits a mapping to be established. If the data
+     * gets migrated for any reason, the mappings are updated accordingly. This
+     * advice is useful in scenarios where data locality is not important, but
+     * avoiding faults is. Consider for example a system containing multiple
+     * GPUs with peer-to-peer access enabled, where the data located on one GPU
+     * is occasionally accessed by other GPUs. In such scenarios, migrating data
+     * over to the other GPUs is not as important because the accesses are
+     * infrequent and the overhead of migration may be too high. But preventing
+     * faults can still help improve performance, and so having a mapping set up
+     * in advance is useful. Note that on CPU access of this data, the data may
+     * be migrated to CPU memory because the CPU typically cannot access GPU
+     * memory directly. Any GPU that had the cudaMemAdviceAccessedBy flag set
+     * for this data will now have its mapping updated to point to the page in
+     * CPU memory.</li>
+     * <li>cudaMemAdviseUnsetAccessedBy: Undoes the effect of
+     * cudaMemAdviseSetAccessedBy. The current set of mappings may be removed at
+     * any time causing accesses to result in page faults.</li>
+     * </ul>
+     * Passing in ::cudaCpuDeviceId for device will set the advice for the CPU.
+     *
+     * Note that this function is asynchronous with respect to the host and all
+     * work on other devices.
+     *
+     * @param devPtr Pointer to memory to set the advice for
+     * @param count Size in bytes of the memory range
+     * @param advice Advice to be applied for the specified memory range
+     * @param device Device to apply the advice for
+     *
+     * @return cudaSuccess, cudaErrorInvalidValue, cudaErrorInvalidDevice
+     *
+     * @see JCuda#cudaMemcpy
+     * @see JCuda#cudaMemcpyPeer
+     * @see JCuda#cudaMemcpyAsync
+     * @see JCuda#cudaMemcpy3DPeerAsync
+     * @see JCuda#cudaMemPrefetchAsync
+     */
+    public static int cudaMemAdvise(Pointer devPtr, long count, int advice, int device)
+    {
+        return checkResult(cudaMemAdviseNative(devPtr, count, advice, device));
+    }
+    private static native int cudaMemAdviseNative(Pointer devPtr, long count, int advice, int device);
 
 
     /**
@@ -8997,17 +9178,14 @@ public class JCuda
      * @see JCuda#cudaBindTexture2D
      * @see JCuda#cudaBindTextureToArray
      * @see JCuda#cudaUnbindTexture
+     *
+     * @deprecated This function is no longer supported as of CUDA 5.0
      */
     public static int cudaGetTextureReference(textureReference texref, String symbol)
     {
-        if (true)
-        {
-            throw new UnsupportedOperationException(
-                "This function is no longer supported as of CUDA 5.0");
-        }
-        return checkResult(cudaGetTextureReferenceNative(texref, symbol));
+        throw new UnsupportedOperationException(
+            "This function is no longer supported as of CUDA 5.0");
     }
-    private static native int cudaGetTextureReferenceNative(textureReference texref, String symbol);
 
 
     /**
@@ -9094,17 +9272,14 @@ public class JCuda
      * @return cudaSuccess, cudaErrorInvalidSurface
      *
      * @see JCuda#cudaBindSurfaceToArray
+     *
+     * @deprecated This function is no longer supported as of CUDA 5.0
      */
     public static int cudaGetSurfaceReference(surfaceReference surfref, String symbol)
     {
-        if (true)
-        {
-            throw new UnsupportedOperationException(
-                "This function is no longer supported as of CUDA 5.0");
-        }
-        return checkResult(cudaGetSurfaceReferenceNative(surfref, symbol));
+        throw new UnsupportedOperationException(
+            "This function is no longer supported as of CUDA 5.0");
     }
-    private static native int cudaGetSurfaceReferenceNative(surfaceReference surfref, String symbol);
 
 
 
@@ -9833,17 +10008,14 @@ public class JCuda
      * @see JCuda#cudaSetDoubleForDevice
      * @see JCuda#cudaSetDoubleForHost
      * @see JCuda#cudaSetupArgument
+     *
+     * @deprecated This function is no longer supported as of CUDA 5.0
      */
     public static int cudaFuncGetAttributes (cudaFuncAttributes attr, String func)
     {
-        if (true)
-        {
-            throw new UnsupportedOperationException(
-                "This function is no longer supported as of CUDA 5.0");
-        }
-        return checkResult(cudaFuncGetAttributesNative(attr, func));
+        throw new UnsupportedOperationException(
+            "This function is no longer supported as of CUDA 5.0");
     }
-    private static native int cudaFuncGetAttributesNative(cudaFuncAttributes attr, String func);
 
 
 
@@ -9887,17 +10059,14 @@ public class JCuda
      * @see JCuda#cudaSetupArgument
      * @see JCuda#cudaThreadGetCacheConfig
      * @see JCuda#cudaThreadSetCacheConfig
+     *
+     * @deprecated This function is no longer supported as of CUDA 5.0
      */
     public static int cudaLaunch(String symbol)
     {
-        if (true)
-        {
-            throw new UnsupportedOperationException(
-                "This function is no longer supported as of CUDA 5.0");
-        }
-        return checkResult(cudaLaunchNative(symbol));
+        throw new UnsupportedOperationException(
+            "This function is no longer supported as of CUDA 5.0");
     }
-    private static native int cudaLaunchNative(String symbol);
 
 
 
@@ -10230,14 +10399,9 @@ public class JCuda
     @Deprecated
     public static int cudaGLRegisterBufferObject(int bufObj)
     {
-        if (true)
-        {
-            throw new UnsupportedOperationException(
-                "This function is deprecated as of CUDA 3.0");
-        }
-        return checkResult(cudaGLRegisterBufferObjectNative(bufObj));
+        throw new UnsupportedOperationException(
+            "This function is deprecated as of CUDA 3.0");
     }
-    private static native int cudaGLRegisterBufferObjectNative(int bufObj);
 
 
     /**

@@ -440,4 +440,90 @@ JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetProgramLogNative
 }
 
 
+/*
+* Class:     jcuda_nvrtc_JNvrtc
+* Method:    nvrtcAddNameExpressionNative
+* Signature: (Ljcuda/nvrtc/nvrtcProgram;Ljava/lang/String;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcAddNameExpressionNative
+(JNIEnv *env, jclass cls, jobject prog, jstring name_expression)
+{
+    if (prog == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'prog' is null for nvrtcAddNameExpression");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (name_expression == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'name_expression' is null for nvrtcAddNameExpression");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing nvrtcAddNameExpression\n");
+
+    nvrtcProgram nativeProg = (nvrtcProgram)(intptr_t)getNativePointerValue(env, prog);
+    char *nativeName_expression = convertString(env, name_expression);
+
+    int result = nvrtcAddNameExpression(nativeProg, nativeName_expression);
+
+    delete[] nativeName_expression;
+    return result;
+}
+
+/*
+* Class:     jcuda_nvrtc_JNvrtc
+* Method:    nvrtcGetLoweredNameNative
+* Signature: (Ljcuda/nvrtc/nvrtcProgram;Ljava/lang/String;[Ljava/lang/String;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetLoweredNameNative
+(JNIEnv *env, jclass cls, jobject prog, jstring name_expression, jobjectArray lowered_name)
+{
+    if (prog == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'prog' is null for nvrtcGetLoweredName");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (name_expression == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'name_expression' is null for nvrtcGetLoweredName");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (lowered_name == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'lowered_name' is null for nvrtcGetLoweredName");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    int length = env->GetArrayLength(lowered_name);
+    if (length == 0)
+    {
+        ThrowByName(env, "java/lang/IllegalArgumentException",
+            "String array lowered_name must at least have length 1");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing nvrtcGetLoweredName\n");
+
+    nvrtcProgram nativeProg = (nvrtcProgram)(intptr_t)getNativePointerValue(env, prog);
+    char *nativeName_expression = convertString(env, name_expression);
+    const char *nativeLowered_name;
+
+    int result = nvrtcGetLoweredName(nativeProg, nativeName_expression, &nativeLowered_name);
+
+    jstring lowered_nameElement = env->NewStringUTF(nativeLowered_name);
+    if (lowered_nameElement == NULL)
+    {
+        ThrowByName(env, "java/lang/OutOfMemoryError",
+            "Out of memory while creating result string");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    env->SetObjectArrayElement(lowered_name, 0, lowered_nameElement);
+
+    delete[] nativeName_expression;
+    return result;
+}
 

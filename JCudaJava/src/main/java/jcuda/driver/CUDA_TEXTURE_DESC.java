@@ -27,6 +27,8 @@
 
 package jcuda.driver;
 
+import java.util.Arrays;
+
 /**
  * Texture descriptor
  */
@@ -81,7 +83,12 @@ public class CUDA_TEXTURE_DESC
      */
     public float maxMipmapLevelClamp;
 
-    // private int _reserved[] = new int[16];
+    /**
+     * Border color
+     */
+    public float borderColor[] = new float[4];
+    
+    // private int _reserved[] = new int[12];
 
     /**
      * Creates a new, uninitialized CUDA_TEXTURE_DESC
@@ -142,6 +149,7 @@ public class CUDA_TEXTURE_DESC
         sb.append("mipmapLevelBias="+mipmapLevelBias+f);
         sb.append("minMipmapLevelClamp="+minMipmapLevelClamp+f);
         sb.append("maxMipmapLevelClamp="+maxMipmapLevelClamp+f);
+        sb.append("borderColor="+Arrays.toString(borderColor)+f);
         return sb.toString();
     }
 

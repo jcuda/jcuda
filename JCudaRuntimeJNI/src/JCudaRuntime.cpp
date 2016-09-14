@@ -91,6 +91,10 @@ jfieldID cudaDeviceProp_regsPerMultiprocessor; // int
 jfieldID cudaDeviceProp_managedMemory; // int
 jfieldID cudaDeviceProp_isMultiGpuBoard; // int
 jfieldID cudaDeviceProp_multiGpuBoardGroupID; // int
+jfieldID cudaDeviceProp_hostNativeAtomicSupported; // int
+jfieldID cudaDeviceProp_singleToDoublePrecisionPerfRatio; // int
+jfieldID cudaDeviceProp_pageableMemoryAccess; // int
+jfieldID cudaDeviceProp_concurrentManagedAccess; // int
 
 jfieldID cudaPitchedPtr_ptr; // jcuda.Pointer
 jfieldID cudaPitchedPtr_pitch; // size_t
@@ -193,6 +197,7 @@ jfieldID cudaTextureDesc_addressMode; // cudaTextureAddressMode[3]
 jfieldID cudaTextureDesc_filterMode; // cudaTextureFilterMode
 jfieldID cudaTextureDesc_readMode; // cudaTextureReadMode
 jfieldID cudaTextureDesc_sRGB; // int
+jfieldID cudaTextureDesc_borderColor; // float[4]
 jfieldID cudaTextureDesc_normalizedCoords; // int
 jfieldID cudaTextureDesc_maxAnisotropy; // unsigned int
 jfieldID cudaTextureDesc_mipmapFilterMode; // cudaTextureFilterMode
@@ -286,6 +291,10 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, cudaDeviceProp_managedMemory,               "managedMemory",               "I" )) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_isMultiGpuBoard,             "isMultiGpuBoard",             "I" )) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_multiGpuBoardGroupID,        "multiGpuBoardGroupID",        "I" )) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_hostNativeAtomicSupported,            "hostNativeAtomicSupported",            "I")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_singleToDoublePrecisionPerfRatio,     "singleToDoublePrecisionPerfRatio",     "I")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_pageableMemoryAccess,                 "pageableMemoryAccess",                 "I")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_concurrentManagedAccess,              "concurrentManagedAccess",              "I")) return JNI_ERR;
 
     // Obtain the fieldIDs of the cudaPitchedPtr class
     if (!init(env, cls, "jcuda/runtime/cudaPitchedPtr")) return JNI_ERR;
@@ -433,6 +442,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, cudaTextureDesc_filterMode,          "filterMode",          "I")) return JNI_ERR;
     if (!init(env, cls, cudaTextureDesc_readMode,            "readMode",            "I")) return JNI_ERR;
     if (!init(env, cls, cudaTextureDesc_sRGB,                "sRGB",                "I")) return JNI_ERR;
+    if (!init(env, cls, cudaTextureDesc_borderColor,         "borderColor",         "[F")) return JNI_ERR;
     if (!init(env, cls, cudaTextureDesc_normalizedCoords,    "normalizedCoords",    "I")) return JNI_ERR;
     if (!init(env, cls, cudaTextureDesc_mipmapFilterMode,    "mipmapFilterMode",    "I")) return JNI_ERR;
     if (!init(env, cls, cudaTextureDesc_mipmapFilterMode,    "mipmapFilterMode",    "I")) return JNI_ERR;
@@ -571,7 +581,11 @@ cudaDeviceProp getCudaDeviceProp(JNIEnv *env, jobject prop)
     nativeProp.regsPerMultiprocessor       = (int)env->GetIntField( prop, cudaDeviceProp_regsPerMultiprocessor);
     nativeProp.managedMemory               = (int)env->GetIntField( prop, cudaDeviceProp_managedMemory);
     nativeProp.isMultiGpuBoard             = (int)env->GetIntField( prop, cudaDeviceProp_isMultiGpuBoard);
-    nativeProp.multiGpuBoardGroupID        = (int)env->GetIntField( prop, cudaDeviceProp_multiGpuBoardGroupID);
+    nativeProp.multiGpuBoardGroupID = (int)env->GetIntField(prop, cudaDeviceProp_multiGpuBoardGroupID);
+    nativeProp.hostNativeAtomicSupported        = (int)env->GetIntField(prop, cudaDeviceProp_hostNativeAtomicSupported);
+    nativeProp.singleToDoublePrecisionPerfRatio = (int)env->GetIntField(prop, cudaDeviceProp_singleToDoublePrecisionPerfRatio);
+    nativeProp.pageableMemoryAccess             = (int)env->GetIntField(prop, cudaDeviceProp_pageableMemoryAccess);
+    nativeProp.concurrentManagedAccess          = (int)env->GetIntField(prop, cudaDeviceProp_concurrentManagedAccess);
 
     return nativeProp;
 }
@@ -685,7 +699,12 @@ void setCudaDeviceProp(JNIEnv *env, jobject prop, cudaDeviceProp nativeProp)
     env->SetIntField( prop, cudaDeviceProp_regsPerMultiprocessor     , (jint) nativeProp.regsPerMultiprocessor);
     env->SetIntField( prop, cudaDeviceProp_managedMemory             , (jint) nativeProp.managedMemory);
     env->SetIntField( prop, cudaDeviceProp_isMultiGpuBoard           , (jint) nativeProp.isMultiGpuBoard);
-    env->SetIntField( prop, cudaDeviceProp_multiGpuBoardGroupID      , (jint) nativeProp.multiGpuBoardGroupID);
+    env->SetIntField(prop, cudaDeviceProp_multiGpuBoardGroupID       , (jint)nativeProp.multiGpuBoardGroupID);
+
+    env->SetIntField(prop, cudaDeviceProp_hostNativeAtomicSupported,        (jint)nativeProp.hostNativeAtomicSupported);
+    env->SetIntField(prop, cudaDeviceProp_singleToDoublePrecisionPerfRatio, (jint)nativeProp.singleToDoublePrecisionPerfRatio);
+    env->SetIntField(prop, cudaDeviceProp_pageableMemoryAccess,             (jint)nativeProp.pageableMemoryAccess);
+    env->SetIntField(prop, cudaDeviceProp_concurrentManagedAccess,          (jint)nativeProp.concurrentManagedAccess);
 }
 
 
@@ -1277,6 +1296,19 @@ cudaTextureDesc getCudaTextureDesc(JNIEnv *env, jobject texDesc)
     nativeTexDesc.filterMode = (cudaTextureFilterMode) env->GetIntField(texDesc, cudaTextureDesc_filterMode);
     nativeTexDesc.readMode = (cudaTextureReadMode) env->GetIntField(texDesc, cudaTextureDesc_readMode);
     nativeTexDesc.sRGB = (int) env->GetIntField(texDesc, cudaTextureDesc_sRGB);
+
+    jfloatArray borderColor = (jfloatArray)env->GetObjectField(texDesc, cudaTextureDesc_borderColor);
+    jfloat *nativeBorderColor = (jfloat*)env->GetPrimitiveArrayCritical(borderColor, NULL);
+    if (nativeBorderColor == NULL)
+    {
+        return nativeTexDesc;
+    }
+    for (int i = 0; i<4; i++)
+    {
+        nativeTexDesc.borderColor[i] = (float)nativeBorderColor[i];
+    }
+    env->ReleasePrimitiveArrayCritical(borderColor, nativeBorderColor, JNI_ABORT);
+
     nativeTexDesc.normalizedCoords = (int) env->GetIntField(texDesc, cudaTextureDesc_normalizedCoords);
     nativeTexDesc.maxAnisotropy = (unsigned int) env->GetIntField(texDesc, cudaTextureDesc_maxAnisotropy);
     nativeTexDesc.mipmapFilterMode = (cudaTextureFilterMode) env->GetIntField(texDesc, cudaTextureDesc_mipmapFilterMode);
@@ -1309,6 +1341,19 @@ void setCudaTextureDesc(JNIEnv *env, jobject texDesc, cudaTextureDesc &nativeTex
     env->SetIntField(texDesc, cudaTextureDesc_filterMode, (jint)nativeTexDesc.filterMode);
     env->SetIntField(texDesc, cudaTextureDesc_readMode, (jint)nativeTexDesc.readMode);
     env->SetIntField(texDesc, cudaTextureDesc_sRGB, (jint)nativeTexDesc.sRGB);
+
+    jfloatArray borderColor = (jfloatArray)env->GetObjectField(texDesc, cudaTextureDesc_borderColor);
+    jfloat *nativeBorderColor = (jfloat*)env->GetPrimitiveArrayCritical(borderColor, NULL);
+    if (nativeBorderColor == NULL)
+    {
+        return;
+    }
+    for (int i = 0; i<4; i++)
+    {
+        nativeBorderColor[i] = (jfloat)nativeTexDesc.borderColor[i];
+    }
+    env->ReleasePrimitiveArrayCritical(borderColor, nativeBorderColor, 0);
+
     env->SetIntField(texDesc, cudaTextureDesc_normalizedCoords, (jint)nativeTexDesc.normalizedCoords);
     env->SetIntField(texDesc, cudaTextureDesc_maxAnisotropy, (jint)nativeTexDesc.maxAnisotropy);
     env->SetIntField(texDesc, cudaTextureDesc_mipmapFilterMode, (jint)nativeTexDesc.mipmapFilterMode);
@@ -1879,6 +1924,26 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaDeviceGetAttributeNative
     return result;
 }
 
+/*
+* Class:     jcuda_runtime_JCuda
+* Method:    cudaDeviceGetP2PAttributeNative
+* Signature: ([IIII)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaDeviceGetP2PAttributeNative
+(JNIEnv *env, jclass cls, jintArray value, jint attr, jint srcDevice, jint dstDevice)
+{
+    if (value == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'value' is null for cudaDeviceGetP2PAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cudaDeviceGetP2PAttribute\n");
+
+    int nativeValue = 0;
+    int result = cudaDeviceGetP2PAttribute(&nativeValue, (cudaDeviceP2PAttr)attr, (int)srcDevice, (int)dstDevice);
+    if (!set(env, value, 0, nativeValue)) return JCUDA_INTERNAL_ERROR;
+    return result;
+}
 
 
 /*
@@ -3130,95 +3195,6 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemcpy2DArrayToArrayNative
 
 
 
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaMemcpyToSymbolNative
- * Signature: (Ljava/lang/String;Ljcuda/Pointer;JJI)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemcpyToSymbolNative
-  (JNIEnv *env, jclass cls, jstring symbol, jobject src, jlong count, jlong offset, jint kind)
-{
-    // This function is no longer supported as of CUDA 5.0.
-    // Although the function still exists, it is no longer
-    // possible to pass in a String as an identifier for
-    // the symbol. Calling this function should be prevented
-    // on Java side, with an UnsupportedOperationException
-    return JCUDA_INTERNAL_ERROR;
-    /*
-    if (symbol == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'symbol' is null for cudaMemcpyToSymbol");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (src == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'src' is null for cudaMemcpyToSymbol");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    Logger::log(LOG_TRACE, "Executing cudaMemcpyToSymbol\n");
-
-    char *nativeSymbol = convertString(env, symbol);
-    PointerData *srcPointerData = initPointerData(env, src);
-    if (srcPointerData == NULL)
-    {
-        return JCUDA_INTERNAL_ERROR;
-    }
-
-    int result = cudaMemcpyToSymbol(nativeSymbol, (void*)srcPointerData->getPointer(env), (size_t)count, (size_t)offset, (cudaMemcpyKind)kind);
-    delete[] nativeSymbol;
-
-    if (!releasePointerData(env, srcPointerData, JNI_ABORT)) return JCUDA_INTERNAL_ERROR;
-
-    return result;
-    */
-}
-
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaMemcpyFromSymbolNative
- * Signature: (Ljcuda/Pointer;Ljava/lang/String;JJI)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemcpyFromSymbolNative
-  (JNIEnv *env, jclass cls, jobject dst, jstring symbol, jlong count, jlong offset, jint kind)
-{
-    // This function is no longer supported as of CUDA 5.0.
-    // Although the function still exists, it is no longer
-    // possible to pass in a String as an identifier for
-    // the symbol. Calling this function should be prevented
-    // on Java side, with an UnsupportedOperationException
-    return JCUDA_INTERNAL_ERROR;
-    /*
-    if (dst == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'dst' is null for cudaMemcpyFromSymbol");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (symbol == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'symbol' is null for cudaMemcpyFromSymbol");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    Logger::log(LOG_TRACE, "Executing cudaMemcpyFromSymbol\n");
-
-    PointerData *dstPointerData = initPointerData(env, dst);
-    if (dstPointerData == NULL)
-    {
-        return JCUDA_INTERNAL_ERROR;
-    }
-    char *nativeSymbol = convertString(env, symbol);
-
-    int result = cudaMemcpyFromSymbol((void*)dstPointerData->getPointer(env), nativeSymbol, (size_t)count, (size_t)offset, (cudaMemcpyKind)kind);
-    delete[] nativeSymbol;
-
-    if (!releasePointerData(env, dstPointerData)) return JCUDA_INTERNAL_ERROR;
-
-    return result;
-    */
-}
-
-
-
 
 
 
@@ -3587,94 +3563,6 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemcpy2DFromArrayAsyncNative
     return result;
 }
 
-
-
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaMemcpyToSymbolAsyncNative
- * Signature: (Ljava/lang/String;Ljcuda/Pointer;JJILjcuda/runtime/cudaStream_t;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemcpyToSymbolAsyncNative
-  (JNIEnv *env, jclass cls, jstring symbol, jobject src, jlong count, jlong offset, jint kind, jobject stream)
-{
-    // This function is no longer supported as of CUDA 5.0.
-    // Although the function still exists, it is no longer
-    // possible to pass in a String as an identifier for
-    // the symbol. Calling this function should be prevented
-    // on Java side, with an UnsupportedOperationException
-    return JCUDA_INTERNAL_ERROR;
-    /*
-    if (symbol == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'symbol' is null for cudaMemcpyToSymbolAsync");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (src == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'src' is null for cudaMemcpyToSymbolAsync");
-        return JCUDA_INTERNAL_ERROR;
-    }
-
-    Logger::log(LOG_TRACE, "Executing cudaMemcpyToSymbolAsync\n");
-
-    char *nativeSymbol = convertString(env, symbol);
-
-    PointerData *srcPointerData = initPointerData(env, src);
-    if (srcPointerData == NULL)
-    {
-        return JCUDA_INTERNAL_ERROR;
-    }
-
-    cudaStream_t nativeStream = (cudaStream_t)getNativePointerValue(env, stream);
-
-    int result = cudaMemcpyToSymbolAsync(nativeSymbol, (void*)srcPointerData->getPointer(env), (size_t)count, (size_t)offset, (cudaMemcpyKind)kind, nativeStream);
-
-    if (!releasePointerData(env, srcPointerData, JNI_ABORT)) return JCUDA_INTERNAL_ERROR;
-    delete[] nativeSymbol;
-
-    return result;
-    */
-}
-
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaMemcpyFromSymbolAsyncNative
- * Signature: (Ljcuda/Pointer;Ljava/lang/String;JJILjcuda/runtime/cudaStream_t;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemcpyFromSymbolAsyncNative
-  (JNIEnv *env, jclass cls, jobject dst, jstring symbol, jlong count, jlong offset, jint kind, jobject stream)
-{
-    // This function is no longer supported as of CUDA 5.0.
-    // Although the function still exists, it is no longer
-    // possible to pass in a String as an identifier for
-    // the symbol. Calling this function should be prevented
-    // on Java side, with an UnsupportedOperationException
-    return JCUDA_INTERNAL_ERROR;
-    /*
-    if (dst == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'dst' is null for cudaMemcpyFromSymbolAsync");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (symbol == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'symbol' is null for cudaMemcpyFromSymbolAsync");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    Logger::log(LOG_TRACE, "Executing cudaMemcpyFromSymbolAsync\n");
-
-    void *nativeDst = getPointer(env, dst);
-    char *nativeSymbol = convertString(env, symbol);
-
-    cudaStream_t nativeStream = (cudaStream_t)getNativePointerValue(env, stream);
-
-    int result = cudaMemcpyFromSymbolAsync(nativeDst, nativeSymbol, (size_t)count, (size_t)offset, (cudaMemcpyKind)kind, nativeStream);
-    delete[] nativeSymbol;
-    return result;
-    */
-}
 
 
 
@@ -4374,82 +4262,59 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaThreadGetLimitNative
     return result;
 }
 
-
-
-
-
 /*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaGetSymbolAddressNative
- * Signature: (Ljcuda/Pointer;Ljava/lang/String;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGetSymbolAddressNative
-  (JNIEnv *env, jclass cls, jobject devPtr, jstring symbol)
+* Class:     jcuda_runtime_JCuda
+* Method:    cudaMemPrefetchAsyncNative
+* Signature: (Ljcuda/Pointer;JILjcuda/runtime/cudaStream_t;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemPrefetchAsyncNative
+(JNIEnv *env, jclass cls, jobject devPtr, jlong count, jint dstDevice, jobject stream)
 {
-    // This function is no longer supported as of CUDA 5.0.
-    // Although the function still exists, it is no longer
-    // possible to pass in a String as an identifier for
-    // the symbol. Calling this function should be prevented
-    // on Java side, with an UnsupportedOperationException
-    return JCUDA_INTERNAL_ERROR;
-    /*
     if (devPtr == NULL)
     {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'devPtr' is null for cudaGetSymbolAddress");
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'devPtr' is null for cudaMemPrefetchAsync");
         return JCUDA_INTERNAL_ERROR;
     }
-    if (symbol == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'symbol' is null for cudaGetSymbolAddress");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    Logger::log(LOG_TRACE, "Executing cudaGetSymbolAddress\n");
+    Logger::log(LOG_TRACE, "Executing cudaMemPrefetchAsync\n");
 
-    char *nativeSymbol = convertString(env, symbol);
-    void *nativeDevPtr;
+    void *nativeDevPtr = getPointer(env, devPtr);
+    long nativeCount = (long)count;
+    int nativeDstDevice = (int)dstDevice;
+    cudaStream_t nativeStream = (cudaStream_t)getNativePointerValue(env, stream);
 
-    int result = cudaGetSymbolAddress(&nativeDevPtr, nativeSymbol);
-    setPointer(env, devPtr, (jlong)nativeDevPtr);
-    delete[] nativeSymbol;
+    int result = cudaMemPrefetchAsync(nativeDevPtr, nativeCount, nativeDstDevice, nativeStream);
+
     return result;
-    */
 }
 
 /*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaGetSymbolSizeNative
- * Signature: ([JLjava/lang/String;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGetSymbolSizeNative
-  (JNIEnv *env, jclass cls, jlongArray size, jstring symbol)
+* Class:     jcuda_runtime_JCuda
+* Method:    cudaMemAdviseNative
+* Signature: (Ljcuda/Pointer;JII)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemAdviseNative
+(JNIEnv *env, jclass cls, jobject devPtr, jlong count, jint advice, jint device)
 {
-    // This function is no longer supported as of CUDA 5.0.
-    // Although the function still exists, it is no longer
-    // possible to pass in a String as an identifier for
-    // the symbol. Calling this function should be prevented
-    // on Java side, with an UnsupportedOperationException
-    return JCUDA_INTERNAL_ERROR;
-    /*
-    if (size == NULL)
+    if (devPtr == NULL)
     {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'size' is null for cudaGetSymbolSize");
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'devPtr' is null for cudaMemAdvise");
         return JCUDA_INTERNAL_ERROR;
     }
-    if (symbol == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'symbol' is null for cudaGetSymbolSize");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    Logger::log(LOG_TRACE, "Executing cudaGetSymbolSize\n");
+    Logger::log(LOG_TRACE, "Executing cudaMemAdvise\n");
 
-    size_t nativeSize;
-    char *nativeSymbol = convertString(env, symbol);
-    int result = cudaGetSymbolSize(&nativeSize, nativeSymbol);
-    if (!set(env, size, 0, (long)nativeSize)) return JCUDA_INTERNAL_ERROR;
-    delete[] nativeSymbol;
+    void *nativeDevPtr = getPointer(env, devPtr);
+    long nativeCount = (long)count;
+    cudaMemoryAdvise nativeAdvice = (cudaMemoryAdvise)advice;
+    int nativeDevice = (int)device;
+
+    int result = cudaMemAdvise(nativeDevPtr, nativeCount, nativeAdvice, nativeDevice);
+
     return result;
-    */
 }
+
+
+
+
 
 
 /*
@@ -4649,37 +4514,6 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGetTextureAlignmentOffsetNat
     return result;
 }
 
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaGetTextureReferenceNative
- * Signature: (Ljcuda/runtime/textureReference;Ljava/lang/String;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGetTextureReferenceNative
-  (JNIEnv *env, jclass cls, jobject texref, jstring symbol)
-{
-    // This function is no longer supported as of CUDA 5.0.
-    // Although the function still exists, it is no longer
-    // possible to pass in a String as an identifier for
-    // the symbol. Calling this function should be prevented
-    // on Java side, with an UnsupportedOperationException
-    return JCUDA_INTERNAL_ERROR;
-    /*
-    if (texref == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'texref' is null for cudaGetTextureReference");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    Logger::log(LOG_TRACE, "Executing cudaGetTextureReference\n");
-
-    textureReference *nativeTexref;
-    char *nativeSymbol = convertString(env, symbol);
-    int result = cudaGetTextureReference((const textureReference**)&nativeTexref, nativeSymbol);
-    setTextureReference(env, texref, *nativeTexref);
-    delete[] nativeSymbol;
-    return result;
-    */
-}
-
 
 
 /*
@@ -4712,38 +4546,6 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaBindSurfaceToArrayNative
     cudaChannelFormatDesc nativeDesc = getCudaChannelFormatDesc(env, desc);
     int result = cudaBindSurfaceToArray(&nativeSurfref, nativeArray, &nativeDesc);
     return result;
-}
-
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaGetSurfaceReferenceNative
- * Signature: (Ljcuda/runtime/surfaceReference;Ljava/lang/String;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGetSurfaceReferenceNative
-  (JNIEnv *env, jclass cls, jobject surfref, jstring symbol)
-{
-    // This function is no longer supported as of CUDA 5.0.
-    // Although the function still exists, it is no longer
-    // possible to pass in a String as an identifier for
-    // the symbol. Calling this function should be prevented
-    // on Java side, with an UnsupportedOperationException
-    return JCUDA_INTERNAL_ERROR;
-    /*
-    if (surfref == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'surfref' is null for cudaGetSurfaceReference");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    Logger::log(LOG_TRACE, "Executing cudaGetSurfaceReference\n");
-
-    surfaceReference *nativeSurfref;
-    char *nativeSymbol = convertString(env, symbol);
-    int result = cudaGetSurfaceReference((const surfaceReference**)&nativeSurfref, nativeSymbol);
-    setSurfaceReference(env, surfref, *nativeSurfref);
-    delete[] nativeSymbol;
-    return result;
-    */
 }
 
 
@@ -5034,74 +4836,6 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaSetupArgumentNative
 
 
 
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaFuncGetAttributesNative
- * Signature: (Ljcuda/runtime/cudaFuncAttributes;Ljava/lang/String;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaFuncGetAttributesNative
-  (JNIEnv *env, jclass cls, jobject attr, jstring func)
-{
-    // This function is no longer supported as of CUDA 5.0.
-    // Although the function still exists, it is no longer
-    // possible to pass in a String as an identifier for
-    // the symbol. Calling this function should be prevented
-    // on Java side, with an UnsupportedOperationException
-    return JCUDA_INTERNAL_ERROR;
-    /*
-    if (attr == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'attr' is null for cudaFuncGetAttributesNative");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (func == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'func' is null for cudaFuncGetAttributesNative");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    Logger::log(LOG_TRACE, "Executing cudaFuncGetAttributesNative\n");
-
-    char *nativeFunc = convertString(env, func);
-    cudaFuncAttributes nativeAttr;
-    int result = cudaFuncGetAttributes(&nativeAttr, nativeFunc);
-    delete[] nativeFunc;
-    setCudaFuncAttributes(env, attr, nativeAttr);
-    return result;
-    */
-}
-
-
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaLaunchNative
- * Signature: (Ljava/lang/String;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaLaunchNative
-  (JNIEnv *env, jclass cls, jstring symbol)
-{
-    // This function is no longer supported as of CUDA 5.0.
-    // Although the function still exists, it is no longer
-    // possible to pass in a String as an identifier for
-    // the symbol. Calling this function should be prevented
-    // on Java side, with an UnsupportedOperationException
-    return JCUDA_INTERNAL_ERROR;
-    /*
-    if (symbol == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'symbol' is null for cudaLaunch");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    Logger::log(LOG_TRACE, "Executing cudaLaunch\n");
-
-    char *nativeSymbol = convertString(env, symbol);
-    int result = cudaLaunch(nativeSymbol);
-    delete[] nativeSymbol;
-    return result;
-    */
-
-}
-
 
 /*
  * Class:     jcuda_runtime_JCuda
@@ -5257,21 +4991,6 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGLUnmapBufferObjectAsyncNati
 }
 
 
-
-
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaGLRegisterBufferObjectNative
- * Signature: (I)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGLRegisterBufferObjectNative
-  (JNIEnv *env, jclass cls, jint bufObj)
-{
-    Logger::log(LOG_TRACE, "Executing cudaGLRegisterBufferObject\n");
-
-    return cudaGLRegisterBufferObject((GLuint)bufObj);
-}
 
 
 /*

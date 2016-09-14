@@ -283,6 +283,54 @@ public class JNvrtc
     }
     private static native int nvrtcGetProgramLogNative(nvrtcProgram prog, String log[]);
 
-    
+
+    /**
+     * Notes the given name expression denoting a __global__ function or
+     * function template instantiation.<br>
+     * <br>
+     * The identical name expression string must be provided on a subsequent
+     * call to nvrtcGetLoweredName to extract the lowered name.
+     *
+     * @param prog CUDA Runtime Compilation program.
+     * @param name_expression constant expression denoting a __global__
+     * function or function template instantiation.
+     * @return NVRTC_SUCCESS, NVRTC_ERROR_NO_NAME_EXPRESSIONS_AFTER_COMPILATION
+     *
+     * @see #nvrtcGetLoweredName
+     */
+    public static int nvrtcAddNameExpression(nvrtcProgram prog, String name_expression)
+    {
+        return checkResult(nvrtcAddNameExpressionNative(prog, name_expression));
+    }
+    private static native int nvrtcAddNameExpressionNative(nvrtcProgram prog, String name_expression);
+
+    /**
+     * Extracts the lowered (mangled) name for a __global__ function or
+     * function template instantiation, and updates *lowered_name to point
+     * to it. The memory containing the name is released when the NVRTC
+     * program is destroyed by nvrtcDestroyProgram.<br>
+     * <br>
+     * The identical name expression must have been previously
+     * provided to nvrtcAddNameExpression.
+     *
+     * @param prog CUDA Runtime Compilation program.
+     * @param name_expression constant expression denoting a __global__
+     * function or function template instantiation.
+     * @param lowered_name initialized by the function to point to a
+     * C string containing the lowered (mangled) name corresponding
+     * to the provided name expression.
+     * @return NVRTC_SUCCESS, NVRTC_ERROR_NO_LOWERED_NAMES_BEFORE_COMPILATION,
+     * NVRTC_ERROR_NAME_EXPRESSION_NOT_VALID
+     *
+     * @see #nvrtcAddNameExpression
+     */
+    public static int nvrtcGetLoweredName(nvrtcProgram prog, String name_expression, String lowered_name[])
+    {
+        return checkResult(nvrtcGetLoweredNameNative(prog, name_expression, lowered_name));
+    }
+    private static native int nvrtcGetLoweredNameNative(nvrtcProgram prog, String name_expression, String lowered_name[]);
+
+
+
 }
 
