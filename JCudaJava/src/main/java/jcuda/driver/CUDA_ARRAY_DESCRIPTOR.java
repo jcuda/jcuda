@@ -27,6 +27,8 @@
 
 package jcuda.driver;
 
+import java.util.Objects;
+
 /**
  * Java port of a CUDA_ARRAY_DESCRIPTOR.<br />
  * <br />
@@ -81,5 +83,24 @@ public class CUDA_ARRAY_DESCRIPTOR
             "CUarray_format_Format="+Format+","+
             "NumChannels="+NumChannels+"]";
     }
-
+    
+    /** CAUTION: hashCode is mutable. */
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(Width, Height, Format, NumChannels);
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (o != null && o instanceof CUDA_ARRAY_DESCRIPTOR) {
+            CUDA_ARRAY_DESCRIPTOR other = (CUDA_ARRAY_DESCRIPTOR) o;
+            return Width == o.Width
+                && Height == o.Height
+                && Format == o.Format
+                && NumChannels == o.NumChannels;
+        } else {
+            return false;
+        }
+        }
+    }
 }
