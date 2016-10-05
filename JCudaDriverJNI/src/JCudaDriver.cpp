@@ -2708,7 +2708,17 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemAllocManagedNative
 
     CUdeviceptr nativeDptr;
     int result = cuMemAllocManaged(&nativeDptr, (size_t)bytesize, (unsigned int)flags);
-    setPointer(env, dptr, (jlong)nativeDptr);
+    if (result == CUDA_SUCCESS)
+    {
+        if (flags == CU_MEM_ATTACH_HOST)
+        {
+            jobject object = env->NewDirectByteBuffer((void*)nativeDptr, bytesize);
+            env->SetObjectField(dptr, Pointer_buffer, object);
+            env->SetObjectField(dptr, Pointer_pointers, NULL);
+            env->SetLongField(dptr, Pointer_byteOffset, 0);
+        }
+        env->SetLongField(dptr, NativePointerObject_nativePointer, (jlong)nativeDptr);
+    }
     return result;
 }
 
@@ -6954,11 +6964,13 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamAddCallbackNative
 JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamAttachMemAsyncNative
   (JNIEnv *env, jclass cls, jobject hStream, jobject dptr, jlong length, jint flags)
 {
+    /* May be null
     if (hStream == NULL)
     {
         ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hStream' is null for cuStreamAttachMemAsync");
         return JCUDA_INTERNAL_ERROR;
     }
+    */
     if (dptr == NULL)
     {
         ThrowByName(env, "java/lang/NullPointerException", "Parameter 'dptr' is null for cuStreamAttachMemAsync");
