@@ -3048,7 +3048,136 @@ public class JCudaDriver
     }
     private static native int cuDeviceGetByPCIBusIdNative(CUdevice dev, String pciBusId);
 
-
+    /**
+     * <pre>
+     * CUresult cuMemAllocManaged (
+     *      CUdeviceptr* dptr,
+     *      size_t bytesize,
+     *      unsigned int  flags )
+     * </pre>
+     * 
+     * <div>Allocates memory that will be automatically managed by the Unified
+     * Memory system. </div> <div>
+     * <h6>Description</h6>
+     * <p>
+     * Allocates <tt>bytesize</tt> bytes of managed memory on the device and
+     * returns in <tt>*dptr</tt> a pointer to the allocated memory. If the
+     * device doesn't support allocating managed memory,
+     * CUDA_ERROR_NOT_SUPPORTED is returned. Support for managed memory can be
+     * queried using the device attribute CU_DEVICE_ATTRIBUTE_MANAGED_MEMORY.
+     * The allocated memory is suitably aligned for any kind of variable. The
+     * memory is not cleared. If <tt>bytesize</tt> is 0, cuMemAllocManaged
+     * returns CUDA_ERROR_INVALID_VALUE. The pointer is valid on the CPU and on
+     * all GPUs in the system that support managed memory. All accesses to this
+     * pointer must obey the Unified Memory programming model.
+     * </p>
+     * <p>
+     * <tt>flags</tt> specifies the default stream association for this
+     * allocation. <tt>flags</tt> must be one of CU_MEM_ATTACH_GLOBAL or
+     * CU_MEM_ATTACH_HOST. If CU_MEM_ATTACH_GLOBAL is specified, then this
+     * memory is accessible from any stream on any device. If CU_MEM_ATTACH_HOST
+     * is specified, then the allocation is created with initial visibility
+     * restricted to host access only; an explicit call to
+     * cuStreamAttachMemAsync will be required to enable access on the device.
+     * </p>
+     * <p>
+     * If the association is later changed via cuStreamAttachMemAsync to a
+     * single stream, the default association as specifed during
+     * cuMemAllocManaged is restored when that stream is destroyed. For
+     * __managed__ variables, the default association is always
+     * CU_MEM_ATTACH_GLOBAL. Note that destroying a stream is an asynchronous
+     * operation, and as a result, the change to default association won't
+     * happen until all work in the stream has completed.
+     * </p>
+     * <p>
+     * Memory allocated with cuMemAllocManaged should be released with
+     * cuMemFree.
+     * </p>
+     * <p>
+     * On a multi-GPU system with peer-to-peer support, where multiple GPUs
+     * support managed memory, the physical storage is created on the GPU which
+     * is active at the time cuMemAllocManaged is called. All other GPUs will
+     * reference the data at reduced bandwidth via peer mappings over the PCIe
+     * bus. The Unified Memory management system does not migrate memory between
+     * GPUs.
+     * </p>
+     * <p>
+     * On a multi-GPU system where multiple GPUs support managed memory, but not
+     * all pairs of such GPUs have peer-to-peer support between them, the
+     * physical storage is created in 'zero-copy' or system memory. All GPUs
+     * will reference the data at reduced bandwidth over the PCIe bus. In these
+     * circumstances, use of the environment variable, CUDA_VISIBLE_DEVICES, is
+     * recommended to restrict CUDA to only use those GPUs that have
+     * peer-to-peer support. Alternatively, users can also set
+     * CUDA_MANAGED_FORCE_DEVICE_ALLOC to a non-zero value to force the driver
+     * to always use device memory for physical storage. When this environment
+     * variable is set to a non-zero value, all contexts created in that process
+     * on devices that support managed memory have to be peer-to-peer compatible
+     * with each other. Context creation will fail if a context is created on a
+     * device that supports managed memory and is not peer-to-peer compatible
+     * with any of the other managed memory supporting devices on which contexts
+     * were previously created, even if those contexts have been destroyed.
+     * These environment variables are described in the CUDA programming guide
+     * under the "CUDA environment variables" section.
+     * </p>
+     * <div> <span>Note:</span>
+     * <p>
+     * Note that this function may also return error codes from previous,
+     * asynchronous launches.
+     * </p>
+     * </div>
+     * </p>
+     * </div>
+     * 
+     * @param dptr The device pointer
+     * @param bytesize The size in bytes
+     * @param flags The flags
+     * 
+     * @return CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED, 
+     * CUDA_ERROR_NOT_INITIALIZED, CUDA_ERROR_INVALID_CONTEXT, 
+     * CUDA_ERROR_NOT_SUPPORTED, CUDA_ERROR_INVALID_VALUE, 
+     * CUDA_ERROR_OUT_OF_MEMORY
+     * 
+     * @see JCudaDriver#cuArray3DCreate
+     * @see JCudaDriver#cuArray3DGetDescriptor
+     * @see JCudaDriver#cuArrayCreate
+     * @see JCudaDriver#cuArrayDestroy
+     * @see JCudaDriver#cuArrayGetDescriptor
+     * @see JCudaDriver#cuMemAllocHost
+     * @see JCudaDriver#cuMemAllocPitch
+     * @see JCudaDriver#cuMemcpy2D
+     * @see JCudaDriver#cuMemcpy2DAsync
+     * @see JCudaDriver#cuMemcpy2DUnaligned
+     * @see JCudaDriver#cuMemcpy3D
+     * @see JCudaDriver#cuMemcpy3DAsync
+     * @see JCudaDriver#cuMemcpyAtoA
+     * @see JCudaDriver#cuMemcpyAtoD
+     * @see JCudaDriver#cuMemcpyAtoH
+     * @see JCudaDriver#cuMemcpyAtoHAsync
+     * @see JCudaDriver#cuMemcpyDtoA
+     * @see JCudaDriver#cuMemcpyDtoD
+     * @see JCudaDriver#cuMemcpyDtoDAsync
+     * @see JCudaDriver#cuMemcpyDtoH
+     * @see JCudaDriver#cuMemcpyDtoHAsync
+     * @see JCudaDriver#cuMemcpyHtoA
+     * @see JCudaDriver#cuMemcpyHtoAAsync
+     * @see JCudaDriver#cuMemcpyHtoD
+     * @see JCudaDriver#cuMemcpyHtoDAsync
+     * @see JCudaDriver#cuMemFree
+     * @see JCudaDriver#cuMemFreeHost
+     * @see JCudaDriver#cuMemGetAddressRange
+     * @see JCudaDriver#cuMemGetInfo
+     * @see JCudaDriver#cuMemHostAlloc
+     * @see JCudaDriver#cuMemHostGetDevicePointer
+     * @see JCudaDriver#cuMemsetD2D8
+     * @see JCudaDriver#cuMemsetD2D16
+     * @see JCudaDriver#cuMemsetD2D32
+     * @see JCudaDriver#cuMemsetD8
+     * @see JCudaDriver#cuMemsetD16
+     * @see JCudaDriver#cuMemsetD32
+     * @see JCudaDriver#cuDeviceGetAttribute
+     * @see JCudaDriver#cuStreamAttachMemAsync
+     */
     public static int cuMemAllocManaged(CUdeviceptr dptr, long bytesize, int flags)
     {
         return checkResult(cuMemAllocManagedNative(dptr, bytesize, flags));

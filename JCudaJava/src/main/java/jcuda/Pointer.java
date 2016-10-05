@@ -519,18 +519,21 @@ public class Pointer extends NativePointerObject
 
     /**
      * Returns a ByteBuffer that corresponds to the specified
-     * segment of the memory that this pointer points to.<br />
-     * <br />
-     * This function may only be applied to pointers that
-     * have been set to point to a region of host memory
-     * using either of the methods
-     * {@link jcuda.driver.JCudaDriver#cuMemAllocHost(Pointer, long)},
-     * {@link jcuda.driver.JCudaDriver#cuMemHostAlloc(Pointer, long, int)},
-     * {@link jcuda.runtime.JCuda#cudaMallocHost(Pointer, long)} or
-     * {@link jcuda.runtime.JCuda#cudaHostAlloc(Pointer, long, int)},
-     * or pointers that have been created with
-     * {@link Pointer#to(byte[])}.<br />
-     * <br />
+     * segment of the memory that this pointer points to.<br>
+     * <br>
+     * This function may only be applied to pointers that have been set to 
+     * point to a region of host- or unified memory using one of these 
+     * methods:
+     * <ul>
+     *   <li>{@link jcuda.driver.JCudaDriver#cuMemAllocHost}</li>
+     *   <li>{@link jcuda.driver.JCudaDriver#cuMemHostAlloc}</li>
+     *   <li>{@link jcuda.driver.JCudaDriver#cuMemAllocManaged}</li>
+     *   <li>{@link jcuda.runtime.JCuda#cudaMallocHost}</li>
+     *   <li>{@link jcuda.runtime.JCuda#cudaHostAlloc}</li>
+     *   <li>{@link jcuda.runtime.JCuda#cudaMallocManaged}</li>
+     *   <li>{@link Pointer#to(byte[])}</li>
+     * </ul>
+     * <br>
      * For other pointer types, <code>null</code> is returned.
      *
      * @param byteOffset The offset in bytes

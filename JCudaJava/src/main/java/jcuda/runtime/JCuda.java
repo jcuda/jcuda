@@ -3846,10 +3846,102 @@ public class JCuda
     private static native int cudaHostGetDevicePointerNative(Pointer pDevice, Pointer pHost, int flags);
 
 
-
+    /**
+     * <pre>
+     * __host__ cudaError_t cudaMallocManaged (
+     *      void** devPtr,
+     *      size_t size,
+     *      unsigned int  flags = cudaMemAttachGlobal )
+     * </pre>
+     * 
+     * <div>Allocates memory that will be automatically managed by the Unified
+     * Memory system. </div> <div>
+     * <h6>Description</h6>
+     * <p>
+     * Allocates <tt>size</tt> bytes of managed memory on the device and returns
+     * in <tt>*devPtr</tt> a pointer to the allocated memory. If the device
+     * doesn't support allocating managed memory, cudaErrorNotSupported is
+     * returned. Support for managed memory can be queried using the device
+     * attribute cudaDevAttrManagedMemory. The allocated memory is suitably
+     * aligned for any kind of variable. The memory is not cleared. If
+     * <tt>size</tt> is 0, cudaMallocManaged returns cudaErrorInvalidValue. The
+     * pointer is valid on the CPU and on all GPUs in the system that support
+     * managed memory. All accesses to this pointer must obey the Unified Memory
+     * programming model.
+     * </p>
+     * <p>
+     * <tt>flags</tt> specifies the default stream association for this
+     * allocation. <tt>flags</tt> must be one of cudaMemAttachGlobal or
+     * cudaMemAttachHost. The default value for <tt>flags</tt> is
+     * cudaMemAttachGlobal. If cudaMemAttachGlobal is specified, then this
+     * memory is accessible from any stream on any device. If cudaMemAttachHost
+     * is specified, then the allocation is created with initial visibility
+     * restricted to host access only; an explicit call to
+     * cudaStreamAttachMemAsync will be required to enable access on the device.
+     * </p>
+     * <p>
+     * If the association is later changed via cudaStreamAttachMemAsync to a
+     * single stream, the default association, as specifed during
+     * cudaMallocManaged, is restored when that stream is destroyed. For
+     * __managed__ variables, the default association is always
+     * cudaMemAttachGlobal. Note that destroying a stream is an asynchronous
+     * operation, and as a result, the change to default association won't
+     * happen until all work in the stream has completed.
+     * </p>
+     * <p>
+     * Memory allocated with cudaMallocManaged should be released with cudaFree.
+     * </p>
+     * <p>
+     * On a multi-GPU system with peer-to-peer support, where multiple GPUs
+     * support managed memory, the physical storage is created on the GPU which
+     * is active at the time cudaMallocManaged is called. All other GPUs will
+     * reference the data at reduced bandwidth via peer mappings over the PCIe
+     * bus. The Unified Memory management system does not migrate memory between
+     * GPUs.
+     * </p>
+     * <p>
+     * On a multi-GPU system where multiple GPUs support managed memory, but not
+     * all pairs of such GPUs have peer-to-peer support between them, the
+     * physical storage is created in 'zero-copy' or system memory. All GPUs
+     * will reference the data at reduced bandwidth over the PCIe bus. In these
+     * circumstances, use of the environment variable, CUDA_VISIBLE_DEVICES, is
+     * recommended to restrict CUDA to only use those GPUs that have
+     * peer-to-peer support. Alternatively, users can also set
+     * CUDA_MANAGED_FORCE_DEVICE_ALLOC to a non-zero value to force the driver
+     * to always use device memory for physical storage. When this environment
+     * variable is set to a non-zero value, all devices used in that process
+     * that support managed memory have to be peer-to-peer compatible with each
+     * other. The error cudaErrorInvalidDevice will be returned if a device that
+     * supports managed memory is used and it is not peer-to-peer compatible
+     * with any of the other managed memory supporting devices that were
+     * previously used in that process, even if cudaDeviceReset has been called
+     * on those devices. These environment variables are described in the CUDA
+     * programming guide under the "CUDA environment variables" section.
+     * </p>
+     * </div>
+     * 
+     * @param devPtr The device pointer
+     * @param size The size in bytes
+     * @param flags The flags
+     * 
+     * @return cudaSuccess, cudaErrorMemoryAllocationcudaErrorNotSupported,
+     * cudaErrorInvalidValue
+     * 
+     * @see JCuda#cudaMallocPitch
+     * @see JCuda#cudaFree
+     * @see JCuda#cudaMallocArray
+     * @see JCuda#cudaFreeArray
+     * @see JCuda#cudaMalloc3D
+     * @see JCuda#cudaMalloc3DArray
+     * @see JCuda#cudaMallocHost
+     * @see JCuda#cudaFreeHost
+     * @see JCuda#cudaHostAlloc
+     * @see JCuda#cudaDeviceGetAttribute
+     * @see JCuda#cudaStreamAttachMemAsync
+     */
     public static int cudaMallocManaged(Pointer devPtr, long size, int flags)
     {
-      return checkResult(cudaMallocManagedNative(devPtr, size, flags));
+        return checkResult(cudaMallocManagedNative(devPtr, size, flags));
     }
     private static native int cudaMallocManagedNative(Pointer devPtr, long size, int flags);
 
