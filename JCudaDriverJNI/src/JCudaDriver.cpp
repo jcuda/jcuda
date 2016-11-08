@@ -6573,6 +6573,56 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuEventElapsedTimeNative
     return result;
 }
 
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuStreamWaitValue32Native
+* Signature: (Ljcuda/driver/CUstream;Ljcuda/driver/CUdeviceptr;II)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamWaitValue32Native
+(JNIEnv *env, jclass cls, jobject stream, jobject addr, jint value, jint flags)
+{
+    if (addr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'addr' is null for cuStreamWaitValue32");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuStreamWaitValue32\n");
+
+    CUstream nativeStream = (CUstream)getNativePointerValue(env, stream);
+    CUdeviceptr nativeAddr = (CUdeviceptr)getPointer(env, addr);
+    cuuint32_t nativeValue = (cuuint32_t)value;
+    unsigned int nativeFlags = (unsigned int)flags;
+
+    int result = cuStreamWaitValue32(nativeStream, nativeAddr, nativeValue, nativeFlags);
+
+    return result;
+}
+
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuStreamWriteValue32Native
+* Signature: (Ljcuda/driver/CUstream;Ljcuda/driver/CUdeviceptr;II)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamWriteValue32Native
+(JNIEnv *env, jclass cls, jobject stream, jobject addr, jint value, jint flags)
+{
+    if (addr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'addr' is null for cuStreamWriteValue32");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuStreamWriteValue32\n");
+
+    CUstream nativeStream = (CUstream)getNativePointerValue(env, stream);
+    CUdeviceptr nativeAddr = (CUdeviceptr)getPointer(env, addr);
+    cuuint32_t nativeValue = (cuuint32_t)value;
+    unsigned int nativeFlags = (unsigned int)flags;
+
+    int result = cuStreamWriteValue32(nativeStream, nativeAddr, nativeValue, nativeFlags);
+
+    return result;
+}
 
 
 /*
@@ -6699,6 +6749,107 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemAdviseNative
     return result;
 }
 
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuMemRangeGetAttributeNative
+* Signature: (Ljcuda/Pointer;JILjcuda/driver/CUdeviceptr;J)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemRangeGetAttributeNative
+(JNIEnv *env, jclass cls, jobject data, jlong dataSize, jint attribute, jobject devPtr, jlong count)
+{
+    if (data == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'data' is null for cuMemRangeGetAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (devPtr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'devPtr' is null for cuMemRangeGetAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuMemRangeGetAttribute\n");
+
+
+    PointerData *dataPointerData = initPointerData(env, data);
+    if (dataPointerData == NULL)
+    {
+        return JCUDA_INTERNAL_ERROR;
+    }
+    void *nativeData = (void*)dataPointerData->getPointer(env);
+    size_t nativeDataSize = (size_t)dataSize;
+    CUmem_range_attribute nativeAttribute = (CUmem_range_attribute)attribute;
+    CUdeviceptr nativeDevPtr = (CUdeviceptr)getPointer(env, devPtr);
+    size_t nativeCount = (size_t)count;
+
+    int result = cuMemRangeGetAttribute(nativeData, nativeDataSize, nativeAttribute, nativeDevPtr, nativeCount);
+
+    if (!releasePointerData(env, dataPointerData, 0)) return JCUDA_INTERNAL_ERROR;
+
+    return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuMemRangeGetAttributesNative
+* Signature: ([Ljcuda/Pointer;[J[IJLjcuda/driver/CUdeviceptr;J)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemRangeGetAttributesNative
+(JNIEnv *env, jclass cls, jobjectArray data, jlongArray dataSizes, jintArray attributes, jlong numAttributes, jobject devPtr, jlong count)
+{
+    if (data == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'data' is null for cuMemRangeGetAttributes");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (dataSizes == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'dataSizes' is null for cuMemRangeGetAttributes");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (attributes == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'attributes' is null for cuMemRangeGetAttributes");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (devPtr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'devPtr' is null for cuMemRangeGetAttributes");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuMemRangeGetAttributes\n");
+
+    PointerData **dataPointerDatas = new PointerData*[numAttributes];
+    void **nativeDatas = new void*[numAttributes];
+    for (int i = 0; i < numAttributes; i++)
+    {
+        dataPointerDatas[i] = initPointerData(env, data);
+        if (dataPointerDatas[i] == NULL)
+        {
+            return JCUDA_INTERNAL_ERROR;
+        }
+        nativeDatas[i] = (void*)dataPointerDatas[i]->getPointer(env);
+    }
+
+    size_t *nativeDataSizes = getArrayContentsGeneric<jlongArray, jlong, size_t>(env, dataSizes);
+    CUmem_range_attribute *nativeAttributes = getArrayContentsGeneric<jintArray, jint, CUmem_range_attribute>(env, attributes);
+    CUdeviceptr nativeDevPtr = (CUdeviceptr)getPointer(env, devPtr);
+    size_t nativeCount = (size_t)count;
+
+    int result = cuMemRangeGetAttributes(nativeDatas, nativeDataSizes, nativeAttributes, (size_t)numAttributes, nativeDevPtr, nativeCount);
+
+    for (int i = 0; i < numAttributes; i++)
+    {
+        if (!releasePointerData(env, dataPointerDatas[i], 0)) return JCUDA_INTERNAL_ERROR;
+    }
+    delete[] dataPointerDatas;
+    delete[] nativeDatas;
+    delete[] nativeDataSizes;
+    delete[] nativeAttributes;
+
+    return result;
+
+}
+
 
 /*
  * Class:     jcuda_driver_JCudaDriver
@@ -6731,37 +6882,6 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuPointerSetAttributeNative
     int result = cuPointerSetAttribute(valuePointer, (CUpointer_attribute)attribute, nativePtr);
 
     if (!releasePointerData(env, valuePointerData, 0)) return JCUDA_INTERNAL_ERROR;
-    return result;
-}
-
-
-CUpointer_attribute* getCUpointerAttributes(JNIEnv *env, jintArray ja, int* length)
-{
-    if (ja == NULL)
-    {
-        return NULL;
-    }
-    jsize len = env->GetArrayLength(ja);
-    if (length != NULL)
-    {
-        *length = (int)len;
-    }
-    jint *a = (jint*)env->GetPrimitiveArrayCritical(ja, NULL);
-    if (a == NULL)
-    {
-        return NULL;
-    }
-    CUpointer_attribute *result = new CUpointer_attribute[len];
-    if (result == NULL)
-    {
-        env->ReleasePrimitiveArrayCritical(ja, a, JNI_ABORT);
-        return NULL;
-    }
-    for (int i = 0; i<len; i++)
-    {
-        result[i] = (CUpointer_attribute)a[i];
-    }
-    env->ReleasePrimitiveArrayCritical(ja, a, JNI_ABORT);
     return result;
 }
 
@@ -6800,7 +6920,7 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuPointerGetAttributesNativ
 
     void **dataPointer = (void**)dataPointerData->getPointer(env);
     int actualNumAttributes = 0;
-    CUpointer_attribute* nativeAttributes = getCUpointerAttributes(env, attributes, &actualNumAttributes);
+    CUpointer_attribute* nativeAttributes = getArrayContentsGeneric<jintArray, jint, CUpointer_attribute>(env, attributes, &actualNumAttributes);
     unsigned int usedNumAttributes = numAttributes < actualNumAttributes ? numAttributes : actualNumAttributes;
     int result = cuPointerGetAttributes(usedNumAttributes, nativeAttributes, dataPointer, nativePtr);
     delete[] nativeAttributes;

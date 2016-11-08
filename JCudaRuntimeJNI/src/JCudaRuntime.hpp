@@ -140,6 +140,8 @@ extern "C" {
 #define jcuda_runtime_JCuda_cudaOccupancyDisableCachingOverride 1L
 #undef jcuda_runtime_JCuda_cudaCpuDeviceId
 #define jcuda_runtime_JCuda_cudaCpuDeviceId -1L
+#undef jcuda_runtime_JCuda_cudaInvalidDeviceId
+#define jcuda_runtime_JCuda_cudaInvalidDeviceId -2L
     /*
     * Class:     jcuda_runtime_JCuda
     * Method:    setLogLevel
@@ -971,6 +973,22 @@ extern "C" {
     */
     JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemAdviseNative
         (JNIEnv *, jclass, jobject, jlong, jint, jint);
+
+    /*
+    * Class:     jcuda_runtime_JCuda
+    * Method:    cudaMemRangeGetAttributeNative
+    * Signature: (Ljcuda/Pointer;JILjcuda/Pointer;J)I
+    */
+    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemRangeGetAttributeNative
+        (JNIEnv *, jclass, jobject, jlong, jint, jobject, jlong);
+
+    /*
+    * Class:     jcuda_runtime_JCuda
+    * Method:    cudaMemRangeGetAttributesNative
+    * Signature: ([Ljcuda/Pointer;[J[IJLjcuda/Pointer;J)I
+    */
+    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemRangeGetAttributesNative
+        (JNIEnv *, jclass, jobjectArray, jlongArray, jintArray, jlong, jobject, jlong);
 
     /*
     * Class:     jcuda_runtime_JCuda

@@ -474,6 +474,15 @@ public class cudaDeviceAttr
      */
     public static final int cudaDevAttrConcurrentManagedAccess        = 89;
 
+    /**
+     * Device supports Compute Preemption 
+     */
+    public static final int cudaDevAttrComputePreemptionSupported     = 90;
+
+    /**
+     * Device can access host registered memory at the same virtual address as the CPU 
+     */
+    public static final int cudaDevAttrCanUseHostPointerForRegisteredMem = 91;
 
     /**
      * Returns the String identifying the given cudaDeviceAttr
@@ -573,10 +582,11 @@ public class cudaDeviceAttr
             case cudaDevAttrSingleToDoublePrecisionPerfRatio : return "cudaDevAttrSingleToDoublePrecisionPerfRatio";
             case cudaDevAttrPageableMemoryAccess             : return "cudaDevAttrPageableMemoryAccess";
             case cudaDevAttrConcurrentManagedAccess          : return "cudaDevAttrConcurrentManagedAccess";
+            case cudaDevAttrComputePreemptionSupported       : return "cudaDevAttrComputePreemptionSupported";
+            case cudaDevAttrCanUseHostPointerForRegisteredMem: return "cudaDevAttrCanUseHostPointerForRegisteredMem";
         }
         return "INVALID cudaDeviceAttr: "+n;
     }
-
 
     /**
      * Private constructor to prevent instantiation

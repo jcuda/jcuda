@@ -526,6 +526,11 @@ public class CUdevice_attribute
     public static final int CU_DEVICE_ATTRIBUTE_COMPUTE_PREEMPTION_SUPPORTED = 90;
     
     /**
+     * Device can access host registered memory at the same virtual address as the CPU 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_CAN_USE_HOST_POINTER_FOR_REGISTERED_MEM = 91; 
+    
+    /**
      * Returns the String identifying the given CUdevice_attribute
      *
      * @param n The CUdevice_attribute

@@ -1430,6 +1430,22 @@ extern "C" {
 
     /*
     * Class:     jcuda_driver_JCudaDriver
+    * Method:    cuStreamWaitValue32Native
+    * Signature: (Ljcuda/driver/CUstream;Ljcuda/driver/CUdeviceptr;II)I
+    */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamWaitValue32Native
+        (JNIEnv *, jclass, jobject, jobject, jint, jint);
+
+    /*
+    * Class:     jcuda_driver_JCudaDriver
+    * Method:    cuStreamWriteValue32Native
+    * Signature: (Ljcuda/driver/CUstream;Ljcuda/driver/CUdeviceptr;II)I
+    */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamWriteValue32Native
+        (JNIEnv *, jclass, jobject, jobject, jint, jint);
+
+    /*
+    * Class:     jcuda_driver_JCudaDriver
     * Method:    cuPointerGetAttributeNative
     * Signature: (Ljcuda/Pointer;ILjcuda/driver/CUdeviceptr;)I
     */
@@ -1451,6 +1467,22 @@ extern "C" {
     */
     JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemAdviseNative
         (JNIEnv *, jclass, jobject, jlong, jint, jobject);
+
+    /*
+    * Class:     jcuda_driver_JCudaDriver
+    * Method:    cuMemRangeGetAttributeNative
+    * Signature: (Ljcuda/Pointer;JILjcuda/driver/CUdeviceptr;J)I
+    */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemRangeGetAttributeNative
+        (JNIEnv *, jclass, jobject, jlong, jint, jobject, jlong);
+
+    /*
+    * Class:     jcuda_driver_JCudaDriver
+    * Method:    cuMemRangeGetAttributesNative
+    * Signature: ([Ljcuda/Pointer;[J[IJLjcuda/driver/CUdeviceptr;J)I
+    */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemRangeGetAttributesNative
+        (JNIEnv *, jclass, jobjectArray, jlongArray, jintArray, jlong, jobject, jlong);
 
     /*
     * Class:     jcuda_driver_JCudaDriver

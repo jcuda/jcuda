@@ -50,7 +50,7 @@ public class JCuda
      */
     public static String getJCudaVersion()
     {
-        return "0.8.0RC";
+        return "0.8.0";
     }
     
     /**
@@ -336,6 +336,11 @@ public class JCuda
      * Device id that represents the CPU
      */
     public static final int cudaCpuDeviceId = -1;
+    
+    /**
+     * Device id that represents an invalid device 
+     */
+    public static final int cudaInvalidDeviceId = -2;
 
     /**
      * Private inner class for the constant stream values
@@ -8829,7 +8834,134 @@ public class JCuda
     }
     private static native int cudaMemAdviseNative(Pointer devPtr, long count, int advice, int device);
 
-
+    /**
+     * Query an attribute of a given memory range.<br>
+     * <br>
+     * Query an attribute about the memory range starting at devPtr with a size
+     * of count bytes. The memory range must refer to managed memory allocated
+     * via cudaMallocManaged or declared via __managed__ variables.<br>
+     * <br>
+     * The attribute parameter can take the following values:<br>
+     * <br>
+     * <ul>
+     * <li>
+     * cudaMemRangeAttributeReadMostly: If this attribute is specified, data
+     * will be interpreted as a 32-bit integer, and dataSize must be 4. The
+     * result returned will be 1 if all pages in the given memory range have
+     * read-duplication enabled, or 0 otherwise.
+     * </li>
+     * <li>
+     * cudaMemRangeAttributePreferredLocation: If this attribute is specified,
+     * data will be interpreted as a 32-bit integer, and dataSize must be 4. The
+     * result returned will be a GPU device id if all pages in the memory range
+     * have that GPU as their preferred location, or it will be cudaCpuDeviceId
+     * if all pages in the memory range have the CPU as their preferred
+     * location, or it will be cudaInvalidDeviceId if either all the pages don't
+     * have the same preferred location or some of the pages don't have a
+     * preferred location at all. Note that the actual location of the pages in
+     * the memory range at the time of the query may be different from the
+     * preferred location.
+     * </li>
+     * <li>
+     * cudaMemRangeAttributeAccessedBy: If this attribute is specified, data
+     * will be interpreted as an array of 32-bit integers, and dataSize must be
+     * a non-zero multiple of 4. The result returned will be a list of device
+     * ids that had cudaMemAdviceSetAccessedBy set for that entire memory range.
+     * If any device does not have that advice set for the entire memory range,
+     * that device will not be included. If data is larger than the number of
+     * devices that have that advice set for that memory range,
+     * cudaInvalidDeviceId will be returned in all the extra space provided. For
+     * ex., if dataSize is 12 (i.e. data has 3 elements) and only device 0 has
+     * the advice set, then the result returned will be { 0,
+     * cudaInvalidDeviceId, cudaInvalidDeviceId }. If data is smaller than the
+     * number of devices that have that advice set, then only as many devices
+     * will be returned as can fit in the array. There is no guarantee on which
+     * specific devices will be returned, however.
+     * </li>
+     * <li>
+     * cudaMemRangeAttributeLastPrefetchLocation: If this attribute is
+     * specified, data will be interpreted as a 32-bit integer, and dataSize
+     * must be 4. The result returned will be the last location to which all
+     * pages in the memory range were prefetched explicitly via
+     * cudaMemPrefetchAsync. This will either be a GPU id or cudaCpuDeviceId
+     * depending on whether the last location for prefetch was a GPU or the CPU
+     * respectively. If any page in the memory range was never explicitly
+     * prefetched or if all pages were not prefetched to the same location,
+     * cudaInvalidDeviceId will be returned. Note that this simply returns the
+     * last location that the applicaton requested to prefetch the memory range
+     * to. It gives no indication as to whether the prefetch operation to that
+     * location has completed or even begun.
+     * </li>
+     * </ul>
+     * 
+     * @param data A pointers to a memory location where the result of each
+     *        attribute query will be written to.
+     * @param dataSize Array containing the size of data
+     * @param attribute The {@link cudaMemRangeAttribute} to query
+     * @param devPtr Start of the range to query
+     * @param count Size of the range to query
+     * @return cudaSuccess, cudaErrorInvalidValue
+     * 
+     * @see JCuda#cudaMemRangeGetAttributes
+     * @see JCuda#cudaMemPrefetchAsync
+     * @see JCuda#cudaMemAdvise
+     */
+    public static int cudaMemRangeGetAttribute(Pointer data, long dataSize, int attribute, Pointer devPtr, long count)
+    {
+        return checkResult(cudaMemRangeGetAttributeNative(data, dataSize, attribute, devPtr, count));
+    }
+    private static native int cudaMemRangeGetAttributeNative(Pointer data, long dataSize, int attribute, Pointer devPtr, long count);
+    
+    /**
+     * Query attributes of a given memory range.<br>
+     * <br>
+     * Query attributes of the memory range starting at devPtr with a size of
+     * count bytes. The memory range must refer to managed memory allocated via
+     * cudaMallocManaged or declared via __managed__ variables. The attributes
+     * array will be interpreted to have numAttributes entries. The dataSizes
+     * array will also be interpreted to have numAttributes entries. The results
+     * of the query will be stored in data.<br>
+     * <br>
+     * The list of supported attributes are given below. Please refer to
+     * {@link #cudaMemRangeGetAttribute} for attribute descriptions and 
+     * restrictions.
+     * <ul>
+     * <li>
+     * cudaMemRangeAttributeReadMostly
+     * </li>
+     * <li>
+     * cudaMemRangeAttributePreferredLocation
+     * </li>
+     * <li>
+     * cudaMemRangeAttributeAccessedBy
+     * </li>
+     * <li>
+     * cudaMemRangeAttributeLastPrefetchLocation
+     * </li>
+     * </ul>
+     * 
+     * 
+     * @param data A two-dimensional array containing pointers to memory
+     *        locations where the result of each attribute query will be written
+     *        to.
+     * @param dataSizes Array containing the sizes of each result
+     * @param attributes An array of {@link cudaMemRangeAttribute} to query
+     *        (numAttributes and the number of attributes in this array should
+     *        match)
+     * @param numAttributes Number of attributes to query
+     * @param devPtr Start of the range to query
+     * @param count Size of the range to query
+     * @return cudaSuccess, cudaErrorInvalidValue
+     * 
+     * @see JCuda#cudaMemRangeGetAttribute
+     * @see JCuda#cudaMemAdvisecudaMemPrefetchAsync
+     */
+    public static int cudaMemRangeGetAttributes(Pointer data[], long dataSizes[], int attributes[], long numAttributes, Pointer devPtr, long count)
+    {
+        return checkResult(cudaMemRangeGetAttributesNative(data, dataSizes, attributes, numAttributes, devPtr, count));
+    }
+    private static native int cudaMemRangeGetAttributesNative(Pointer data[], long dataSizes[], int attributes[], long numAttributes, Pointer devPtr, long count);
+    
     /**
      * [C++ API] Binds a memory area to a texture
      *

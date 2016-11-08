@@ -81,7 +81,7 @@ public class CUjitInputType
     }
 
     /**
-     * Private constructor to prevent instantation
+     * Private constructor to prevent instantiation
      */
     private CUjitInputType()
     {

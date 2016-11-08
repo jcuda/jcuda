@@ -1,7 +1,7 @@
 /*
  * JCuda - Java bindings for NVIDIA CUDA driver and runtime API
  *
- * Copyright (c) 2009-2015 Marco Hutter - http://www.jcuda.org
+ * Copyright (c) 2009-2016 Marco Hutter - http://www.jcuda.org
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,47 +27,49 @@
 package jcuda.driver;
 
 /**
- * Caching modes for dlcm
+ * Operations for cuStreamBatchMemOp
  */
-public class CUjit_cacheMode
+public class CUstreamBatchMemOpType
 {
     /**
-     * Compile with no -dlcm flag specified
+     * Represents a ::cuStreamWaitValue32 operation 
      */
-    public static final int CU_JIT_CACHE_OPTION_NONE = 0;
-
+    public static final int CU_STREAM_MEM_OP_WAIT_VALUE_32  = 1;
+    
     /**
-     * Compile with L1 cache disabled
+     * Represents a ::cuStreamWriteValue32 operation 
      */
-    public static final int CU_JIT_CACHE_OPTION_CG = 1;
-
+    public static final int CU_STREAM_MEM_OP_WRITE_VALUE_32 = 2;
+    
     /**
-     * Compile with L1 cache enabled
+     * This has the same effect as ::CU_STREAM_WAIT_VALUE_FLUSH, but as a
+     * standalone operation. 
      */
-    public static final int CU_JIT_CACHE_OPTION_CA = 2;
-
+    public static final int CU_STREAM_MEM_OP_FLUSH_REMOTE_WRITES = 3; 
+    
     /**
-     * Returns the String identifying the given CUjit_cacheMode
+     * Returns the String identifying the given CUstreamBatchMemOpType
      *
-     * @param n The CUjit_cacheMode
-     * @return The String identifying the given CUjit_cacheMode
+     * @param n The CUstreamBatchMemOpType
+     * @return The String identifying the given CUstreamBatchMemOpType
      */
     public static String stringFor(int n)
     {
         switch (n)
         {
-            case CU_JIT_CACHE_OPTION_NONE: return "CU_JIT_CACHE_OPTION_NONE";
-            case CU_JIT_CACHE_OPTION_CG: return "CU_JIT_CACHE_OPTION_CG";
-            case CU_JIT_CACHE_OPTION_CA: return "CU_JIT_CACHE_OPTION_CA";
+            case CU_STREAM_MEM_OP_WAIT_VALUE_32: return "CU_STREAM_MEM_OP_WAIT_VALUE_32";
+            case CU_STREAM_MEM_OP_WRITE_VALUE_32: return "CU_STREAM_MEM_OP_WRITE_VALUE_32";
+            case CU_STREAM_MEM_OP_FLUSH_REMOTE_WRITES: return "CU_STREAM_MEM_OP_FLUSH_REMOTE_WRITES";
         }
-        return "INVALID CUjit_cacheMode: "+n;
+        return "INVALID CUstreamBatchMemOpType: "+n;
     }
 
     /**
      * Private constructor to prevent instantiation
      */
-    private CUjit_cacheMode()
+    private CUstreamBatchMemOpType()
     {
-
+        // Private constructor to prevent instantiation
     }
+    
 }

@@ -1,7 +1,7 @@
 /*
  * JCuda - Java bindings for NVIDIA CUDA driver and runtime API
  *
- * Copyright (c) 2009-2015 Marco Hutter - http://www.jcuda.org
+ * Copyright (c) 2009-2016 Marco Hutter - http://www.jcuda.org
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -27,47 +27,47 @@
 package jcuda.driver;
 
 /**
- * Caching modes for dlcm
+ * Flags for cuStreamWriteValue32
  */
-public class CUjit_cacheMode
+public class CUstreamWriteValue_flags
 {
     /**
-     * Compile with no -dlcm flag specified
+     * Default behavior 
      */
-    public static final int CU_JIT_CACHE_OPTION_NONE = 0;
+    public static final int CU_STREAM_WRITE_VALUE_DEFAULT           = 0x0;
+    
+    /**
+     * Permits the write to be reordered with writes which were issued before
+     * it, as a performance optimization. Normally, ::cuStreamWriteValue32 will
+     * provide a memory fence before the write, which has similar semantics to
+     * __threadfence_system() but is scoped to the stream rather than a CUDA
+     * thread.
+     */
+    public static final int CU_STREAM_WRITE_VALUE_NO_MEMORY_BARRIER = 0x1;
 
     /**
-     * Compile with L1 cache disabled
-     */
-    public static final int CU_JIT_CACHE_OPTION_CG = 1;
-
-    /**
-     * Compile with L1 cache enabled
-     */
-    public static final int CU_JIT_CACHE_OPTION_CA = 2;
-
-    /**
-     * Returns the String identifying the given CUjit_cacheMode
+     * Returns the String identifying the given CUstreamWriteValue_flags
      *
-     * @param n The CUjit_cacheMode
-     * @return The String identifying the given CUjit_cacheMode
+     * @param n The CUstreamWriteValue_flags
+     * @return The String identifying the given CUstreamWriteValue_flags
      */
     public static String stringFor(int n)
     {
-        switch (n)
+        if (n == 0)
         {
-            case CU_JIT_CACHE_OPTION_NONE: return "CU_JIT_CACHE_OPTION_NONE";
-            case CU_JIT_CACHE_OPTION_CG: return "CU_JIT_CACHE_OPTION_CG";
-            case CU_JIT_CACHE_OPTION_CA: return "CU_JIT_CACHE_OPTION_CA";
+            return "CU_STREAM_WRITE_VALUE_DEFAULT";
         }
-        return "INVALID CUjit_cacheMode: "+n;
+        String result = "";
+        if ((n & CU_STREAM_WRITE_VALUE_NO_MEMORY_BARRIER) != 0) result += "CU_STREAM_WRITE_VALUE_NO_MEMORY_BARRIER ";
+        return result;
     }
 
     /**
-     * Private constructor to prevent instantiation
+     * Private constructor to prevent instantiation.
      */
-    private CUjit_cacheMode()
+    private CUstreamWriteValue_flags()
     {
-
+        // Private constructor to prevent instantiation.
     }
+
 }

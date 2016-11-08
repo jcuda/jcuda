@@ -34,54 +34,74 @@ package jcuda;
 public class cudaDataType
 {
     /**
-     * 16 bit real
+     * real as a half
      */
     public static final int CUDA_R_16F = 2;
-    
+
     /**
-     * 16 bit complex
+     * complex as a pair of half numbers
      */
     public static final int CUDA_C_16F = 6;
-    
+
     /**
-     * 32 bit real
+     * real as a float
      */
     public static final int CUDA_R_32F = 0;
-    
+
     /**
-     * 32 bit complex
+     * complex as a pair of float numbers
      */
     public static final int CUDA_C_32F = 4;
-    
+
     /**
-     * 64 bit real
+     * real as a double
      */
     public static final int CUDA_R_64F = 1;
-    
+
     /**
-     * 64 bit complex
+     * complex as a pair of double numbers
      */
     public static final int CUDA_C_64F = 5;
-    
+
     /**
-     * 8 bit real as a signed integer
+     * real as a signed char
      */
     public static final int CUDA_R_8I = 3;
-    
+
     /**
-     * 8 bit complex as a pair of signed integers
+     * complex as a pair of signed char numbers
      */
     public static final int CUDA_C_8I = 7;
-    
+
     /**
-     * 8 bit real as a signed integer
+     * real as a unsigned char
      */
     public static final int CUDA_R_8U = 8;
-    
+
     /**
-     * 8 bit complex as a pair of signed integers
+     * complex as a pair of unsigned char numbers
      */
     public static final int CUDA_C_8U = 9;
+
+    /**
+     * real as a signed int
+     */
+    public static final int CUDA_R_32I = 10;
+
+    /**
+     * complex as a pair of signed int numbers
+     */
+    public static final int CUDA_C_32I = 11;
+
+    /**
+     * real as a unsigned int
+     */
+    public static final int CUDA_R_32U = 12;
+
+    /**
+     * complex as a pair of unsigned int numbers
+     */
+    public static final int CUDA_C_32U = 13;
 
     /**
      * Returns the String identifying the given cudaDataType
@@ -93,16 +113,20 @@ public class cudaDataType
     {
         switch (n)
         {
-            case CUDA_R_16F: return "CUDA_R_16F";
-            case CUDA_C_16F: return "CUDA_C_16F";
-            case CUDA_R_32F: return "CUDA_R_32F";
-            case CUDA_C_32F: return "CUDA_C_32F";
-            case CUDA_R_64F: return "CUDA_R_64F";
-            case CUDA_C_64F: return "CUDA_C_64F";
-            case CUDA_R_8I: return "CUDA_R_8I";
-            case CUDA_C_8I: return "CUDA_C_8I";
-            case CUDA_R_8U: return "CUDA_R_8U";
-            case CUDA_C_8U: return "CUDA_C_8U";
+            case CUDA_R_16F : return "CUDA_R_16F";
+            case CUDA_C_16F : return "CUDA_C_16F";
+            case CUDA_R_32F : return "CUDA_R_32F";
+            case CUDA_C_32F : return "CUDA_C_32F";
+            case CUDA_R_64F : return "CUDA_R_64F";
+            case CUDA_C_64F : return "CUDA_C_64F";
+            case CUDA_R_8I : return "CUDA_R_8I";
+            case CUDA_C_8I : return "CUDA_C_8I";
+            case CUDA_R_8U : return "CUDA_R_8U";
+            case CUDA_C_8U : return "CUDA_C_8U";
+            case CUDA_R_32I : return "CUDA_R_32I";
+            case CUDA_C_32I : return "CUDA_C_32I";
+            case CUDA_R_32U : return "CUDA_R_32U";
+            case CUDA_C_32U : return "CUDA_C_32U";
         }
         return "INVALID cudaDataType: " + n;
     }

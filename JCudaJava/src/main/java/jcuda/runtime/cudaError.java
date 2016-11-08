@@ -625,6 +625,11 @@ public class cudaError
      */
     public static final int cudaErrorInvalidGraphicsContext       =     79;
 
+    /**
+     * This indicates that an uncorrectable NVLink error was detected during the
+     * execution.
+     */
+    public static final int cudaErrorNvlinkUncorrectable          =     80;
 
     /**
      * This indicates an internal startup failure in the CUDA runtime.
@@ -731,6 +736,7 @@ public class cudaError
             case cudaErrorIllegalAddress               : return "cudaErrorIllegalAddress";
             case cudaErrorInvalidPtx                   : return "cudaErrorInvalidPtx";
             case cudaErrorInvalidGraphicsContext       : return "cudaErrorInvalidGraphicsContext";
+            case cudaErrorNvlinkUncorrectable          : return "cudaErrorNvlinkUncorrectable";
             case cudaErrorStartupFailure               : return "cudaErrorStartupFailure";
             case jcudaInternalError                    : return "jcudaInternalError";
         }

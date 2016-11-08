@@ -223,6 +223,12 @@ public class CUresult
     public static final int CUDA_ERROR_INVALID_GRAPHICS_CONTEXT       = 219;
 
     /**
+     * This indicates that an uncorrectable NVLink error was detected during 
+     * the execution.
+     */
+    public static final int CUDA_ERROR_NVLINK_UNCORRECTABLE           = 220;
+    
+    /**
      * This indicates that the device kernel source is invalid.
      */
     public static final int CUDA_ERROR_INVALID_SOURCE                 = 300;
@@ -493,6 +499,7 @@ public class CUresult
             case CUDA_ERROR_PEER_ACCESS_UNSUPPORTED        : return "CUDA_ERROR_PEER_ACCESS_UNSUPPORTED";
             case CUDA_ERROR_INVALID_PTX                    : return "CUDA_ERROR_INVALID_PTX";
             case CUDA_ERROR_INVALID_GRAPHICS_CONTEXT       : return "CUDA_ERROR_INVALID_GRAPHICS_CONTEXT";
+            case CUDA_ERROR_NVLINK_UNCORRECTABLE           : return "CUDA_ERROR_NVLINK_UNCORRECTABLE";
             case CUDA_ERROR_INVALID_SOURCE                 : return "CUDA_ERROR_INVALID_SOURCE";
             case CUDA_ERROR_FILE_NOT_FOUND                 : return "CUDA_ERROR_FILE_NOT_FOUND";
             case CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND : return "CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND";

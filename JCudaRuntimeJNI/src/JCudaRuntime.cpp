@@ -4313,6 +4313,105 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemAdviseNative
 }
 
 
+/*
+* Class:     jcuda_runtime_JCuda
+* Method:    cudaMemRangeGetAttributeNative
+* Signature: (Ljcuda/Pointer;JILjcuda/Pointer;J)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemRangeGetAttributeNative
+(JNIEnv *env, jclass cls, jobject data, jlong dataSize, jint attribute, jobject devPtr, jlong count)
+{
+    if (data == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'data' is null for cudaMemRangeGetAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (devPtr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'devPtr' is null for cudaMemRangeGetAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cudaMemRangeGetAttribute\n");
+
+    
+    PointerData *dataPointerData = initPointerData(env, data);
+    if (dataPointerData == NULL)
+    {
+        return JCUDA_INTERNAL_ERROR;
+    }
+    void *nativeData = (void*)dataPointerData->getPointer(env);
+    size_t nativeDataSize = (size_t)dataSize;
+    cudaMemRangeAttribute nativeAttribute = (cudaMemRangeAttribute)attribute;
+    void *nativeDevPtr = getPointer(env, devPtr);
+    size_t nativeCount = (size_t)count;
+
+    int result = cudaMemRangeGetAttribute(nativeData, nativeDataSize, nativeAttribute, nativeDevPtr, nativeCount);
+
+    if (!releasePointerData(env, dataPointerData, 0)) return JCUDA_INTERNAL_ERROR;
+
+    return result;
+}
+
+/*
+* Class:     jcuda_runtime_JCuda
+* Method:    cudaMemRangeGetAttributesNative
+* Signature: ([Ljcuda/Pointer;[J[IJLjcuda/Pointer;J)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemRangeGetAttributesNative
+(JNIEnv *env, jclass cls, jobjectArray data, jlongArray dataSizes, jintArray attributes, jlong numAttributes, jobject devPtr, jlong count)
+{
+    if (data == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'data' is null for cudaMemRangeGetAttributes");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (dataSizes == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'dataSizes' is null for cudaMemRangeGetAttributes");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (attributes == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'attributes' is null for cudaMemRangeGetAttributes");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (devPtr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'devPtr' is null for cudaMemRangeGetAttributes");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cudaMemRangeGetAttributes\n");
+
+    PointerData **dataPointerDatas = new PointerData*[numAttributes];
+    void **nativeDatas = new void*[numAttributes];
+    for (int i = 0; i < numAttributes; i++)
+    {
+        dataPointerDatas[i] = initPointerData(env, data);
+        if (dataPointerDatas[i] == NULL)
+        {
+            return JCUDA_INTERNAL_ERROR;
+        }
+        nativeDatas[i] = (void*)dataPointerDatas[i]->getPointer(env);
+    }
+
+    size_t *nativeDataSizes = getArrayContentsGeneric<jlongArray, jlong, size_t>(env, dataSizes);
+    cudaMemRangeAttribute *nativeAttributes = getArrayContentsGeneric<jintArray, jint, cudaMemRangeAttribute>(env, attributes);
+    void *nativeDevPtr = getPointer(env, devPtr);
+    size_t nativeCount = (size_t)count;
+
+    int result = cudaMemRangeGetAttributes(nativeDatas, nativeDataSizes, nativeAttributes, (size_t)numAttributes, nativeDevPtr, nativeCount);
+
+    for (int i = 0; i < numAttributes; i++)
+    {
+        if (!releasePointerData(env, dataPointerDatas[i], 0)) return JCUDA_INTERNAL_ERROR;
+    }
+    delete[] dataPointerDatas;
+    delete[] nativeDatas;
+    delete[] nativeDataSizes;
+    delete[] nativeAttributes;
+
+    return result;
+}
 
 
 

@@ -247,6 +247,11 @@ public class JCudaDriver
      */
     public static final CUdevice CU_DEVICE_CPU = new CUdevice(-1);
 
+    /**
+     * Device that represents an invalid device
+     */
+    public static final CUdevice CU_DEVICE_INVALID = new CUdevice(-2);
+    
 
     /**
      * Private inner class for the constant stream values
@@ -12384,7 +12389,110 @@ public class JCudaDriver
 
     private static native int cuEventElapsedTimeNative(float pMilliseconds[], CUevent hStart, CUevent hEnd);
 
+    /**
+     * Wait on a memory location.<br>
+     * <br>
+     * Enqueues a synchronization of the stream on the given memory location.
+     * Work ordered after the operation will block until the given condition on
+     * the memory is satisfied. By default, the condition is to wait for
+     * (int32_t)(*addr - value) >= 0, a cyclic greater-or-equal. Other condition
+     * types can be specified via flags.<br>
+     * <br>
+     * If the memory was registered via cuMemHostRegister(), the device pointer
+     * should be obtained with cuMemHostGetDevicePointer(). This function cannot
+     * be used with managed memory (cuMemAllocManaged).<br>
+     * <br>
+     * On Windows, the device must be using TCC, or the operation is not
+     * supported. See cuDeviceGetAttributes().
+     * 
+     * @param stream The stream to synchronize on the memory location.
+     * @param addr The memory location to wait on.
+     * @param value The value to compare with the memory location.
+     * @param flags See {@link CUstreamWaitValue_flags}
+     * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_NOT_SUPPORTED
+     * 
+     * @see JCudaDriver#cuStreamWriteValue32
+     * @see JCudaDriver#cuStreamBatchMemOp
+     * @see JCudaDriver#cuMemHostRegister
+     * @see JCudaDriver#cuStreamWaitEvent
+     */
+    public static int cuStreamWaitValue32(CUstream stream, CUdeviceptr addr, int value, int flags)
+    {
+        return checkResult(cuStreamWaitValue32Native(stream, addr, value, flags));
+    }
+    private static native int cuStreamWaitValue32Native(CUstream stream, CUdeviceptr addr, int value, int flags);
 
+    /**
+     * Write a value to memory.<br>
+     * <br>
+     * Write a value to memory. Unless the
+     * CU_STREAM_WRITE_VALUE_NO_MEMORY_BARRIER flag is passed, the write is
+     * preceded by a system-wide memory fence, equivalent to a
+     * __threadfence_system() but scoped to the stream rather than a CUDA
+     * thread.<br>
+     * <br>
+     * If the memory was registered via cuMemHostRegister(), the device pointer
+     * should be obtained with cuMemHostGetDevicePointer(). This function cannot
+     * be used with managed memory (cuMemAllocManaged).<br>
+     * <br>
+     * On Windows, the device must be using TCC, or the operation is not
+     * supported. See cuDeviceGetAttribute().
+     * 
+     * @param stream The stream to do the write in.
+     * @param addr The device address to write to.
+     * @param value The value to write.
+     * @param flags See {@link CUstreamWriteValue_flags}
+     * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_NOT_SUPPORTED
+     * 
+     * @see JCudaDriver#cuStreamWaitValue32
+     * @see JCudaDriver#cuStreamBatchMemOp
+     * @see JCudaDriver#cuMemHostRegister
+     * @see JCudaDriver#cuEventRecord
+     */
+    public static int cuStreamWriteValue32(CUstream stream, CUdeviceptr addr, int value, int flags)
+    {
+        return checkResult(cuStreamWriteValue32Native(stream, addr, value, flags));
+    }
+    private static native int cuStreamWriteValue32Native(CUstream stream, CUdeviceptr addr, int value, int flags);
+
+    /**
+     * <br>
+     * <b>NOTE: This function is not yet supported in JCuda, and will throw an
+     * UnsupportedOperationException!</b><br>
+     * <br>
+     * 
+     * Batch operations to synchronize the stream via memory operations.<br>
+     * <br>
+     * This is a batch version of cuStreamWaitValue32() and
+     * cuStreamWriteValue32(). Batching operations may avoid some performance
+     * overhead in both the API call and the device execution versus adding them
+     * to the stream in separate API calls. The operations are enqueued in the
+     * order they appear in the array.<br>
+     * <br>
+     * See CUstreamBatchMemOpType for the full set of supported operations, and
+     * cuStreamWaitValue32() and cuStreamWriteValue32() for details of specific
+     * operations.<br>
+     * <br>
+     * On Windows, the device must be using TCC, or this call is not supported.
+     * See cuDeviceGetAttribute().
+     * 
+     * @param stream The stream to enqueue the operations in.
+     * @param count The number of operations in the array. Must be less than
+     *        256.
+     * @param paramArray The types and parameters of the individual operations.
+     * @param flags Reserved for future expansion; must be 0.
+     * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_NOT_SUPPORTED
+     * 
+     * @see JCudaDriver#cuStreamWaitValue32
+     * @see JCudaDriver#cuStreamWriteValue32
+     * @see JCudaDriver#cuMemHostRegister
+     */
+    public static int cuStreamBatchMemOp(CUstream stream, int count, CUstreamBatchMemOpParams paramArray[], int flags)
+    {
+        // TODO Implement cuStreamBatchMemOp
+        throw new UnsupportedOperationException("The cuStreamBatchMemOp function is not yet supported in JCuda");
+    }
+    
     /**
      * Returns information about a pointer.
      *
@@ -12698,6 +12806,115 @@ public class JCudaDriver
     }
     private static native int cuMemAdviseNative(CUdeviceptr devPtr, long count, int advice, CUdevice device);
 
+    /**
+     * Query an attribute of a given memory range.<br>
+     * 
+     * Query an attribute about the memory range starting at devPtr with a size
+     * of count bytes. The memory range must refer to managed memory allocated
+     * via cuMemAllocManaged or declared via __managed__ variables. <br>
+     * <br>
+     * The attribute parameter can take the following values: <br>
+     * <ul>
+     * <li>CU_MEM_RANGE_ATTRIBUTE_READ_MOSTLY: If this attribute is specified,
+     * data will be interpreted as a 32-bit integer, and dataSize must be 4. The
+     * result returned will be 1 if all pages in the given memory range have
+     * read-duplication enabled, or 0 otherwise.</li>
+     * <li>CU_MEM_RANGE_ATTRIBUTE_PREFERRED_LOCATION: If this attribute is
+     * specified, data will be interpreted as a 32-bit integer, and dataSize
+     * must be 4. The result returned will be a GPU device id if all pages in
+     * the memory range have that GPU as their preferred location, or it will be
+     * CU_DEVICE_CPU if all pages in the memory range have the CPU as their
+     * preferred location, or it will be CU_DEVICE_INVALID if either all the
+     * pages don't have the same preferred location or some of the pages don't
+     * have a preferred location at all. Note that the actual location of the
+     * pages in the memory range at the time of the query may be different from
+     * the preferred location.</li>
+     * <li>CU_MEM_RANGE_ATTRIBUTE_ACCESSED_BY: If this attribute is specified,
+     * data will be interpreted as an array of 32-bit integers, and dataSize
+     * must be a non-zero multiple of 4. The result returned will be a list of
+     * device ids that had CU_MEM_ADVISE_SET_ACCESSED_BY set for that entire
+     * memory range. If any device does not have that advice set for the entire
+     * memory range, that device will not be included. If data is larger than
+     * the number of devices that have that advice set for that memory range,
+     * CU_DEVICE_INVALID will be returned in all the extra space provided. For
+     * ex., if dataSize is 12 (i.e. data has 3 elements) and only device 0 has
+     * the advice set, then the result returned will be { 0, CU_DEVICE_INVALID,
+     * CU_DEVICE_INVALID }. If data is smaller than the number of devices that
+     * have that advice set, then only as many devices will be returned as can
+     * fit in the array. There is no guarantee on which specific devices will be
+     * returned, however.</li>
+     * <li>CU_MEM_RANGE_ATTRIBUTE_LAST_PREFETCH_LOCATION: If this attribute is
+     * specified, data will be interpreted as a 32-bit integer, and dataSize
+     * must be 4. The result returned will be the last location to which all
+     * pages in the memory range were prefetched explicitly via
+     * cuMemPrefetchAsync. This will either be a GPU id or CU_DEVICE_CPU
+     * depending on whether the last location for prefetch was a GPU or the CPU
+     * respectively. If any page in the memory range was never explicitly
+     * prefetched or if all pages were not prefetched to the same location,
+     * CU_DEVICE_INVALID will be returned. Note that this simply returns the
+     * last location that the applicaton requested to prefetch the memory range
+     * to. It gives no indication as to whether the prefetch operation to that
+     * location has completed or even begun.</li>
+     * </ul>
+     * 
+     * @param data A pointers to a memory location where the result of each
+     * attribute query will be written to.
+     * @param dataSize Array containing the size of data
+     * @param attribute The attribute to query
+     * @param devPtr Start of the range to query
+     * @param count Size of the range to query
+     * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_INVALID_DEVICE
+     * 
+     * @see JCudaDriver#cuMemRangeGetAttributes
+     * @see JCudaDriver#cuMemPrefetchAsync
+     * @see JCudaDriver#cuMemAdvise
+     */
+    public static int cuMemRangeGetAttribute(Pointer data, long dataSize, int attribute, CUdeviceptr devPtr, long count)
+    {
+        return checkResult(cuMemRangeGetAttributeNative(data, dataSize, attribute, devPtr, count));
+    }
+    private static native int cuMemRangeGetAttributeNative(Pointer data, long dataSize, int attribute, CUdeviceptr devPtr, long count);
+    
+    /**
+     * Query attributes of a given memory range.<br>
+     * <br>
+     * Query attributes of the memory range starting at devPtr with a size of
+     * count bytes. The memory range must refer to managed memory allocated via
+     * cuMemAllocManaged or declared via __managed__ variables. The attributes
+     * array will be interpreted to have numAttributes entries. The dataSizes
+     * array will also be interpreted to have numAttributes entries. The results
+     * of the query will be stored in data.<br>
+     * <br>
+     * <br>
+     * The list of supported attributes are given below. Please refer to
+     * {@link JCudaDriver#cuMemRangeGetAttribute} for attribute descriptions and
+     * restrictions.
+     * <ul>
+     * <li>CU_MEM_RANGE_ATTRIBUTE_READ_MOSTLY</li>
+     * <li>CU_MEM_RANGE_ATTRIBUTE_PREFERRED_LOCATION</li>
+     * <li>CU_MEM_RANGE_ATTRIBUTE_ACCESSED_BY</li>
+     * <li>CU_MEM_RANGE_ATTRIBUTE_LAST_PREFETCH_LOCATION</li>
+     * </ul>
+     * 
+     * @param data A two-dimensional array containing pointers to memory
+     *        locations where the result of each attribute query will be written
+     *        to.
+     * @param dataSizes Array containing the sizes of each result
+     * @param attributes An array of attributes to query (numAttributes and the
+     *        number of attributes in this array should match)
+     * @param numAttributes Number of attributes to query
+     * @param devPtr Start of the range to query
+     * @param count Size of the range to query
+     * @return CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED,
+     *         CUDA_ERROR_INVALID_CONTEXT, CUDA_ERROR_INVALID_VALUE,
+     *         CUDA_ERROR_INVALID_DEVICE
+     */
+    public static int cuMemRangeGetAttributes(Pointer data[], long dataSizes[], int attributes[], long numAttributes, CUdeviceptr devPtr, long count)
+    {
+        return checkResult(cuMemRangeGetAttributesNative(data, dataSizes, attributes, numAttributes, devPtr, count));
+    }
+    private static native int cuMemRangeGetAttributesNative(Pointer data[], long dataSizes[], int attributes[], long numAttributes, CUdeviceptr devPtr, long count);
+    
     /**
      * Set attributes on a previously allocated memory region<br>
      * <br>
