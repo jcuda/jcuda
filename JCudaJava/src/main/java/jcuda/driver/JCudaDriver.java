@@ -252,29 +252,17 @@ public class JCudaDriver
      */
     public static final CUdevice CU_DEVICE_INVALID = new CUdevice(-2);
     
-
-    /**
-     * Private inner class for the constant stream values
-     */
-    private static class ConstantCUstream extends CUstream
-    {
-        private ConstantCUstream(long value)
-        {
-            super(value);
-        }
-    }
-
     /**
      * Stream handle that can be passed as a CUstream to use an implicit stream
      * with legacy synchronization behavior.
      */
-    public static final CUstream CU_STREAM_LEGACY = new ConstantCUstream(0x1);
+    public static final CUstream CU_STREAM_LEGACY = new CUstream(0x1);
 
     /**
      * Stream handle that can be passed as a CUstream to use an implicit stream
      * with per-thread synchronization behavior.
      */
-    public static final CUstream CU_STREAM_PER_THREAD = new ConstantCUstream(0x2);
+    public static final CUstream CU_STREAM_PER_THREAD = new CUstream(0x2);
 
 
     /**
