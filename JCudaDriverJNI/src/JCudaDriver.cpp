@@ -6704,7 +6704,7 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemPrefetchAsyncNative
     }
     if (dstDevice == NULL)
     {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'ptr' is null for cuMemPrefetchAsync");
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'dstDevice' is null for cuMemPrefetchAsync");
         return JCUDA_INTERNAL_ERROR;
     }
     Logger::log(LOG_TRACE, "Executing cuMemPrefetchAsync\n");
@@ -6730,11 +6730,6 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemAdviseNative
     if (devPtr == NULL)
     {
         ThrowByName(env, "java/lang/NullPointerException", "Parameter 'devPtr' is null for cuMemAdvise");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (device == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'ptr' is null for cuMemAdvise");
         return JCUDA_INTERNAL_ERROR;
     }
     Logger::log(LOG_TRACE, "Executing cuMemAdvise\n");
