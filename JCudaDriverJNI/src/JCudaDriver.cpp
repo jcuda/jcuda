@@ -6817,7 +6817,13 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemRangeGetAttributesNati
     void **nativeDatas = new void*[numAttributes];
     for (int i = 0; i < numAttributes; i++)
     {
-        dataPointerDatas[i] = initPointerData(env, data);
+        jobject element = env->GetObjectArrayElement(data, i);
+        if (env->ExceptionCheck())
+        {
+            // ArrayIndexOutOfBoundsException may be thrown
+            return JCUDA_INTERNAL_ERROR;
+        }
+        dataPointerDatas[i] = initPointerData(env, element);
         if (dataPointerDatas[i] == NULL)
         {
             return JCUDA_INTERNAL_ERROR;
