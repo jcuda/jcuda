@@ -177,6 +177,10 @@ jmethodID CUoccupancyB2DSize_call; // "(I)J"
 jobject currentOccupancyCallback = NULL;
 JNIEnv *currentOccupancyEnv = NULL;
 
+// Static method ID for the CUstreamCallback#call function
+static jmethodID CUstreamCallback_call; // (Ljcuda/driver/CUstream;ILjava/lang/Object;)V
+
+
 
 /**
  * Called when the library is loaded. Will initialize all
@@ -191,6 +195,8 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     }
 
     Logger::log(LOG_TRACE, "Initializing JCuda\n");
+
+    globalJvm = jvm;
 
     jclass cls = NULL;
 
@@ -376,6 +382,10 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, "jcuda/driver/CUoccupancyB2DSize")) return JNI_ERR;
     if (!init(env, cls, CUoccupancyB2DSize_call, "call", "(I)J")) return JNI_ERR;
 
+    // Obtain the methodID for jcuda.driver.CUstreamCallback#call
+    if (!init(env, cls, "jcuda/driver/CUstreamCallback")) return JNI_ERR;
+    if (!init(env, cls, CUstreamCallback_call, "call", "(Ljcuda/driver/CUstream;ILjava/lang/Object;)V")) return JNI_ERR;
+
 
     return JNI_VERSION_1_4;
 }
@@ -405,6 +415,45 @@ size_t CUDA_CB CUoccupancyB2DSizeFunction(int blockSize)
     return (size_t)memSize;
 }
 
+
+/**
+* A pointer to this function will be passed to cuStreamAddCallback function.
+* The given callbackInfoUserData will be a pointer to the CallbackInfo that was 
+* created when the callback was established. The contents of this CallbackInfo
+* will be extracted here, and the actual (Java) callback function will be called.
+*/
+void CUDA_CB cuStreamAddCallback_NativeCallback(CUstream hStream, CUresult status, void *callbackInfoUserData)
+{
+    Logger::log(LOG_DEBUGTRACE, "Executing cuStreamAddCallback_NativeCallback\n");
+
+    CallbackInfo *callbackInfo = (CallbackInfo*)callbackInfoUserData;
+
+    jobject javaStreamObject = callbackInfo->globalStream;
+    jobject javaCallbackObject = callbackInfo->globalJavaCallbackObject;
+    if (javaCallbackObject == NULL)
+    {
+        return;
+    }
+    jobject userData = callbackInfo->globalUserData;
+
+    JNIEnv *env = NULL;
+    jint attached = globalJvm->GetEnv((void**)&env, JNI_VERSION_1_4);
+    if (attached != JNI_OK)
+    {
+        globalJvm->AttachCurrentThread((void**)&env, NULL);
+    }
+
+    Logger::log(LOG_DEBUGTRACE, "Calling Java callback method\n");
+    env->CallVoidMethod(javaCallbackObject, CUstreamCallback_call, javaStreamObject, status, userData);
+    Logger::log(LOG_DEBUGTRACE, "Calling Java callback method done\n");
+
+    finishCallback(env);
+    deleteCallbackInfo(env, callbackInfo);
+    if (attached != JNI_OK)
+    {
+        globalJvm->DetachCurrentThread();
+    }
+}
 
 
 /*
@@ -7063,7 +7112,6 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamWaitEventNative
     return result;
 }
 
-
 /*
  * Class:     jcuda_driver_JCudaDriver
  * Method:    cuStreamAddCallbackNative
@@ -7072,8 +7120,30 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamWaitEventNative
 JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamAddCallbackNative
   (JNIEnv *env, jclass cls, jobject hStream, jobject callback, jobject userData, jint flags)
 {
-    ThrowByName(env, "java/lang/UnsupportedOperationException", "cuStreamAddCallback is not yet supported");
-    return JCUDA_INTERNAL_ERROR;
+    // hStream may be null
+    if (callback == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'callback' is null for cuStreamAddCallback");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    // userData may be null
+
+    Logger::log(LOG_TRACE, "Executing cuStreamAddCallback\n");
+
+    CUstream nativeHStream = (CUstream)getNativePointerValue(env, hStream);
+
+    CallbackInfo *callbackInfo = NULL;
+    void* nativeUserData = NULL;
+
+    callbackInfo = initCallbackInfo(env, hStream, callback, userData);
+    if (callbackInfo == NULL)
+    {
+        return JCUDA_INTERNAL_ERROR;
+    }
+    nativeUserData = (void*)callbackInfo;
+
+    int result = cuStreamAddCallback(nativeHStream, cuStreamAddCallback_NativeCallback, nativeUserData, (unsigned int)flags);
+    return result;
 }
 
 

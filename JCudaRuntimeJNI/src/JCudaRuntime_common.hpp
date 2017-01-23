@@ -44,6 +44,11 @@
 #include "Logger.hpp"
 #include "JNIUtils.hpp"
 #include "PointerUtils.hpp"
+#include "CallbackUtils.hpp"
+
+// The JVM, used for attaching threads in callbacks, and initialized
+// in JNI_OnLoad
+JavaVM *globalJvm;
 
 #define JCUDA_INTERNAL_ERROR 0x80000001
 

@@ -52,7 +52,11 @@
 #include "Logger.hpp"
 #include "PointerUtils.hpp"
 #include "JNIUtils.hpp"
+#include "CallbackUtils.hpp"
 
+// The JVM, used for attaching threads in callbacks, and initialized
+// in JNI_OnLoad
+JavaVM *globalJvm;
 
 
 /**

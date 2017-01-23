@@ -205,6 +205,8 @@ jfieldID cudaTextureDesc_mipmapLevelBias; // float
 jfieldID cudaTextureDesc_minMipmapLevelClamp; // float
 jfieldID cudaTextureDesc_maxMipmapLevelClamp; // float
 
+// Static method ID for the cudaStreamCallback#call function
+static jmethodID cudaStreamCallback_call; // (Ljcuda/runtime/cudaStream_t;ILjava/lang/Object;)V
 
 
 /**
@@ -220,6 +222,8 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     }
 
     Logger::log(LOG_DEBUGTRACE, "Initializing JCudaRuntime\n");
+
+    globalJvm = jvm;
 
     jclass cls = NULL;
 
@@ -450,6 +454,10 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, cudaTextureDesc_minMipmapLevelClamp, "minMipmapLevelClamp", "F")) return JNI_ERR;
     if (!init(env, cls, cudaTextureDesc_maxMipmapLevelClamp, "maxMipmapLevelClamp", "F")) return JNI_ERR;
 
+    // Obtain the methodID for jcuda.runtime.cudaStreamCallback#call
+    if (!init(env, cls, "jcuda/runtime/cudaStreamCallback")) return JNI_ERR;
+    if (!init(env, cls, cudaStreamCallback_call, "call", "(Ljcuda/runtime/cudaStream_t;ILjava/lang/Object;)V")) return JNI_ERR;
+
     return JNI_VERSION_1_4;
 }
 
@@ -458,6 +466,48 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
 JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
 {
 }
+
+
+
+/**
+* A pointer to this function will be passed to cudaStreamAddCallback function.
+* The given callbackInfoUserData will be a pointer to the CallbackInfo that was
+* created when the callback was established. The contents of this CallbackInfo
+* will be extracted here, and the actual (Java) callback function will be called.
+*/
+void CUDART_CB cudaStreamAddCallback_NativeCallback(cudaStream_t stream, cudaError_t status, void *callbackInfoUserData)
+{
+    Logger::log(LOG_DEBUGTRACE, "Executing cudaStreamAddCallback_NativeCallback\n");
+
+    CallbackInfo *callbackInfo = (CallbackInfo*)callbackInfoUserData;
+
+    jobject javaStreamObject = callbackInfo->globalStream;
+    jobject javaCallbackObject = callbackInfo->globalJavaCallbackObject;
+    if (javaCallbackObject == NULL)
+    {
+        return;
+    }
+    jobject userData = callbackInfo->globalUserData;
+
+    JNIEnv *env = NULL;
+    jint attached = globalJvm->GetEnv((void**)&env, JNI_VERSION_1_4);
+    if (attached != JNI_OK)
+    {
+        globalJvm->AttachCurrentThread((void**)&env, NULL);
+    }
+
+    Logger::log(LOG_DEBUGTRACE, "Calling Java callback method\n");
+    env->CallVoidMethod(javaCallbackObject, cudaStreamCallback_call, javaStreamObject, (int)status, userData);
+    Logger::log(LOG_DEBUGTRACE, "Calling Java callback method done\n");
+
+    finishCallback(env);
+    deleteCallbackInfo(env, callbackInfo);
+    if (attached != JNI_OK)
+    {
+        globalJvm->DetachCurrentThread();
+    }
+}
+
 
 /*
  * Set the log level
@@ -3898,8 +3948,30 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaStreamWaitEventNative
 JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaStreamAddCallbackNative
   (JNIEnv *env, jclass cls, jobject stream, jobject callback, jobject userData, jint flags)
 {
-    ThrowByName(env, "java/lang/UnsupportedOperationException", "cudaStreamAddCallback is not yet supported");
-    return JCUDA_INTERNAL_ERROR;
+    // stream may be null
+    if (callback == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'callback' is null for cudaStreamCallback");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    // userData may be null
+
+    Logger::log(LOG_TRACE, "Executing cudaStreamCallback\n");
+
+    cudaStream_t nativeStream = (cudaStream_t)getNativePointerValue(env, stream);
+
+    CallbackInfo *callbackInfo = NULL;
+    void* nativeUserData = NULL;
+
+    callbackInfo = initCallbackInfo(env, stream, callback, userData);
+    if (callbackInfo == NULL)
+    {
+        return JCUDA_INTERNAL_ERROR;
+    }
+    nativeUserData = (void*)callbackInfo;
+
+    int result = cudaStreamAddCallback(nativeStream, cudaStreamAddCallback_NativeCallback, nativeUserData, (unsigned int)flags);
+    return result;
 }
 
 
