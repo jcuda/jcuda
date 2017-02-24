@@ -6,19 +6,27 @@
         <groupId>org.jcuda</groupId>
         <artifactId>jcuda-parent</artifactId>
         <version>0.8.0</version>
-        <relativePath>../jcuda-common/JCudaParentPOM/pom.xml</relativePath>
+        <relativePath></relativePath>
     </parent>
-	<packaging>pom</packaging>
 
     <artifactId>jcuda-natives</artifactId>
 
+    <scm>
+        <connection>scm:git:git@github.com:jcuda/jcuda.git</connection>
+        <developerConnection>scm:git:git@github.com:jcuda/jcuda.git</developerConnection>
+        <url>git@github.com:jcuda/jcuda.git</url>
+    </scm>
+
     <build>
         <plugins>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.0.2</version>
                 <executions>
+
+                    <!-- Create the JAR containing the native libraries -->
                     <execution>
                         <id>create-native-jar</id>
                         <phase>package</phase>
@@ -35,8 +43,53 @@
                             </includes>
                         </configuration>
                     </execution>
+
+                    <!-- Create the placeholder main JAR that contains the README.txt -->
+                    <execution>
+                        <id>default-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classesDirectory>${basedir}/../jcuda-main/resources/readme</classesDirectory>
+                        </configuration>
+                    </execution>
+
+                    <!-- Create the JAR containing the native sources -->
+                    <execution>
+                        <id>create-native-sources-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classesDirectory>${basedir}</classesDirectory>
+                            <classifier>sources</classifier>
+                            <includes>
+                                <include>JCudaRuntimeJNI/**</include>
+                                <include>JCudaDriverJNI/**</include>
+                                <include>JNvrtcJNI/**</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+
+                    <!-- Create the placeholder JAR for the javadoc that contains the README.txt -->
+                    <execution>
+                        <id>create-native-javadoc-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>javadoc</classifier>
+                            <classesDirectory>${basedir}/../jcuda-main/resources/readme</classesDirectory>
+                        </configuration>
+                    </execution>
+
                 </executions>
             </plugin>
+
         </plugins>
     </build>
 
