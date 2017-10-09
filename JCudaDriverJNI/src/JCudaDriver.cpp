@@ -6880,8 +6880,8 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemRangeGetAttributesNati
         nativeDatas[i] = (void*)dataPointerDatas[i]->getPointer(env);
     }
 
-    size_t *nativeDataSizes = getArrayContentsGeneric<jlongArray, jlong, size_t>(env, dataSizes);
-    CUmem_range_attribute *nativeAttributes = getArrayContentsGeneric<jintArray, jint, CUmem_range_attribute>(env, attributes);
+    size_t *nativeDataSizes = getLongArrayContentsGeneric<size_t>(env, dataSizes);
+    CUmem_range_attribute *nativeAttributes = getIntArrayContentsGeneric<CUmem_range_attribute>(env, attributes);
     CUdeviceptr nativeDevPtr = (CUdeviceptr)getPointer(env, devPtr);
     size_t nativeCount = (size_t)count;
 
@@ -6970,7 +6970,7 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuPointerGetAttributesNativ
 
     void **dataPointer = (void**)dataPointerData->getPointer(env);
     int actualNumAttributes = 0;
-    CUpointer_attribute* nativeAttributes = getArrayContentsGeneric<jintArray, jint, CUpointer_attribute>(env, attributes, &actualNumAttributes);
+    CUpointer_attribute* nativeAttributes = getIntArrayContentsGeneric<CUpointer_attribute>(env, attributes, &actualNumAttributes);
     unsigned int usedNumAttributes = numAttributes < actualNumAttributes ? numAttributes : actualNumAttributes;
     int result = cuPointerGetAttributes(usedNumAttributes, nativeAttributes, dataPointer, nativePtr);
     delete[] nativeAttributes;

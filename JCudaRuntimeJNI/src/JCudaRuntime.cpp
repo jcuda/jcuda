@@ -4472,8 +4472,8 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemRangeGetAttributesNative
         nativeDatas[i] = (void*)dataPointerDatas[i]->getPointer(env);
     }
 
-    size_t *nativeDataSizes = getArrayContentsGeneric<jlongArray, jlong, size_t>(env, dataSizes);
-    cudaMemRangeAttribute *nativeAttributes = getArrayContentsGeneric<jintArray, jint, cudaMemRangeAttribute>(env, attributes);
+    size_t *nativeDataSizes = getLongArrayContentsGeneric<size_t>(env, dataSizes);
+    cudaMemRangeAttribute *nativeAttributes = getIntArrayContentsGeneric<cudaMemRangeAttribute>(env, attributes);
     void *nativeDevPtr = getPointer(env, devPtr);
     size_t nativeCount = (size_t)count;
 
