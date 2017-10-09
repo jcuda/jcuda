@@ -481,21 +481,10 @@ void setCUdevprop(JNIEnv *env, jobject prop, CUdevprop nativeProp)
     env->SetIntField(prop, CUdevprop_maxThreadsPerBlock,  (jint)nativeProp.maxThreadsPerBlock);
 
     jintArray propMaxThreadsDim   = (jintArray)env->GetObjectField(prop, CUdevprop_maxThreadsDim);
-    jint *nativePropMaxThreadsDim = (jint*)    env->GetPrimitiveArrayCritical(propMaxThreadsDim, NULL);
-    for (int i=0; i<3; i++)
-    {
-        nativePropMaxThreadsDim[i] = (int)nativeProp.maxThreadsDim[i];
-    }
-    env->ReleasePrimitiveArrayCritical(propMaxThreadsDim, nativePropMaxThreadsDim, 0);
+    writeIntArrayContentsGeneric<int>(env, nativeProp.maxThreadsDim, propMaxThreadsDim);
 
     jintArray propMaxGridSize     = (jintArray)env->GetObjectField(prop, CUdevprop_maxGridSize);
-
-    jint *nativePropMaxGridSize   = (jint*)    env->GetPrimitiveArrayCritical(propMaxGridSize, NULL);
-    for (int i=0; i<3; i++)
-    {
-        nativePropMaxGridSize[i] = (int)nativeProp.maxGridSize[i];
-    }
-    env->ReleasePrimitiveArrayCritical(propMaxGridSize, nativePropMaxGridSize, 0);
+    writeIntArrayContentsGeneric<int>(env, nativeProp.maxGridSize, propMaxGridSize);
 
     env->SetIntField(prop, CUdevprop_sharedMemPerBlock,   (jint)nativeProp.sharedMemPerBlock);
     env->SetIntField(prop, CUdevprop_totalConstantMemory, (jint)nativeProp.totalConstantMemory);
@@ -832,12 +821,13 @@ CUipcEventHandle getCUipcEventHandle(JNIEnv *env, jobject handle)
     jobject reservedObject = env->GetObjectField(handle, CUipcEventHandle_reserved);
     jbyteArray reserved = (jbyteArray)reservedObject;
     int len = env->GetArrayLength(reserved); // Should always be CU_IPC_HANDLE_SIZE
-    char *reservedData = (char*)env->GetPrimitiveArrayCritical(reserved, NULL);
-    for (int i=0; i<len; i++)
+    jbyte *reservedData = env->GetByteArrayElements(reserved, NULL);
+    if (reservedData == NULL)
     {
-        nativeHandle.reserved[i] = reservedData[i];
+        return nativeHandle;
     }
-    env->ReleasePrimitiveArrayCritical(reserved, reservedData, 0);
+    memcpy(nativeHandle.reserved, reservedData, len);
+    env->ReleaseByteArrayElements(reserved, reservedData, JNI_ABORT);
     return nativeHandle;
 }
 
@@ -851,12 +841,13 @@ void setCUipcEventHandle(JNIEnv *env, jobject handle, CUipcEventHandle &nativeHa
     jobject reservedObject = env->GetObjectField(handle, CUipcEventHandle_reserved);
     jbyteArray reserved = (jbyteArray)reservedObject;
     int len = env->GetArrayLength(reserved); // Should always be CU_IPC_HANDLE_SIZE
-    char *reservedData = (char*)env->GetPrimitiveArrayCritical(reserved, NULL);
-    for (int i=0; i<len; i++)
+    jbyte *reservedData = env->GetByteArrayElements(reserved, NULL);
+    if (reservedData == NULL)
     {
-        reservedData[i] = nativeHandle.reserved[i];
+        return;
     }
-    env->ReleasePrimitiveArrayCritical(reserved, reservedData, 0);
+    memcpy(reservedData, nativeHandle.reserved, len);
+    env->ReleaseByteArrayElements(reserved, reservedData, 0);
 }
 
 
@@ -870,12 +861,13 @@ CUipcMemHandle getCUipcMemHandle(JNIEnv *env, jobject handle)
     jobject reservedObject = env->GetObjectField(handle, CUipcMemHandle_reserved);
     jbyteArray reserved = (jbyteArray)reservedObject;
     int len = env->GetArrayLength(reserved); // Should always be CU_IPC_HANDLE_SIZE
-    char *reservedData = (char*)env->GetPrimitiveArrayCritical(reserved, NULL);
-    for (int i=0; i<len; i++)
+    jbyte *reservedData = env->GetByteArrayElements(reserved, NULL);
+    if (reservedData == NULL)
     {
-        nativeHandle.reserved[i] = reservedData[i];
+        return nativeHandle;
     }
-    env->ReleasePrimitiveArrayCritical(reserved, reservedData, 0);
+    memcpy(nativeHandle.reserved, reservedData, len);
+    env->ReleaseByteArrayElements(reserved, reservedData, JNI_ABORT);
     return nativeHandle;
 }
 
@@ -889,12 +881,13 @@ void setCUipcMemHandle(JNIEnv *env, jobject handle, CUipcMemHandle &nativeHandle
     jobject reservedObject = env->GetObjectField(handle, CUipcMemHandle_reserved);
     jbyteArray reserved = (jbyteArray)reservedObject;
     int len = env->GetArrayLength(reserved); // Should always be CU_IPC_HANDLE_SIZE
-    char *reservedData = (char*)env->GetPrimitiveArrayCritical(reserved, NULL);
-    for (int i=0; i<len; i++)
+    jbyte *reservedData = env->GetByteArrayElements(reserved, NULL);
+    if (reservedData == NULL)
     {
-        reservedData[i] = nativeHandle.reserved[i];
+        return;
     }
-    env->ReleasePrimitiveArrayCritical(reserved, reservedData, 0);
+    memcpy(reservedData, nativeHandle.reserved, len);
+    env->ReleaseByteArrayElements(reserved, reservedData, 0);
 }
 
 
@@ -1049,12 +1042,7 @@ CUDA_TEXTURE_DESC getCUDA_TEXTURE_DESC(JNIEnv *env, jobject texDesc)
     memset(&nativeTexDesc,0,sizeof(CUDA_TEXTURE_DESC));
 
     jintArray addressMode = (jintArray)env->GetObjectField(texDesc, CUDA_TEXTURE_DESC_addressMode);
-    jint *nativeAddressMode = (jint*)env->GetPrimitiveArrayCritical(addressMode, NULL);
-    for (int i=0; i<3; i++)
-    {
-        nativeTexDesc.addressMode[i] = (CUaddress_mode)nativeAddressMode[i];
-    }
-    env->ReleasePrimitiveArrayCritical(addressMode, nativeAddressMode, JNI_ABORT);
+    readIntArrayContentsGeneric<CUaddress_mode>(env, addressMode, nativeTexDesc.addressMode);
 
     nativeTexDesc.filterMode = (CUfilter_mode) env->GetIntField(texDesc, CUDA_TEXTURE_DESC_filterMode);
     nativeTexDesc.flags = (unsigned int) env->GetIntField(texDesc, CUDA_TEXTURE_DESC_flags);
@@ -1065,12 +1053,7 @@ CUDA_TEXTURE_DESC getCUDA_TEXTURE_DESC(JNIEnv *env, jobject texDesc)
     nativeTexDesc.maxMipmapLevelClamp = (float)env->GetFloatField(texDesc, CUDA_TEXTURE_DESC_maxMipmapLevelClamp);
 
     jfloatArray borderColor = (jfloatArray)env->GetObjectField(texDesc, CUDA_TEXTURE_DESC_borderColor);
-    jfloat *nativeBorderColor = (jfloat*)env->GetPrimitiveArrayCritical(borderColor, NULL);
-    for (int i = 0; i<4; i++)
-    {
-        nativeTexDesc.borderColor[i] = (float)nativeBorderColor[i];
-    }
-    env->ReleasePrimitiveArrayCritical(borderColor, nativeBorderColor, JNI_ABORT);
+    readFloatArrayContents(env, borderColor, nativeTexDesc.borderColor);
 
     return nativeTexDesc;
 }
@@ -1083,12 +1066,7 @@ CUDA_TEXTURE_DESC getCUDA_TEXTURE_DESC(JNIEnv *env, jobject texDesc)
 void setCUDA_TEXTURE_DESC(JNIEnv *env, jobject texDesc, CUDA_TEXTURE_DESC &nativeTexDesc)
 {
     jintArray addressMode = (jintArray)env->GetObjectField(texDesc, CUDA_TEXTURE_DESC_addressMode);
-    jint *nativeAddressMode = (jint*)env->GetPrimitiveArrayCritical(addressMode, NULL);
-    for (int i = 0; i<3; i++)
-    {
-        nativeAddressMode[i] = (jint)nativeTexDesc.addressMode[i];
-    }
-    env->ReleasePrimitiveArrayCritical(addressMode, nativeAddressMode, 0);
+    writeIntArrayContentsGeneric<CUaddress_mode>(env, nativeTexDesc.addressMode, addressMode);
 
     env->SetIntField(texDesc, CUDA_TEXTURE_DESC_filterMode, (jint)nativeTexDesc.filterMode);
     env->SetIntField(texDesc, CUDA_TEXTURE_DESC_flags, (jint)nativeTexDesc.flags);
@@ -1099,12 +1077,7 @@ void setCUDA_TEXTURE_DESC(JNIEnv *env, jobject texDesc, CUDA_TEXTURE_DESC &nativ
     env->SetFloatField(texDesc, CUDA_TEXTURE_DESC_maxMipmapLevelClamp, (jfloat)nativeTexDesc.maxMipmapLevelClamp);
 
     jfloatArray borderColor = (jfloatArray)env->GetObjectField(texDesc, CUDA_TEXTURE_DESC_borderColor);
-    jfloat *nativeBorderColor = (jfloat*)env->GetPrimitiveArrayCritical(borderColor, NULL);
-    for (int i = 0; i<4; i++)
-    {
-        nativeBorderColor[i] = (jfloat)nativeTexDesc.borderColor[i];
-    }
-    env->ReleasePrimitiveArrayCritical(borderColor, nativeBorderColor, 0);
+    writeFloatArrayContents(env, nativeTexDesc.borderColor, borderColor);
 
 }
 
@@ -1220,7 +1193,7 @@ bool setOptionValue(JNIEnv *env, jobject jitOptions, CUjit_option option, void* 
                 return false;
             }
             jsize length = env->GetArrayLength(byteArray);
-            jbyte *a = (jbyte*)env->GetPrimitiveArrayCritical(byteArray, NULL);
+            jbyte *a = env->GetByteArrayElements(byteArray, NULL);
             if (a == NULL)
             {
                 return NULL;
@@ -1230,7 +1203,7 @@ bool setOptionValue(JNIEnv *env, jobject jitOptions, CUjit_option option, void* 
             {
                 a[i] = (jbyte)v[i];
             }
-            env->ReleasePrimitiveArrayCritical(byteArray, a, 0);
+            env->ReleaseByteArrayElements(byteArray, a, 0);
             delete[] v;
             return true;
         }
@@ -1495,13 +1468,13 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDeviceGetNameNative
 
     jboolean isCopy = JNI_FALSE;
     CUdevice nativeDev = (CUdevice)(intptr_t)getNativePointerValue(env, dev);
-    char *nativeName = (char*)env->GetPrimitiveArrayCritical(name, &isCopy);
+    char *nativeName = new char[len];
     if (nativeName == NULL)
     {
         return JCUDA_INTERNAL_ERROR;
     }
     int result = cuDeviceGetName(nativeName, len, nativeDev);
-    env->ReleasePrimitiveArrayCritical(name, nativeName, (isCopy==JNI_TRUE)?0:JNI_ABORT);
+    env->SetByteArrayRegion(name, 0, len, (jbyte*)nativeName);
     return result;
 }
 
@@ -2020,13 +1993,13 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuModuleLoadDataNative
     Logger::log(LOG_TRACE, "Executing cuModuleLoadData\n");
 
     CUmodule nativeModule = (CUmodule)getNativePointerValue(env, module);
-    void *nativeImage = env->GetPrimitiveArrayCritical(image, NULL);
+    jbyte *nativeImage = env->GetByteArrayElements(image, NULL);
     if (nativeImage == NULL)
     {
         return JCUDA_INTERNAL_ERROR;
     }
     int result = cuModuleLoadData(&nativeModule, nativeImage);
-    env->ReleasePrimitiveArrayCritical(image, nativeImage, JNI_ABORT);
+    env->ReleaseByteArrayElements(image, nativeImage, JNI_ABORT);
     setNativePointerValue(env, module, (jlong)nativeModule);
     return result;
 }
@@ -2182,13 +2155,13 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuModuleLoadFatBinaryNative
     Logger::log(LOG_TRACE, "Executing cuModuleLoadFatBinary\n");
 
     CUmodule nativeModule = (CUmodule)getNativePointerValue(env, module);
-    void *nativeFatCubin = env->GetPrimitiveArrayCritical(fatCubin, NULL);
+    jbyte *nativeFatCubin = env->GetByteArrayElements(fatCubin, NULL);
     if (nativeFatCubin == NULL)
     {
         return JCUDA_INTERNAL_ERROR;
     }
     int result = cuModuleLoadFatBinary(&nativeModule, nativeFatCubin);
-    env->ReleasePrimitiveArrayCritical(fatCubin, nativeFatCubin, JNI_ABORT);
+    env->ReleaseByteArrayElements(fatCubin, nativeFatCubin, JNI_ABORT);
     return result;
 }
 
@@ -5147,9 +5120,9 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuTexRefSetBorderColorNativ
         ThrowByName(env, "java/lang/IllegalArgumentException", "Parameter 'pBorderColor' must have length 4");
         return JCUDA_INTERNAL_ERROR;
     }
-    jfloat *nativePBorderColor = (jfloat*)env->GetPrimitiveArrayCritical(pBorderColor, NULL);
+    jfloat *nativePBorderColor = env->GetFloatArrayElements(pBorderColor, NULL);
     int result = cuTexRefSetBorderColor(nativeHTexRef, nativePBorderColor);
-    env->ReleasePrimitiveArrayCritical(pBorderColor, nativePBorderColor, JNI_ABORT);
+    env->ReleaseFloatArrayElements(pBorderColor, nativePBorderColor, JNI_ABORT);
 
     return result;
 }
@@ -5521,9 +5494,9 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuTexRefGetBorderColorNativ
         ThrowByName(env, "java/lang/IllegalArgumentException", "Parameter 'pBorderColor' must have length 4");
         return JCUDA_INTERNAL_ERROR;
     }
-    jfloat *nativePBorderColor = (jfloat*)env->GetPrimitiveArrayCritical(pBorderColor, NULL);
+    jfloat *nativePBorderColor = env->GetFloatArrayElements(pBorderColor, NULL);
     int result = cuTexRefGetBorderColor(nativePBorderColor, nativeHTexRef);
-    env->ReleasePrimitiveArrayCritical(pBorderColor, nativePBorderColor, 0);
+    env->ReleaseFloatArrayElements(pBorderColor, nativePBorderColor, 0);
 
     return result;
 }

@@ -531,13 +531,13 @@ JNIEXPORT void JNICALL Java_jcuda_runtime_JCuda_setLogLevel
 
 /**
  * Writes the contents of the array of the given object that is specified
- * by the given field into the given native array
+ * by the given field into the given native array. 
  */
 void getArray(JNIEnv *env, jobject object, jfieldID field, int *nativeArray)
 {
     jintArray array   = (jintArray)env->GetObjectField(object, field);
     int length = env->GetArrayLength(array);
-    jint *arrayData = (jint*)    env->GetPrimitiveArrayCritical(array, NULL);
+    jint *arrayData = env->GetIntArrayElements(array, NULL);
     if (arrayData == NULL)
     {
         return;
@@ -546,7 +546,7 @@ void getArray(JNIEnv *env, jobject object, jfieldID field, int *nativeArray)
     {
         nativeArray[i] = (int)arrayData[i];
     }
-    env->ReleasePrimitiveArrayCritical(array, arrayData, JNI_ABORT);
+    env->ReleaseIntArrayElements(array, arrayData, JNI_ABORT);
 }
 
 /**
@@ -557,9 +557,9 @@ cudaDeviceProp getCudaDeviceProp(JNIEnv *env, jobject prop)
     cudaDeviceProp nativeProp;
 
     jbyteArray propName = (jbyteArray)env->GetObjectField(prop, cudaDeviceProp_name);
-    char *propNameMemory = (char*)env->GetPrimitiveArrayCritical(propName, NULL);
-    memcpy(nativeProp.name, propNameMemory, 256);
-    env->ReleasePrimitiveArrayCritical(propName, propNameMemory, 0);
+    jbyte *propNameElements = env->GetByteArrayElements(propName, NULL);
+    memcpy(nativeProp.name, propNameElements, 256);
+    env->ReleaseByteArrayElements(propName, propNameElements, JNI_ABORT);
 
     nativeProp.totalGlobalMem      = (size_t)env->GetLongField(prop, cudaDeviceProp_totalGlobalMem);
     nativeProp.sharedMemPerBlock   = (size_t)env->GetLongField(prop, cudaDeviceProp_sharedMemPerBlock);
@@ -649,7 +649,7 @@ void setArray(JNIEnv *env, jobject object, jfieldID field, int *nativeArray)
 {
     jintArray array   = (jintArray)env->GetObjectField(object, field);
     int length = env->GetArrayLength(array);
-    jint *arrayData = (jint*)    env->GetPrimitiveArrayCritical(array, NULL);
+    jint *arrayData = env->GetIntArrayElements(array, NULL);
      if (arrayData == NULL)
     {
         return;
@@ -658,7 +658,7 @@ void setArray(JNIEnv *env, jobject object, jfieldID field, int *nativeArray)
     {
         arrayData[i] = (jint)nativeArray[i];
     }
-    env->ReleasePrimitiveArrayCritical(array, arrayData, 0);
+    env->ReleaseIntArrayElements(array, arrayData, 0);
 }
 
 
@@ -669,13 +669,13 @@ void setArray(JNIEnv *env, jobject object, jfieldID field, int *nativeArray)
 void setCudaDeviceProp(JNIEnv *env, jobject prop, cudaDeviceProp nativeProp)
 {
     jbyteArray propName = (jbyteArray)env->GetObjectField(prop, cudaDeviceProp_name);
-    char *propNameMemory = (char*)env->GetPrimitiveArrayCritical(propName, NULL);
-     if (propNameMemory == NULL)
+    jbyte *propNameElements = env->GetByteArrayElements(propName, NULL);
+    if (propNameElements == NULL)
     {
        return;
     }
-    memcpy(propNameMemory, nativeProp.name, 256);
-    env->ReleasePrimitiveArrayCritical(propName, propNameMemory, JNI_ABORT);
+    memcpy(propNameElements, nativeProp.name, 256);
+    env->ReleaseByteArrayElements(propName, propNameElements, 0);
 
     env->SetLongField(prop, cudaDeviceProp_totalGlobalMem,      (jlong)nativeProp.totalGlobalMem);
     env->SetLongField(prop, cudaDeviceProp_sharedMemPerBlock,   (jlong)nativeProp.sharedMemPerBlock);
@@ -928,16 +928,8 @@ textureReference getTextureReference(JNIEnv *env, jobject texref)
     nativeTexref.filterMode  = (cudaTextureFilterMode) env->GetIntField(texref, textureReference_filterMode);
 
     jintArray addressMode = (jintArray)env->GetObjectField(texref, textureReference_addressMode);
-    jint *nativeAddressMode = (jint*)env->GetPrimitiveArrayCritical(addressMode, NULL);
-     if (nativeAddressMode == NULL)
-    {
-       return nativeTexref;
-    }
-    for (int i=0; i<3; i++)
-    {
-        nativeTexref.addressMode[i] = (cudaTextureAddressMode)nativeAddressMode[i];
-    }
-    env->ReleasePrimitiveArrayCritical(addressMode, nativeAddressMode, JNI_ABORT);
+
+    readIntArrayContentsGeneric<cudaTextureAddressMode>(env, addressMode, nativeTexref.addressMode);
 
     jobject channelDesc = env->GetObjectField(texref, textureReference_channelDesc);
     nativeTexref.channelDesc = getCudaChannelFormatDesc(env, channelDesc);
@@ -962,16 +954,8 @@ void setTextureReference(JNIEnv *env, jobject texref, textureReference nativeTex
     env->SetIntField(texref, textureReference_filterMode, (jint)nativeTexref.filterMode);
 
     jintArray addressMode = (jintArray)env->GetObjectField(texref, textureReference_addressMode);
-    jint *nativeAddressMode = (jint*)env->GetPrimitiveArrayCritical(addressMode, NULL);
-     if (nativeAddressMode == NULL)
-    {
-       return;
-    }
-    for (int i=0; i<3; i++)
-    {
-        nativeAddressMode[i] = (jint)nativeTexref.addressMode[i];
-    }
-    env->ReleasePrimitiveArrayCritical(addressMode, nativeAddressMode, 0);
+
+    writeIntArrayContentsGeneric<cudaTextureAddressMode>(env, nativeTexref.addressMode, addressMode);
 
     jobject channelDesc = env->GetObjectField(texref, textureReference_channelDesc);
     setCudaChannelFormatDesc(env, channelDesc, nativeTexref.channelDesc);
@@ -1088,16 +1072,13 @@ cudaIpcEventHandle_t getCudaIpcEventHandle(JNIEnv *env, jobject handle)
     jobject reservedObject = env->GetObjectField(handle, cudaIpcEventHandle_reserved);
     jbyteArray reserved = (jbyteArray)reservedObject;
     int len = env->GetArrayLength(reserved); // Should always be CUDA_IPC_HANDLE_SIZE
-    char *reservedData = (char*)env->GetPrimitiveArrayCritical(reserved, NULL);
+    jbyte *reservedData = env->GetByteArrayElements(reserved, NULL);
     if (reservedData == NULL)
     {
         return nativeHandle;
     }
-    for (int i=0; i<len; i++)
-    {
-        nativeHandle.reserved[i] = reservedData[i];
-    }
-    env->ReleasePrimitiveArrayCritical(reserved, reservedData, 0);
+    memcpy(nativeHandle.reserved, reservedData, len);
+    env->ReleaseByteArrayElements(reserved, reservedData, JNI_ABORT);
     return nativeHandle;
 }
 
@@ -1111,16 +1092,13 @@ void setCudaIpcEventHandle(JNIEnv *env, jobject handle, cudaIpcEventHandle_t &na
     jobject reservedObject = env->GetObjectField(handle, cudaIpcEventHandle_reserved);
     jbyteArray reserved = (jbyteArray)reservedObject;
     int len = env->GetArrayLength(reserved); // Should always be CUDA_IPC_HANDLE_SIZE
-    char *reservedData = (char*)env->GetPrimitiveArrayCritical(reserved, NULL);
+    jbyte *reservedData = env->GetByteArrayElements(reserved, NULL);
     if (reservedData == NULL)
     {
         return;
     }
-    for (int i=0; i<len; i++)
-    {
-        reservedData[i] = nativeHandle.reserved[i];
-    }
-    env->ReleasePrimitiveArrayCritical(reserved, reservedData, 0);
+    memcpy(reservedData, nativeHandle.reserved, len);
+    env->ReleaseByteArrayElements(reserved, reservedData, 0);
 }
 
 
@@ -1137,16 +1115,13 @@ cudaIpcMemHandle_t getCudaIpcMemHandle(JNIEnv *env, jobject handle)
     jobject reservedObject = env->GetObjectField(handle, cudaIpcMemHandle_reserved);
     jbyteArray reserved = (jbyteArray)reservedObject;
     int len = env->GetArrayLength(reserved); // Should always be CUDA_IPC_HANDLE_SIZE
-    char *reservedData = (char*)env->GetPrimitiveArrayCritical(reserved, NULL);
+    jbyte *reservedData = env->GetByteArrayElements(reserved, NULL);
     if (reservedData == NULL)
     {
         return nativeHandle;
     }
-    for (int i=0; i<len; i++)
-    {
-        nativeHandle.reserved[i] = reservedData[i];
-    }
-    env->ReleasePrimitiveArrayCritical(reserved, reservedData, 0);
+    memcpy(nativeHandle.reserved, reservedData, len);
+    env->ReleaseByteArrayElements(reserved, reservedData, JNI_ABORT);
     return nativeHandle;
 }
 
@@ -1160,16 +1135,13 @@ void setCudaIpcMemHandle(JNIEnv *env, jobject handle, cudaIpcMemHandle_t &native
     jobject reservedObject = env->GetObjectField(handle, cudaIpcMemHandle_reserved);
     jbyteArray reserved = (jbyteArray)reservedObject;
     int len = env->GetArrayLength(reserved); // Should always be CUDA_IPC_HANDLE_SIZE
-    char *reservedData = (char*)env->GetPrimitiveArrayCritical(reserved, NULL);
+    jbyte *reservedData = env->GetByteArrayElements(reserved, NULL);
     if (reservedData == NULL)
     {
         return;
     }
-    for (int i=0; i<len; i++)
-    {
-        reservedData[i] = nativeHandle.reserved[i];
-    }
-    env->ReleasePrimitiveArrayCritical(reserved, reservedData, 0);
+    memcpy(reservedData, nativeHandle.reserved, len);
+    env->ReleaseByteArrayElements(reserved, reservedData, 0);
 }
 
 
@@ -1332,32 +1304,14 @@ cudaTextureDesc getCudaTextureDesc(JNIEnv *env, jobject texDesc)
     memset(&nativeTexDesc,0,sizeof(cudaTextureDesc));
 
     jintArray addressMode = (jintArray)env->GetObjectField(texDesc, cudaTextureDesc_addressMode);
-    jint *nativeAddressMode = (jint*)env->GetPrimitiveArrayCritical(addressMode, NULL);
-    if (nativeAddressMode == NULL)
-    {
-        return nativeTexDesc;
-    }
-    for (int i=0; i<3; i++)
-    {
-        nativeTexDesc.addressMode[i] = (cudaTextureAddressMode)nativeAddressMode[i];
-    }
-    env->ReleasePrimitiveArrayCritical(addressMode, nativeAddressMode, JNI_ABORT);
+    readIntArrayContentsGeneric<cudaTextureAddressMode>(env, addressMode, nativeTexDesc.addressMode);
 
     nativeTexDesc.filterMode = (cudaTextureFilterMode) env->GetIntField(texDesc, cudaTextureDesc_filterMode);
     nativeTexDesc.readMode = (cudaTextureReadMode) env->GetIntField(texDesc, cudaTextureDesc_readMode);
     nativeTexDesc.sRGB = (int) env->GetIntField(texDesc, cudaTextureDesc_sRGB);
 
     jfloatArray borderColor = (jfloatArray)env->GetObjectField(texDesc, cudaTextureDesc_borderColor);
-    jfloat *nativeBorderColor = (jfloat*)env->GetPrimitiveArrayCritical(borderColor, NULL);
-    if (nativeBorderColor == NULL)
-    {
-        return nativeTexDesc;
-    }
-    for (int i = 0; i<4; i++)
-    {
-        nativeTexDesc.borderColor[i] = (float)nativeBorderColor[i];
-    }
-    env->ReleasePrimitiveArrayCritical(borderColor, nativeBorderColor, JNI_ABORT);
+    readFloatArrayContents(env, borderColor, nativeTexDesc.borderColor);
 
     nativeTexDesc.normalizedCoords = (int) env->GetIntField(texDesc, cudaTextureDesc_normalizedCoords);
     nativeTexDesc.maxAnisotropy = (unsigned int) env->GetIntField(texDesc, cudaTextureDesc_maxAnisotropy);
@@ -1377,32 +1331,14 @@ cudaTextureDesc getCudaTextureDesc(JNIEnv *env, jobject texDesc)
 void setCudaTextureDesc(JNIEnv *env, jobject texDesc, cudaTextureDesc &nativeTexDesc)
 {
     jintArray addressMode = (jintArray)env->GetObjectField(texDesc, cudaTextureDesc_addressMode);
-    jint *nativeAddressMode = (jint*)env->GetPrimitiveArrayCritical(addressMode, NULL);
-    if (nativeAddressMode == NULL)
-    {
-        return;
-    }
-    for (int i=0; i<3; i++)
-    {
-         nativeAddressMode[i] = (jint)nativeTexDesc.addressMode[i];
-    }
-    env->ReleasePrimitiveArrayCritical(addressMode, nativeAddressMode, 0);
+    writeIntArrayContentsGeneric<cudaTextureAddressMode>(env, nativeTexDesc.addressMode, addressMode);
 
     env->SetIntField(texDesc, cudaTextureDesc_filterMode, (jint)nativeTexDesc.filterMode);
     env->SetIntField(texDesc, cudaTextureDesc_readMode, (jint)nativeTexDesc.readMode);
     env->SetIntField(texDesc, cudaTextureDesc_sRGB, (jint)nativeTexDesc.sRGB);
 
     jfloatArray borderColor = (jfloatArray)env->GetObjectField(texDesc, cudaTextureDesc_borderColor);
-    jfloat *nativeBorderColor = (jfloat*)env->GetPrimitiveArrayCritical(borderColor, NULL);
-    if (nativeBorderColor == NULL)
-    {
-        return;
-    }
-    for (int i = 0; i<4; i++)
-    {
-        nativeBorderColor[i] = (jfloat)nativeTexDesc.borderColor[i];
-    }
-    env->ReleasePrimitiveArrayCritical(borderColor, nativeBorderColor, 0);
+    writeFloatArrayContents(env, nativeTexDesc.borderColor, borderColor);
 
     env->SetIntField(texDesc, cudaTextureDesc_normalizedCoords, (jint)nativeTexDesc.normalizedCoords);
     env->SetIntField(texDesc, cudaTextureDesc_maxAnisotropy, (jint)nativeTexDesc.maxAnisotropy);
@@ -1884,18 +1820,7 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaSetValidDevicesNative
     }
     Logger::log(LOG_TRACE, "Executing cudaSetValidDevices\n");
 
-    jint *device_arrElements = (jint*)env->GetPrimitiveArrayCritical(device_arr, NULL);
-    if (device_arrElements == NULL)
-    {
-        return JCUDA_INTERNAL_ERROR;
-    }
-
-    int *nativeDevice_arr = new int[len];
-    for (int i=0; i<len; i++)
-    {
-        nativeDevice_arr[i] = (int)device_arrElements[i];
-    }
-    env->ReleasePrimitiveArrayCritical(device_arr, device_arrElements, JNI_ABORT);
+    int *nativeDevice_arr = getIntArrayContentsGeneric<int>(env, device_arr);
 
     int result = cudaSetValidDevices(nativeDevice_arr, (int)len);
 
@@ -2871,22 +2796,14 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMallocPitchNative
 
     void *nativeDevPtr = NULL;
 
-    size_t *nativePitch = new size_t[3];
-    jlong *nativePitchJava = (jlong*)env->GetPrimitiveArrayCritical(pitch, NULL);
-    for (int i=0; i<3; i++)
-    {
-        nativePitch[i] = (size_t)nativePitchJava[i];
-    }
+    size_t *nativePitch = getLongArrayContentsGeneric<size_t>(env, pitch);
 
     int result = cudaMallocPitch(&nativeDevPtr, nativePitch, (size_t)width, (size_t)height);
 
     setPointer(env, devPtr, (jlong)nativeDevPtr);
-    for (int i=0; i<3; i++)
-    {
-        nativePitchJava[i] = nativePitch[i];
-    }
+
+    writeLongArrayContentsGeneric<size_t>(env, nativePitch, pitch);
     delete[] nativePitch;
-    env->ReleasePrimitiveArrayCritical(pitch, nativePitchJava, 0);
 
     return result;
 }
@@ -5040,16 +4957,7 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGLGetDevicesNative
 
     int result = cudaGLGetDevices(&nativePCudaDeviceCount, nativePCudaDevices, (unsigned int)cudaDeviceCount, (cudaGLDeviceList)deviceList);
 
-    jint *pCudaDevicesElements = (jint*)env->GetPrimitiveArrayCritical(pCudaDevices, NULL);
-    if (pCudaDevicesElements == NULL)
-    {
-        return JCUDA_INTERNAL_ERROR;
-    }
-    for (unsigned int i=0; i<nativePCudaDeviceCount; i++)
-    {
-        pCudaDevicesElements[i] = nativePCudaDevices[i];
-    }
-    env->ReleasePrimitiveArrayCritical(pCudaDevices, pCudaDevicesElements, 0);
+    writeIntArrayContentsGeneric<int>(env, nativePCudaDevices, pCudaDevices);
     delete[] nativePCudaDevices;
     if (!set(env, pCudaDeviceCount, 0, (jint)nativePCudaDeviceCount)) return JCUDA_INTERNAL_ERROR;
 
