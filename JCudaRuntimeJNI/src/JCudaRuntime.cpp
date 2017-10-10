@@ -2442,7 +2442,7 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemset3DNative
 
     int result = cudaMemset3D(nativePitchDevPtr, (int)value, nativeExtent);
 
-    if (!releasePointerData(env, pointerData, JNI_COMMIT)) return JCUDA_INTERNAL_ERROR;
+    if (!releasePointerData(env, pointerData)) return JCUDA_INTERNAL_ERROR;
 
     return result;
 }
@@ -2540,7 +2540,7 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemset3DAsyncNative
 
     int result = cudaMemset3DAsync(nativePitchedDevPtr, (int)value, nativeExtent, nativeStream);
 
-    if (!releasePointerData(env, pointerData, JNI_COMMIT)) return JCUDA_INTERNAL_ERROR;
+    if (!releasePointerData(env, pointerData)) return JCUDA_INTERNAL_ERROR;
 
     return result;
 
@@ -2570,7 +2570,7 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemcpy3DNative
     int result = cudaMemcpy3D(&nativeP);
 
     if (!releasePointerData(env, srcPointerData, JNI_ABORT)) return JCUDA_INTERNAL_ERROR;
-    if (!releasePointerData(env, dstPointerData, JNI_COMMIT)) return JCUDA_INTERNAL_ERROR;
+    if (!releasePointerData(env, dstPointerData)) return JCUDA_INTERNAL_ERROR;
 
     return result;
 }
@@ -2597,7 +2597,7 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemcpy3DPeerNative
     int result = cudaMemcpy3DPeer(&nativeP);
 
     if (!releasePointerData(env, srcPointerData, JNI_ABORT)) return JCUDA_INTERNAL_ERROR;
-    if (!releasePointerData(env, dstPointerData, JNI_COMMIT)) return JCUDA_INTERNAL_ERROR;
+    if (!releasePointerData(env, dstPointerData)) return JCUDA_INTERNAL_ERROR;
 
     return result;
 }
@@ -2635,7 +2635,7 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemcpy3DAsyncNative
     int result = cudaMemcpy3DAsync(&nativeP, nativeStream);
 
     if (!releasePointerData(env, srcPointerData, JNI_ABORT)) return JCUDA_INTERNAL_ERROR;
-    if (!releasePointerData(env, dstPointerData, JNI_COMMIT)) return JCUDA_INTERNAL_ERROR;
+    if (!releasePointerData(env, dstPointerData)) return JCUDA_INTERNAL_ERROR;
 
     return result;
 }
@@ -2672,7 +2672,7 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemcpy3DPeerAsyncNative
     int result = cudaMemcpy3DPeerAsync(&nativeP, nativeStream);
 
     if (!releasePointerData(env, srcPointerData, JNI_ABORT)) return JCUDA_INTERNAL_ERROR;
-    if (!releasePointerData(env, dstPointerData, JNI_COMMIT)) return JCUDA_INTERNAL_ERROR;
+    if (!releasePointerData(env, dstPointerData)) return JCUDA_INTERNAL_ERROR;
 
     return result;
 }
