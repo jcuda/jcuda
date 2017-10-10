@@ -521,6 +521,11 @@ public class Pointer extends NativePointerObject
      * Returns a ByteBuffer that corresponds to the specified
      * segment of the memory that this pointer points to.<br>
      * <br>
+     * The returned byte buffer will have the byte order that is implied
+     * by <code>ByteOrder#nativeOrder()</code>. It will be a slice of the
+     * buffer that is stored internally. So it will share the same memory,
+     * but its position and limit will be independent of the internal buffer.
+     * <br>
      * This function may only be applied to pointers that have been set to 
      * point to a region of host- or unified memory using one of these 
      * methods:
@@ -539,6 +544,11 @@ public class Pointer extends NativePointerObject
      * @param byteOffset The offset in bytes
      * @param byteSize The size of the byte buffer, in bytes
      * @return The byte buffer
+     * @throws IllegalArgumentException If the <code>byteOffset</code> and
+     * <code>byteSize</code> describe an invalid memory range (for example,
+     * when the <code>byteOffset</code> is negative)
+     * @throws ArithmeticException If the <code>byteOffset</code> or 
+     * <code>byteOffset + byteSize</code> overflows an <code>int</code>.
      */
     public ByteBuffer getByteBuffer(long byteOffset, long byteSize)
     {
@@ -550,12 +560,54 @@ public class Pointer extends NativePointerObject
         {
             return null;
         }
-        ByteBuffer byteBuffer = (ByteBuffer)buffer;
-        byteBuffer.limit((int)(byteOffset + byteSize));
-        byteBuffer.position((int)byteOffset);
-        return byteBuffer.slice();
+        ByteBuffer internalByteBuffer = (ByteBuffer)buffer;
+        ByteBuffer byteBuffer = internalByteBuffer.slice();
+        byteBuffer.limit(Math.toIntExact(byteOffset + byteSize));
+        byteBuffer.position(Math.toIntExact(byteOffset));
+        return byteBuffer.slice().order(ByteOrder.nativeOrder());
     }
 
+    /**
+     * Returns a ByteBuffer that corresponds to the memory that this 
+     * pointer points to.<br>
+     * <br>
+     * The returned byte buffer will have the byte order that is implied
+     * by <code>ByteOrder#nativeOrder()</code>. It will be a slice of the
+     * buffer that is stored internally. So it will share the same memory,
+     * but its position and limit will be independent of the internal buffer.
+     * <br>
+     * This function may only be applied to pointers that have been set to 
+     * point to a region of host- or unified memory using one of these 
+     * methods:
+     * <ul>
+     *   <li>{@link jcuda.driver.JCudaDriver#cuMemAllocHost}</li>
+     *   <li>{@link jcuda.driver.JCudaDriver#cuMemHostAlloc}</li>
+     *   <li>{@link jcuda.driver.JCudaDriver#cuMemAllocManaged}</li>
+     *   <li>{@link jcuda.runtime.JCuda#cudaMallocHost}</li>
+     *   <li>{@link jcuda.runtime.JCuda#cudaHostAlloc}</li>
+     *   <li>{@link jcuda.runtime.JCuda#cudaMallocManaged}</li>
+     *   <li>{@link Pointer#to(byte[])}</li>
+     * </ul>
+     * <br>
+     * For other pointer types, <code>null</code> is returned.
+     * 
+     * @return The byte buffer
+     */
+    public ByteBuffer getByteBuffer()
+    {
+        if (buffer == null)
+        {
+            return null;
+        }
+        if (!(buffer instanceof ByteBuffer))
+        {
+            return null;
+        }
+        ByteBuffer internalByteBuffer = (ByteBuffer)buffer;
+        ByteBuffer byteBuffer = internalByteBuffer.slice();
+        return byteBuffer.order(ByteOrder.nativeOrder());
+    }
+    
 
     /**
      * Returns the byte offset
