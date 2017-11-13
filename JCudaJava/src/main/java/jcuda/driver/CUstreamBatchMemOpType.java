@@ -42,6 +42,16 @@ public class CUstreamBatchMemOpType
     public static final int CU_STREAM_MEM_OP_WRITE_VALUE_32 = 2;
     
     /**
+     * Represents a ::cuStreamWaitValue64 operation 
+     */
+    public static final int CU_STREAM_MEM_OP_WAIT_VALUE_64  = 4;
+    
+    /**
+     * Represents a ::cuStreamWriteValue64 operation 
+     */
+    public static final int CU_STREAM_MEM_OP_WRITE_VALUE_64 = 5;
+    
+    /**
      * This has the same effect as ::CU_STREAM_WAIT_VALUE_FLUSH, but as a
      * standalone operation. 
      */

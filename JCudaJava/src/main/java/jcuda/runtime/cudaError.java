@@ -82,9 +82,10 @@ public class cudaError
      * This indicates that the device kernel took too long to execute. This can
      * only occur if timeouts are enabled - see the device property
      * {@link cudaDeviceProp#kernelExecTimeoutEnabled} "kernelExecTimeoutEnabled"
-     * for more information. The device cannot be used until {@link JCuda#cudaThreadExit}
-     * is called. All existing device memory allocations are invalid and must be
-     * reconstructed if the program is to continue using CUDA.
+     * for more information. 
+     * This leaves the process in an inconsistent state and any further CUDA work
+     * will return the same error. To continue using CUDA, the process must be terminated
+     * and relaunched.
      */
     public static final int cudaErrorLaunchTimeout                =      6;
 
@@ -557,29 +558,26 @@ public class cudaError
     /**
      * Device encountered an error in the call stack during kernel execution,
      * possibly due to stack corruption or exceeding the stack size limit.
-     * The context cannot be used, so it must be destroyed (and a new one
-     * should be created).
-     * All existing device memory allocations from this context are invalid
-     * and must be reconstructed if the program is to continue using CUDA.
+     * This leaves the process in an inconsistent state and any further CUDA 
+     * work will return the same error. To continue using CUDA, the process 
+     * must be terminated and relaunched.
      */
     public static final int cudaErrorHardwareStackError           =     72;
 
     /**
      * The device encountered an illegal instruction during kernel execution
-     * The context cannot be used, so it must be destroyed (and a new one
-     * should be created).
-     * All existing device memory allocations from this context are invalid
-     * and must be reconstructed if the program is to continue using CUDA.
+     * This leaves the process in an inconsistent state and any further CUDA 
+     * work will return the same error. To continue using CUDA, the process 
+     * must be terminated and relaunched.
      */
     public static final int cudaErrorIllegalInstruction           =     73;
 
     /**
      * The device encountered a load or store instruction
      * on a memory address which is not aligned.
-     * The context cannot be used, so it must be destroyed (and a new one
-     * should be created).
-     * All existing device memory allocations from this context are invalid
-     * and must be reconstructed if the program is to continue using CUDA.
+     * This leaves the process in an inconsistent state and any further CUDA 
+     * work will return the same error. To continue using CUDA, the process 
+     * must be terminated and relaunched.
      */
     public static final int cudaErrorMisalignedAddress            =     74;
 
@@ -588,29 +586,26 @@ public class cudaError
      * which can only operate on memory locations in certain address spaces
      * (global, shared, or local), but was supplied a memory address not
      * belonging to an allowed address space.
-     * The context cannot be used, so it must be destroyed (and a new one
-     * should be created).
-     * All existing device memory allocations from this context are invalid
-     * and must be reconstructed if the program is to continue using CUDA.
+     * This leaves the process in an inconsistent state and any further CUDA 
+     * work will return the same error. To continue using CUDA, the process 
+     * must be terminated and relaunched.
      */
     public static final int cudaErrorInvalidAddressSpace          =     75;
 
     /**
      * The device encountered an invalid program counter.
-     * The context cannot be used, so it must be destroyed (and a new one
-     * should be created).
-     * All existing device memory allocations from this context are invalid
-     * and must be reconstructed if the program is to continue using CUDA.
+     * This leaves the process in an inconsistent state and any further CUDA 
+     * work will return the same error. To continue using CUDA, the process 
+     * must be terminated and relaunched.
      */
     public static final int cudaErrorInvalidPc                    =     76;
 
     /**
      * The device encountered a load or store instruction on an invalid
      * memory address.
-     * The context cannot be used, so it must be destroyed (and a new one
-     * should be created).
-     * All existing device memory allocations from this context are invalid
-     * and must be reconstructed if the program is to continue using CUDA.
+     * This leaves the process in an inconsistent state and any further CUDA 
+     * work will return the same error. To continue using CUDA, the process 
+     * must be terminated and relaunched.
      */
     public static final int cudaErrorIllegalAddress               =     77;
 
@@ -631,6 +626,25 @@ public class cudaError
      */
     public static final int cudaErrorNvlinkUncorrectable          =     80;
 
+    /**
+     * This indicates that the PTX JIT compiler library was not found. The JIT
+     * Compiler library is used for PTX compilation. The runtime may fall back
+     * to compiling PTX if an application does not contain a suitable binary for
+     * the current device.
+     */
+    public static final int cudaErrorJitCompilerNotFound          =     81;
+
+    /**
+     * This error indicates that the number of blocks launched per grid for a
+     * kernel that was launched via either ::cudaLaunchCooperativeKernel or
+     * ::cudaLaunchCooperativeKernelMultiDevice exceeds the maximum number of
+     * blocks as allowed by ::cudaOccupancyMaxActiveBlocksPerMultiprocessor or
+     * ::cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags times the number
+     * of multiprocessors as specified by the device attribute
+     * ::cudaDevAttrMultiProcessorCount.
+     */
+    public static final int cudaErrorCooperativeLaunchTooLarge    =     82;
+    
     /**
      * This indicates an internal startup failure in the CUDA runtime.
      */
@@ -737,6 +751,8 @@ public class cudaError
             case cudaErrorInvalidPtx                   : return "cudaErrorInvalidPtx";
             case cudaErrorInvalidGraphicsContext       : return "cudaErrorInvalidGraphicsContext";
             case cudaErrorNvlinkUncorrectable          : return "cudaErrorNvlinkUncorrectable";
+            case cudaErrorJitCompilerNotFound          : return "cudaErrorJitCompilerNotFound";
+            case cudaErrorCooperativeLaunchTooLarge    : return "cudaErrorCooperativeLaunchTooLarge";
             case cudaErrorStartupFailure               : return "cudaErrorStartupFailure";
             case jcudaInternalError                    : return "jcudaInternalError";
         }

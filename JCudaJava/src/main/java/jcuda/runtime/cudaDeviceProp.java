@@ -390,7 +390,34 @@ public class cudaDeviceProp
      */
     public int concurrentManagedAccess;
 
-
+    /**
+     * This is 1 if the device supports Compute Preemption, and 0 otherwise.
+     */
+    public int computePreemptionSupported;
+    
+    /**
+     * This is 1 if the device can access host registered memory at the same 
+     * virtual address as the CPU, and 0 otherwise.
+     */
+    public int canUseHostPointerForRegisteredMem;
+    
+    /**
+     * This is 1 if the device supports launching cooperative kernels 
+     * via ::cudaLaunchCooperativeKernel, and 0 otherwise.
+     */
+    public int cooperativeLaunch;
+    
+    /**
+     * This is 1 if the device supports launching cooperative kernels via 
+     * ::cudaLaunchCooperativeKernelMultiDevice, and 0 otherwise
+     */
+    public int cooperativeMultiDeviceLaunch;
+    
+    /**
+     * Per device maximum shared memory per block usable by special opt in 
+     */
+    public long sharedMemPerBlockOptin;     
+    
     /**
      * Returns the String describing the name of this cudaDeviceProp
      *
@@ -510,7 +537,12 @@ public class cudaDeviceProp
             "hostNativeAtomicSupported="+hostNativeAtomicSupported+f+
             "singleToDoublePrecisionPerfRatio="+singleToDoublePrecisionPerfRatio+f+
             "pageableMemoryAccess="+pageableMemoryAccess+f+
-            "concurrentManagedAccess="+concurrentManagedAccess+f;
+            "concurrentManagedAccess="+concurrentManagedAccess+f+
+            "computePreemptionSupported="+computePreemptionSupported+f+
+            "canUseHostPointerForRegisteredMem="+canUseHostPointerForRegisteredMem+f+
+            "cooperativeLaunch="+cooperativeLaunch+f+
+            "cooperativeMultiDeviceLaunch="+cooperativeMultiDeviceLaunch+f+
+            "sharedMemPerBlockOptin="+sharedMemPerBlockOptin+f;
     }
 
     /**

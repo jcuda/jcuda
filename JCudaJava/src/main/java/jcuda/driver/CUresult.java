@@ -229,6 +229,11 @@ public class CUresult
     public static final int CUDA_ERROR_NVLINK_UNCORRECTABLE           = 220;
     
     /**
+     * This indicates that the PTX JIT compiler library was not found.
+     */
+    public static final int CUDA_ERROR_JIT_COMPILER_NOT_FOUND         = 221;
+    
+    /**
      * This indicates that the device kernel source is invalid.
      */
     public static final int CUDA_ERROR_INVALID_SOURCE                 = 300;
@@ -279,9 +284,9 @@ public class CUresult
     /**
      * While executing a kernel, the device encountered a
      * load or store instruction on an invalid memory address.
-     * The context cannot be used, so it must be destroyed (and a new one should be created).
-     * All existing device memory allocations from this context are invalid
-     * and must be reconstructed if the program is to continue using CUDA.
+     * This leaves the process in an inconsistent state and any further CUDA 
+     * work will return the same error. To continue using CUDA, the process 
+     * must be terminated and relaunched.
      */
     public static final int CUDA_ERROR_ILLEGAL_ADDRESS                = 700;
 
@@ -299,11 +304,10 @@ public class CUresult
     /**
      * This indicates that the device kernel took too long to execute. This can
      * only occur if timeouts are enabled - see the device attribute
-     * ::CU_DEVICE_ATTRIBUTE_KERNEL_EXEC_TIMEOUT for more information. The
-     * context cannot be used (and must be destroyed similar to
-     * ::CUDA_ERROR_LAUNCH_FAILED). All existing device memory allocations from
-     * this context are invalid and must be reconstructed if the program is to
-     * continue using CUDA.
+     * ::CU_DEVICE_ATTRIBUTE_KERNEL_EXEC_TIMEOUT for more information. 
+     * This leaves the process in an inconsistent state and any further CUDA 
+     * work will return the same error. To continue using CUDA, the process 
+     * must be terminated and relaunched.
      */
     public static final int CUDA_ERROR_LAUNCH_TIMEOUT                 = 702;
 
@@ -391,26 +395,26 @@ public class CUresult
     /**
      * While executing a kernel, the device encountered a stack error.
      * This can be due to stack corruption or exceeding the stack size limit.
-     * The context cannot be used, so it must be destroyed (and a new one should be created).
-     * All existing device memory allocations from this context are invalid
-     * and must be reconstructed if the program is to continue using CUDA.
+     * This leaves the process in an inconsistent state and any further CUDA 
+     * work will return the same error. To continue using CUDA, the process 
+     * must be terminated and relaunched.
      */
     public static final int CUDA_ERROR_HARDWARE_STACK_ERROR           = 714;
 
     /**
      * While executing a kernel, the device encountered an illegal instruction.
-     * The context cannot be used, so it must be destroyed (and a new one should be created).
-     * All existing device memory allocations from this context are invalid
-     * and must be reconstructed if the program is to continue using CUDA.
+     * This leaves the process in an inconsistent state and any further CUDA 
+     * work will return the same error. To continue using CUDA, the process 
+     * must be terminated and relaunched.
      */
     public static final int CUDA_ERROR_ILLEGAL_INSTRUCTION            = 715;
 
     /**
      * While executing a kernel, the device encountered a load or store instruction
      * on a memory address which is not aligned.
-     * The context cannot be used, so it must be destroyed (and a new one should be created).
-     * All existing device memory allocations from this context are invalid
-     * and must be reconstructed if the program is to continue using CUDA.
+     * This leaves the process in an inconsistent state and any further CUDA 
+     * work will return the same error. To continue using CUDA, the process 
+     * must be terminated and relaunched.
      */
     public static final int CUDA_ERROR_MISALIGNED_ADDRESS             = 716;
 
@@ -419,30 +423,41 @@ public class CUresult
      * which can only operate on memory locations in certain address spaces
      * (global, shared, or local), but was supplied a memory address not
      * belonging to an allowed address space.
-     * The context cannot be used, so it must be destroyed (and a new one should be created).
-     * All existing device memory allocations from this context are invalid
-     * and must be reconstructed if the program is to continue using CUDA.
+     * This leaves the process in an inconsistent state and any further CUDA 
+     * work will return the same error. To continue using CUDA, the process 
+     * must be terminated and relaunched.
      */
     public static final int CUDA_ERROR_INVALID_ADDRESS_SPACE          = 717;
 
     /**
      * While executing a kernel, the device program counter wrapped its address space.
-     * The context cannot be used, so it must be destroyed (and a new one should be created).
-     * All existing device memory allocations from this context are invalid
-     * and must be reconstructed if the program is to continue using CUDA.
+     * This leaves the process in an inconsistent state and any further CUDA 
+     * work will return the same error. To continue using CUDA, the process 
+     * must be terminated and relaunched.
      */
     public static final int CUDA_ERROR_INVALID_PC                     = 718;
 
     /**
      * An exception occurred on the device while executing a kernel. Common
      * causes include dereferencing an invalid device pointer and accessing
-     * out of bounds shared memory. The context cannot be used, so it must
-     * be destroyed (and a new one should be created). All existing device
-     * memory allocations from this context are invalid and must be
-     * reconstructed if the program is to continue using CUDA.
+     * out of bounds shared memory. 
+     * This leaves the process in an inconsistent state and any further CUDA 
+     * work will return the same error. To continue using CUDA, the process 
+     * must be terminated and relaunched.
      */
     public static final int CUDA_ERROR_LAUNCH_FAILED                  = 719;
 
+    /**
+     * This error indicates that the number of blocks launched per grid for a
+     * kernel that was launched via either ::cuLaunchCooperativeKernel or
+     * ::cuLaunchCooperativeKernelMultiDevice exceeds the maximum number of
+     * blocks as allowed by ::cuOccupancyMaxActiveBlocksPerMultiprocessor or
+     * ::cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags times the number
+     * of multiprocessors as specified by the device attribute
+     * ::CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT.
+     */
+    public static final int CUDA_ERROR_COOPERATIVE_LAUNCH_TOO_LARGE   = 720;
+        
     /**
      * This error indicates that the attempted operation is not permitted.
      */
@@ -500,6 +515,7 @@ public class CUresult
             case CUDA_ERROR_INVALID_PTX                    : return "CUDA_ERROR_INVALID_PTX";
             case CUDA_ERROR_INVALID_GRAPHICS_CONTEXT       : return "CUDA_ERROR_INVALID_GRAPHICS_CONTEXT";
             case CUDA_ERROR_NVLINK_UNCORRECTABLE           : return "CUDA_ERROR_NVLINK_UNCORRECTABLE";
+            case CUDA_ERROR_JIT_COMPILER_NOT_FOUND         : return "CUDA_ERROR_JIT_COMPILER_NOT_FOUND";
             case CUDA_ERROR_INVALID_SOURCE                 : return "CUDA_ERROR_INVALID_SOURCE";
             case CUDA_ERROR_FILE_NOT_FOUND                 : return "CUDA_ERROR_FILE_NOT_FOUND";
             case CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND : return "CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND";
@@ -528,6 +544,7 @@ public class CUresult
             case CUDA_ERROR_INVALID_ADDRESS_SPACE          : return "CUDA_ERROR_INVALID_ADDRESS_SPACE";
             case CUDA_ERROR_INVALID_PC                     : return "CUDA_ERROR_INVALID_PC";
             case CUDA_ERROR_LAUNCH_FAILED                  : return "CUDA_ERROR_LAUNCH_FAILED";
+            case CUDA_ERROR_COOPERATIVE_LAUNCH_TOO_LARGE   : return "CUDA_ERROR_COOPERATIVE_LAUNCH_TOO_LARGE";
             case CUDA_ERROR_NOT_PERMITTED                  : return "CUDA_ERROR_NOT_PERMITTED";
             case CUDA_ERROR_NOT_SUPPORTED                  : return "CUDA_ERROR_NOT_SUPPORTED";
             case CUDA_ERROR_UNKNOWN                        : return "CUDA_ERROR_UNKNOWN";

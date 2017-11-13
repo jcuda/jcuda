@@ -164,6 +164,18 @@ jfieldID CUDA_TEXTURE_DESC_minMipmapLevelClamp; // float
 jfieldID CUDA_TEXTURE_DESC_maxMipmapLevelClamp; // float
 jfieldID CUDA_TEXTURE_DESC_borderColor; // float[4]
 
+jfieldID CUDA_LAUNCH_PARAMS_function; // CUfunction
+jfieldID CUDA_LAUNCH_PARAMS_gridDimX; // unsigned int
+jfieldID CUDA_LAUNCH_PARAMS_gridDimY; // unsigned int
+jfieldID CUDA_LAUNCH_PARAMS_gridDimZ; // unsigned int
+jfieldID CUDA_LAUNCH_PARAMS_blockDimX; // unsigned int
+jfieldID CUDA_LAUNCH_PARAMS_blockDimY; // unsigned int
+jfieldID CUDA_LAUNCH_PARAMS_blockDimZ; // unsigned int
+jfieldID CUDA_LAUNCH_PARAMS_sharedMemBytes; // unsigned int
+jfieldID CUDA_LAUNCH_PARAMS_hStream; // CUstream
+jfieldID CUDA_LAUNCH_PARAMS_kernelParams; // void**
+
+
 jclass CUdevice_class;
 jmethodID CUdevice_constructor;
 
@@ -366,6 +378,19 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, CUDA_TEXTURE_DESC_minMipmapLevelClamp, "minMipmapLevelClamp", "F")) return JNI_ERR;
     if (!init(env, cls, CUDA_TEXTURE_DESC_maxMipmapLevelClamp, "maxMipmapLevelClamp", "F")) return JNI_ERR;
     if (!init(env, cls, CUDA_TEXTURE_DESC_borderColor,         "borderColor",         "[F")) return JNI_ERR;
+
+    // Obtain the fieldIDs of the CUDA_LAUNCH_PARAMS class
+    if (!init(env, cls, "jcuda/driver/CUDA_LAUNCH_PARAMS")) return JNI_ERR;
+    if (!init(env, cls, CUDA_LAUNCH_PARAMS_function,         "function",         "Ljcuda/driver/CUfunction;")) return JNI_ERR;
+    if (!init(env, cls, CUDA_LAUNCH_PARAMS_gridDimX,         "gridDimX",         "I")) return JNI_ERR;
+    if (!init(env, cls, CUDA_LAUNCH_PARAMS_gridDimY,         "gridDimY",         "I")) return JNI_ERR;
+    if (!init(env, cls, CUDA_LAUNCH_PARAMS_gridDimZ,         "gridDimZ",         "I")) return JNI_ERR;
+    if (!init(env, cls, CUDA_LAUNCH_PARAMS_blockDimX,        "blockDimX",        "I")) return JNI_ERR;
+    if (!init(env, cls, CUDA_LAUNCH_PARAMS_blockDimY,        "blockDimY",        "I")) return JNI_ERR;
+    if (!init(env, cls, CUDA_LAUNCH_PARAMS_blockDimZ,        "blockDimZ",        "I")) return JNI_ERR;
+	if (!init(env, cls, CUDA_LAUNCH_PARAMS_sharedMemBytes,   "sharedMemBytes",   "I")) return JNI_ERR;
+    if (!init(env, cls, CUDA_LAUNCH_PARAMS_hStream,          "hStream",          "Ljcuda/driver/CUstream;")) return JNI_ERR;
+	if (!init(env, cls, CUDA_LAUNCH_PARAMS_kernelParams,     "kernelParams",     "Ljcuda/Pointer;")) return JNI_ERR;
 
     // Obtain the constructor of the CUdevice class
     if (!init(env, cls, "jcuda/driver/CUdevice")) return JNI_ERR;
@@ -1108,6 +1133,50 @@ void setCUDA_TEXTURE_DESC(JNIEnv *env, jobject texDesc, CUDA_TEXTURE_DESC &nativ
 
 }
 
+
+/**
+* Initializes the given CUDA_LAUNCH_PARAMSData from the given CUDA_LAUNCH_PARAMS Java object.
+* Returns whether the initialization succeeded.
+*/
+bool initCUDA_LAUNCH_PARAMSData(JNIEnv *env, jobject javaObject, CUDA_LAUNCH_PARAMSData *data)
+{
+	CUDA_LAUNCH_PARAMS &cudaLaunchParams = data->cudaLaunchParams;
+
+	jobject function = env->GetObjectField(javaObject, CUDA_LAUNCH_PARAMS_function);
+	cudaLaunchParams.function = (CUfunction)getNativePointerValue(env, function);
+	cudaLaunchParams.gridDimX = (unsigned int)env->GetIntField(javaObject, CUDA_LAUNCH_PARAMS_gridDimX);
+	cudaLaunchParams.gridDimY = (unsigned int)env->GetIntField(javaObject, CUDA_LAUNCH_PARAMS_gridDimY);
+	cudaLaunchParams.gridDimZ = (unsigned int)env->GetIntField(javaObject, CUDA_LAUNCH_PARAMS_gridDimZ);
+	cudaLaunchParams.blockDimX = (unsigned int)env->GetIntField(javaObject, CUDA_LAUNCH_PARAMS_blockDimX);
+	cudaLaunchParams.blockDimY = (unsigned int)env->GetIntField(javaObject, CUDA_LAUNCH_PARAMS_blockDimY);
+	cudaLaunchParams.blockDimZ = (unsigned int)env->GetIntField(javaObject, CUDA_LAUNCH_PARAMS_blockDimZ);
+	cudaLaunchParams.sharedMemBytes = (unsigned int)env->GetIntField(javaObject, CUDA_LAUNCH_PARAMS_sharedMemBytes);
+
+	jobject stream = env->GetObjectField(javaObject, CUDA_LAUNCH_PARAMS_hStream);
+	cudaLaunchParams.hStream = (CUstream)getNativePointerValue(env, stream);
+
+	cudaLaunchParams.sharedMemBytes = (unsigned int)env->GetIntField(javaObject, CUDA_LAUNCH_PARAMS_sharedMemBytes);
+
+	jobject kernelParams = env->GetObjectField(javaObject, CUDA_LAUNCH_PARAMS_kernelParams);
+	data->kernelParamsPointerData = initPointerData(env, kernelParams);
+	if (data->kernelParamsPointerData == NULL)
+	{
+		delete data;
+		return NULL;
+	}
+	return true;
+}
+
+/**
+* Release the given CUDA_LAUNCH_PARAMSData object
+* Returns whether this operation succeeded
+*/
+bool releaseCUDA_LAUNCH_PARAMSData(JNIEnv *env, CUDA_LAUNCH_PARAMSData* data)
+{
+	if (!releasePointerData(env, data->kernelParamsPointerData)) return false;
+	delete data;
+	return true;
+}
 
 
 
@@ -2917,7 +2986,7 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuIpcOpenMemHandleNative
     Logger::log(LOG_TRACE, "Executing cuIpcOpenMemHandle\n");
 
     CUipcMemHandle nativeHandle = getCUipcMemHandle(env, handle);
-    CUdeviceptr nativePdptr = NULL;
+    CUdeviceptr nativePdptr = 0;
 
     int result = cuIpcOpenMemHandle(&nativePdptr, nativeHandle, (int)Flags);
 
@@ -4443,6 +4512,91 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuLaunchKernelNative
 }
 
 
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuLaunchCooperativeKernelNative
+* Signature: (Ljcuda/driver/CUfunction;IIIIIIILjcuda/driver/CUstream;Ljcuda/Pointer;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuLaunchCooperativeKernelNative
+  (JNIEnv *env, jclass cls, jobject f, jint gridDimX, jint gridDimY, jint gridDimZ, jint blockDimX, jint blockDimY, jint blockDimZ, jint sharedMemBytes, jobject hStream, jobject kernelParams)
+{
+	if (f == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'f' is null for cuLaunchCooperativeKernel");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	Logger::log(LOG_TRACE, "Executing cuLaunchCooperativeKernel\n");
+
+	CUfunction nativeF = (CUfunction)getNativePointerValue(env, f);
+	CUstream nativeHStream = (CUstream)getNativePointerValue(env, hStream);
+
+	PointerData *kernelParamsPointerData = NULL;
+	void **nativeKernelParams = NULL;
+	if (kernelParams != NULL)
+	{
+		kernelParamsPointerData = initPointerData(env, kernelParams);
+		if (kernelParamsPointerData == NULL)
+		{
+			return JCUDA_INTERNAL_ERROR;
+		}
+		nativeKernelParams = (void**)kernelParamsPointerData->getPointer(env);
+	}
+
+	int result = cuLaunchCooperativeKernel(
+		nativeF,
+		(unsigned int)gridDimX,
+		(unsigned int)gridDimY,
+		(unsigned int)gridDimZ,
+		(unsigned int)blockDimX,
+		(unsigned int)blockDimY,
+		(unsigned int)blockDimZ,
+		(unsigned int)sharedMemBytes,
+		nativeHStream,
+		nativeKernelParams);
+
+	if (!releasePointerData(env, kernelParamsPointerData, 0)) return JCUDA_INTERNAL_ERROR;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuLaunchCooperativeKernelMultiDeviceNative
+* Signature: ([Ljcuda/driver/CUDA_LAUNCH_PARAMS;II)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuLaunchCooperativeKernelMultiDeviceNative
+  (JNIEnv *env, jclass cls, jobjectArray launchParamsList, jint numDevices, jint flags)
+{
+	if (launchParamsList == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'launchParamsList' is null for cuLaunchCooperativeKernelMultiDevice");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	Logger::log(LOG_TRACE, "Executing cuLaunchCooperativeKernelMultiDevice\n");
+
+	size_t len = (size_t)env->GetArrayLength(launchParamsList);
+	CUDA_LAUNCH_PARAMS *launchParamsListNative = new CUDA_LAUNCH_PARAMS[len];
+	CUDA_LAUNCH_PARAMSData *launchParamsDatas = new CUDA_LAUNCH_PARAMSData[len];
+	for (int i = 0; i < len; i++)
+	{
+		jobject launchParams = env->GetObjectArrayElement(launchParamsList, i);
+		if (!initCUDA_LAUNCH_PARAMSData(env, launchParams, &launchParamsDatas[i]))
+		{
+			return JCUDA_INTERNAL_ERROR;
+		}
+		launchParamsListNative[i] = launchParamsDatas[i].cudaLaunchParams;
+	}
+	int result = cuLaunchCooperativeKernelMultiDevice(launchParamsListNative, (unsigned int)numDevices, (unsigned int)flags);
+
+	for (int i = 0; i < len; i++)
+	{
+		if (!releaseCUDA_LAUNCH_PARAMSData(env, &launchParamsDatas[i]))
+		{
+			return JCUDA_INTERNAL_ERROR;
+		}
+	}
+	return result;
+}
 
 
 
@@ -4476,6 +4630,27 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuFuncGetAttributeNative
     return result;
 }
 
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuFuncSetAttributeNative
+* Signature: (Ljcuda/driver/CUfunction;II)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuFuncSetAttributeNative
+  (JNIEnv *env, jclass cls, jobject hfunc, jint attrib, jint value)
+{
+	if (hfunc == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hfunc' is null for cuFuncSetAttribute");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	Logger::log(LOG_TRACE, "Executing cuFuncSetAttribute\n");
+
+	CUfunction nativeHFunc = (CUfunction)getNativePointerValue(env, hfunc);
+	CUfunction_attribute nativeAttrib = (CUfunction_attribute)attrib;
+	int nativeValue = (int)value;
+	int result = cuFuncSetAttribute(nativeHFunc, nativeAttrib, nativeValue);
+	return result;
+}
 
 
 /*
@@ -6673,6 +6848,56 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamWriteValue32Native
     return result;
 }
 
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuStreamWaitValue64Native
+* Signature: (Ljcuda/driver/CUstream;Ljcuda/driver/CUdeviceptr;JI)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamWaitValue64Native
+(JNIEnv *env, jclass cls, jobject stream, jobject addr, jlong value, jint flags)
+{
+	if (addr == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'addr' is null for cuStreamWaitValue64");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	Logger::log(LOG_TRACE, "Executing cuStreamWaitValue64\n");
+
+	CUstream nativeStream = (CUstream)getNativePointerValue(env, stream);
+	CUdeviceptr nativeAddr = (CUdeviceptr)getPointer(env, addr);
+	cuuint64_t nativeValue = (cuuint64_t)value;
+	unsigned int nativeFlags = (unsigned int)flags;
+
+	int result = cuStreamWaitValue64(nativeStream, nativeAddr, nativeValue, nativeFlags);
+
+	return result;
+}
+
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuStreamWriteValue64Native
+* Signature: (Ljcuda/driver/CUstream;Ljcuda/driver/CUdeviceptr;JI)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamWriteValue64Native
+(JNIEnv *env, jclass cls, jobject stream, jobject addr, jlong value, jint flags)
+{
+	if (addr == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'addr' is null for cuStreamWriteValue64");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	Logger::log(LOG_TRACE, "Executing cuStreamWriteValue64\n");
+
+	CUstream nativeStream = (CUstream)getNativePointerValue(env, stream);
+	CUdeviceptr nativeAddr = (CUdeviceptr)getPointer(env, addr);
+	cuuint64_t nativeValue = (cuuint64_t)value;
+	unsigned int nativeFlags = (unsigned int)flags;
+
+	int result = cuStreamWriteValue64(nativeStream, nativeAddr, nativeValue, nativeFlags);
+
+	return result;
+}
 
 /*
  * Class:     jcuda_driver_JCudaDriver

@@ -28,13 +28,15 @@
 package jcuda.driver;
 
 /**
- * Flags for cuStreamWaitValue32
+ * Flags for {@link JCudaDriver#cuStreamWaitValue32}
+ * and {@link JCudaDriver#cuStreamWaitValue64}
  */
 public class CUstreamWaitValue_flags
 {
     /**
-     * Wait until (int32_t)(*addr - value) >= 0. Note this is a
-     * cyclic comparison which ignores wraparound. (Default behavior.)
+     * Wait until (int32_t)(*addr - value) >= 0 (or int64_t for 64 bit
+     * values). Note this is a cyclic comparison which ignores wraparound.
+     * (Default behavior.) 
      */
     public static final int CU_STREAM_WAIT_VALUE_GEQ   = 0x0;
 
@@ -47,6 +49,14 @@ public class CUstreamWaitValue_flags
      * Wait until (*addr & value) != 0. 
      */
     public static final int CU_STREAM_WAIT_VALUE_AND   = 0x2;   
+    
+    /**
+     * Wait until ~(*addr | value) != 0. Support for this operation can be
+     * queried with ::cuDeviceGetAttribute() and
+     * ::CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR. Generally, this
+     * requires compute capability 7.0 or greater. 
+     */
+    public static final int CU_STREAM_WAIT_VALUE_NOR   = 0x3;
     
     /**
      * Follow the wait operation with a flush of outstanding remote writes. This
@@ -74,6 +84,7 @@ public class CUstreamWaitValue_flags
         String result = "";
         if ((n & CU_STREAM_WAIT_VALUE_EQ) != 0) result += "CU_STREAM_WAIT_VALUE_EQ ";
         if ((n & CU_STREAM_WAIT_VALUE_AND) != 0) result += "CU_STREAM_WAIT_VALUE_AND ";
+        if ((n & CU_STREAM_WAIT_VALUE_NOR) != 0) result += "CU_STREAM_WAIT_VALUE_NOR ";
         if ((n & CU_STREAM_WAIT_VALUE_FLUSH) != 0) result += "CU_STREAM_WAIT_VALUE_FLUSH ";
         return result;
     }

@@ -40,7 +40,7 @@ public class JCuda
     /**
      * CUDA runtime version
      */
-    public static final int CUDART_VERSION = 8000;
+    public static final int CUDART_VERSION = 9000;
 
     /**
      * Returns an unspecified string that will be appended to native 
@@ -50,7 +50,7 @@ public class JCuda
      */
     public static String getJCudaVersion()
     {
-        return "0.8.0";
+        return "0.9.0";
     }
     
     /**
@@ -342,6 +342,22 @@ public class JCuda
      */
     public static final int cudaInvalidDeviceId = -2;
 
+    /**
+     * If set, each kernel launched as part of
+     * ::cudaLaunchCooperativeKernelMultiDevice only waits for prior work in the
+     * stream corresponding to that GPU to complete before the kernel begins
+     * execution.
+     */
+    public static final int cudaCooperativeLaunchMultiDeviceNoPreSync = 0x01;
+
+    /**
+     * If set, any subsequent work pushed in a stream that participated in a
+     * call to ::cudaLaunchCooperativeKernelMultiDevice will only wait for the
+     * kernel launched on the GPU corresponding to that stream to complete
+     * before it begins execution.
+     */
+    public static final int cudaCooperativeLaunchMultiDeviceNoPostSync = 0x02;    
+    
     /**
      * Private inner class for the constant stream values
      */

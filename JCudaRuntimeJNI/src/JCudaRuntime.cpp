@@ -95,6 +95,11 @@ jfieldID cudaDeviceProp_hostNativeAtomicSupported; // int
 jfieldID cudaDeviceProp_singleToDoublePrecisionPerfRatio; // int
 jfieldID cudaDeviceProp_pageableMemoryAccess; // int
 jfieldID cudaDeviceProp_concurrentManagedAccess; // int
+jfieldID cudaDeviceProp_computePreemptionSupported; // int
+jfieldID cudaDeviceProp_canUseHostPointerForRegisteredMem; // int
+jfieldID cudaDeviceProp_cooperativeLaunch; // int
+jfieldID cudaDeviceProp_cooperativeMultiDeviceLaunch; // int
+jfieldID cudaDeviceProp_sharedMemPerBlockOptin; // size_t
 
 jfieldID cudaPitchedPtr_ptr; // jcuda.Pointer
 jfieldID cudaPitchedPtr_pitch; // size_t
@@ -162,6 +167,8 @@ jfieldID cudaFuncAttributes_numRegs; // int
 jfieldID cudaFuncAttributes_ptxVersion; // int
 jfieldID cudaFuncAttributes_binaryVersion; // int
 jfieldID cudaFuncAttributes_cacheModeCA; // int
+jfieldID cudaFuncAttributes_maxDynamicSharedSizeBytes; // int
+jfieldID cudaFuncAttributes_preferredShmemCarveout; // int
 
 jfieldID cudaPointerAttributes_memoryType; // cudaMempryType
 jfieldID cudaPointerAttributes_device; // int
@@ -295,10 +302,15 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, cudaDeviceProp_managedMemory,               "managedMemory",               "I" )) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_isMultiGpuBoard,             "isMultiGpuBoard",             "I" )) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_multiGpuBoardGroupID,        "multiGpuBoardGroupID",        "I" )) return JNI_ERR;
-    if (!init(env, cls, cudaDeviceProp_hostNativeAtomicSupported,            "hostNativeAtomicSupported",            "I")) return JNI_ERR;
-    if (!init(env, cls, cudaDeviceProp_singleToDoublePrecisionPerfRatio,     "singleToDoublePrecisionPerfRatio",     "I")) return JNI_ERR;
-    if (!init(env, cls, cudaDeviceProp_pageableMemoryAccess,                 "pageableMemoryAccess",                 "I")) return JNI_ERR;
-    if (!init(env, cls, cudaDeviceProp_concurrentManagedAccess,              "concurrentManagedAccess",              "I")) return JNI_ERR;
+	if (!init(env, cls, cudaDeviceProp_hostNativeAtomicSupported,         "hostNativeAtomicSupported",         "I")) return JNI_ERR;
+	if (!init(env, cls, cudaDeviceProp_singleToDoublePrecisionPerfRatio,  "singleToDoublePrecisionPerfRatio",  "I")) return JNI_ERR;
+	if (!init(env, cls, cudaDeviceProp_pageableMemoryAccess,              "pageableMemoryAccess",              "I")) return JNI_ERR;
+	if (!init(env, cls, cudaDeviceProp_concurrentManagedAccess,           "concurrentManagedAccess",           "I")) return JNI_ERR;
+	if (!init(env, cls, cudaDeviceProp_computePreemptionSupported,        "computePreemptionSupported",        "I")) return JNI_ERR;
+	if (!init(env, cls, cudaDeviceProp_canUseHostPointerForRegisteredMem, "canUseHostPointerForRegisteredMem", "I")) return JNI_ERR;
+	if (!init(env, cls, cudaDeviceProp_cooperativeLaunch,                 "cooperativeLaunch",                 "I")) return JNI_ERR;
+	if (!init(env, cls, cudaDeviceProp_cooperativeMultiDeviceLaunch,      "cooperativeMultiDeviceLaunch",      "I")) return JNI_ERR;
+	if (!init(env, cls, cudaDeviceProp_sharedMemPerBlockOptin,            "sharedMemPerBlockOptin",            "J")) return JNI_ERR;
 
     // Obtain the fieldIDs of the cudaPitchedPtr class
     if (!init(env, cls, "jcuda/runtime/cudaPitchedPtr")) return JNI_ERR;
@@ -390,14 +402,16 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
 
     // Obtain the fieldIDs of the cudaFuncAttributes class
     if (!init(env, cls, "jcuda/runtime/cudaFuncAttributes")) return JNI_ERR;
-    if (!init(env, cls, cudaFuncAttributes_sharedSizeBytes,    "sharedSizeBytes",    "J")) return JNI_ERR;
-    if (!init(env, cls, cudaFuncAttributes_constSizeBytes,     "constSizeBytes",     "J")) return JNI_ERR;
-    if (!init(env, cls, cudaFuncAttributes_localSizeBytes,     "localSizeBytes",     "J")) return JNI_ERR;
-    if (!init(env, cls, cudaFuncAttributes_maxThreadsPerBlock, "maxThreadsPerBlock", "I")) return JNI_ERR;
-    if (!init(env, cls, cudaFuncAttributes_numRegs,            "numRegs",            "I")) return JNI_ERR;
-    if (!init(env, cls, cudaFuncAttributes_ptxVersion,         "ptxVersion",         "I")) return JNI_ERR;
-    if (!init(env, cls, cudaFuncAttributes_binaryVersion,      "binaryVersion",      "I")) return JNI_ERR;
-    if (!init(env, cls, cudaFuncAttributes_cacheModeCA,        "cacheModeCA",        "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_sharedSizeBytes,           "sharedSizeBytes",           "J")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_constSizeBytes,            "constSizeBytes",            "J")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_localSizeBytes,            "localSizeBytes",            "J")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_maxThreadsPerBlock,        "maxThreadsPerBlock",        "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_numRegs,                   "numRegs",                   "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_ptxVersion,                "ptxVersion",                "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_binaryVersion,             "binaryVersion",             "I")) return JNI_ERR;
+	if (!init(env, cls, cudaFuncAttributes_cacheModeCA,               "cacheModeCA",               "I")) return JNI_ERR;
+	if (!init(env, cls, cudaFuncAttributes_maxDynamicSharedSizeBytes, "maxDynamicSharedSizeBytes", "I")) return JNI_ERR;
+	if (!init(env, cls, cudaFuncAttributes_preferredShmemCarveout,    "preferredShmemCarveout",    "I")) return JNI_ERR;
 
     // Obtain the fieldIDs of the cudaPointerAttributes class
     if (!init(env, cls, "jcuda/runtime/cudaPointerAttributes")) return JNI_ERR;
@@ -631,11 +645,16 @@ cudaDeviceProp getCudaDeviceProp(JNIEnv *env, jobject prop)
     nativeProp.regsPerMultiprocessor       = (int)env->GetIntField( prop, cudaDeviceProp_regsPerMultiprocessor);
     nativeProp.managedMemory               = (int)env->GetIntField( prop, cudaDeviceProp_managedMemory);
     nativeProp.isMultiGpuBoard             = (int)env->GetIntField( prop, cudaDeviceProp_isMultiGpuBoard);
-    nativeProp.multiGpuBoardGroupID = (int)env->GetIntField(prop, cudaDeviceProp_multiGpuBoardGroupID);
+    nativeProp.multiGpuBoardGroupID        = (int)env->GetIntField(prop, cudaDeviceProp_multiGpuBoardGroupID);
     nativeProp.hostNativeAtomicSupported        = (int)env->GetIntField(prop, cudaDeviceProp_hostNativeAtomicSupported);
     nativeProp.singleToDoublePrecisionPerfRatio = (int)env->GetIntField(prop, cudaDeviceProp_singleToDoublePrecisionPerfRatio);
     nativeProp.pageableMemoryAccess             = (int)env->GetIntField(prop, cudaDeviceProp_pageableMemoryAccess);
-    nativeProp.concurrentManagedAccess          = (int)env->GetIntField(prop, cudaDeviceProp_concurrentManagedAccess);
+	nativeProp.concurrentManagedAccess          = (int)env->GetIntField(prop, cudaDeviceProp_concurrentManagedAccess);
+    nativeProp.computePreemptionSupported        = (int)env->GetIntField(prop, cudaDeviceProp_computePreemptionSupported);
+	nativeProp.canUseHostPointerForRegisteredMem = (int)env->GetIntField(prop, cudaDeviceProp_canUseHostPointerForRegisteredMem);
+	nativeProp.cooperativeLaunch                 = (int)env->GetIntField(prop, cudaDeviceProp_cooperativeLaunch);
+	nativeProp.cooperativeMultiDeviceLaunch      = (int)env->GetIntField(prop, cudaDeviceProp_cooperativeMultiDeviceLaunch);
+	nativeProp.sharedMemPerBlockOptin = (size_t)env->GetLongField(prop, cudaDeviceProp_sharedMemPerBlockOptin);
 
     return nativeProp;
 }
@@ -751,10 +770,18 @@ void setCudaDeviceProp(JNIEnv *env, jobject prop, cudaDeviceProp nativeProp)
     env->SetIntField( prop, cudaDeviceProp_isMultiGpuBoard           , (jint) nativeProp.isMultiGpuBoard);
     env->SetIntField(prop, cudaDeviceProp_multiGpuBoardGroupID       , (jint)nativeProp.multiGpuBoardGroupID);
 
-    env->SetIntField(prop, cudaDeviceProp_hostNativeAtomicSupported,        (jint)nativeProp.hostNativeAtomicSupported);
+    env->SetIntField(prop, cudaDeviceProp_hostNativeAtomicSupported       , (jint)nativeProp.hostNativeAtomicSupported);
     env->SetIntField(prop, cudaDeviceProp_singleToDoublePrecisionPerfRatio, (jint)nativeProp.singleToDoublePrecisionPerfRatio);
-    env->SetIntField(prop, cudaDeviceProp_pageableMemoryAccess,             (jint)nativeProp.pageableMemoryAccess);
-    env->SetIntField(prop, cudaDeviceProp_concurrentManagedAccess,          (jint)nativeProp.concurrentManagedAccess);
+    env->SetIntField(prop, cudaDeviceProp_pageableMemoryAccess            , (jint)nativeProp.pageableMemoryAccess);
+    env->SetIntField(prop, cudaDeviceProp_concurrentManagedAccess         , (jint)nativeProp.concurrentManagedAccess);
+
+	env->SetIntField(prop, cudaDeviceProp_computePreemptionSupported       , (jint)nativeProp.computePreemptionSupported);
+	env->SetIntField(prop, cudaDeviceProp_canUseHostPointerForRegisteredMem, (jint)nativeProp.canUseHostPointerForRegisteredMem);
+	env->SetIntField(prop, cudaDeviceProp_cooperativeLaunch                , (jint)nativeProp.cooperativeLaunch);
+	env->SetIntField(prop, cudaDeviceProp_cooperativeMultiDeviceLaunch     , (jint)nativeProp.cooperativeMultiDeviceLaunch);
+
+	env->SetLongField(prop, cudaDeviceProp_sharedMemPerBlockOptin, (jlong)nativeProp.sharedMemPerBlockOptin);
+
 }
 
 
@@ -1043,6 +1070,10 @@ void setCudaFuncAttributes(JNIEnv *env, jobject attr, cudaFuncAttributes nativeA
     env->SetIntField( attr, cudaFuncAttributes_ptxVersion,         (jint) nativeAttr.ptxVersion);
     env->SetIntField( attr, cudaFuncAttributes_binaryVersion,      (jint) nativeAttr.binaryVersion);
     env->SetIntField( attr, cudaFuncAttributes_cacheModeCA,        (jint) nativeAttr.cacheModeCA);
+
+	env->SetIntField(attr, cudaFuncAttributes_maxDynamicSharedSizeBytes, (jint)nativeAttr.maxDynamicSharedSizeBytes);
+	env->SetIntField(attr, cudaFuncAttributes_preferredShmemCarveout,    (jint)nativeAttr.preferredShmemCarveout);
+
 }
 
 

@@ -103,20 +103,24 @@ public class CUjit_target
     public static final int CU_TARGET_COMPUTE_53 = 53;
 
     /**
-     * Compute device class 6.0. This must be removed for CUDA 7.0 toolkit.
-     * See bug 1518217.
+     * Compute device class 6.0.
      */
     public static final int CU_TARGET_COMPUTE_60 = 60;
 
     /**
-     * Compute device class 6.1. This must be removed for CUDA 7.0 toolkit.
+     * Compute device class 6.1.
      */
     public static final int CU_TARGET_COMPUTE_61 = 61;
 
     /**
-     * Compute device class 6.2. This must be removed for CUDA 7.0 toolkit.
+     * Compute device class 6.2.
      */
     public static final int CU_TARGET_COMPUTE_62 = 62;
+
+    /**
+     * Compute device class 7.0.
+     */
+    public static final int CU_TARGET_COMPUTE_70 = 70;
 
     /**
      * Returns the String identifying the given CUjit_target
@@ -144,6 +148,7 @@ public class CUjit_target
             case CU_TARGET_COMPUTE_60: return "CU_TARGET_COMPUTE_60";
             case CU_TARGET_COMPUTE_61: return "CU_TARGET_COMPUTE_61";
             case CU_TARGET_COMPUTE_62: return "CU_TARGET_COMPUTE_62";
+            case CU_TARGET_COMPUTE_70: return "CU_TARGET_COMPUTE_70";
         }
         return "INVALID CUjit_target: "+n;
     }

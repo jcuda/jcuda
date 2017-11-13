@@ -143,4 +143,20 @@ typedef struct JITOptionsData
     void **optionValues;
 } JITOptionsData;
 
+
+/**
+* A structure containing all information necessary for maintaining
+* the CUDA_LAUNCH_PARAMS parameters
+*/
+typedef struct CUDA_LAUNCH_PARAMSData
+{
+	/** The actual CUDA_LAUNCH_PARAMS */
+	CUDA_LAUNCH_PARAMS cudaLaunchParams;
+
+	/** The data for the kernel parameters */
+	PointerData *kernelParamsPointerData;
+
+} CUDA_LAUNCH_PARAMSData;
+
+
 #endif

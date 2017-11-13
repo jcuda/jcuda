@@ -485,6 +485,38 @@ public class cudaDeviceAttr
     public static final int cudaDevAttrCanUseHostPointerForRegisteredMem = 91;
 
     /**
+     * Reserved
+     */
+    public static final int cudaDevAttrReserved92                     = 92;
+
+    /**
+     * Reserved
+     */
+    public static final int cudaDevAttrReserved93                     = 93;
+
+    /**
+     * Reserved
+     */
+    public static final int cudaDevAttrReserved94                     = 94;
+    
+    /** 
+     * Device supports launching cooperative kernels via ::cudaLaunchCooperativeKernel
+     */
+    public static final int cudaDevAttrCooperativeLaunch              = 95; 
+    
+    /**
+     * Device can participate in cooperative kernels launched via 
+     * ::cudaLaunchCooperativeKernelMultiDevice 
+     */
+    public static final int cudaDevAttrCooperativeMultiDeviceLaunch   = 96;
+    
+    /**
+     * The maximum optin shared memory per block. This value may vary by 
+     * chip. See ::cudaFuncSetAttribute 
+     */
+    public static final int cudaDevAttrMaxSharedMemoryPerBlockOptin   = 97; 
+    
+    /**
      * Returns the String identifying the given cudaDeviceAttr
      *
      * @param n The cudaDeviceAttr
@@ -584,6 +616,12 @@ public class cudaDeviceAttr
             case cudaDevAttrConcurrentManagedAccess          : return "cudaDevAttrConcurrentManagedAccess";
             case cudaDevAttrComputePreemptionSupported       : return "cudaDevAttrComputePreemptionSupported";
             case cudaDevAttrCanUseHostPointerForRegisteredMem: return "cudaDevAttrCanUseHostPointerForRegisteredMem";
+            case cudaDevAttrReserved92                       : return "cudaDevAttrReserved92";
+            case cudaDevAttrReserved93                       : return "cudaDevAttrReserved93";
+            case cudaDevAttrReserved94                       : return "cudaDevAttrReserved94";
+            case cudaDevAttrCooperativeLaunch                : return "cudaDevAttrCooperativeLaunch";
+            case cudaDevAttrCooperativeMultiDeviceLaunch     : return "cudaDevAttrCooperativeMultiDeviceLaunch";
+            case cudaDevAttrMaxSharedMemoryPerBlockOptin     : return "cudaDevAttrMaxSharedMemoryPerBlockOptin";
         }
         return "INVALID cudaDeviceAttr: "+n;
     }

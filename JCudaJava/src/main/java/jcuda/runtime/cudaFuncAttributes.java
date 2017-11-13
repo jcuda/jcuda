@@ -85,6 +85,20 @@ public class cudaFuncAttributes
     public int cacheModeCA;
 
     /**
+     * The maximum size in bytes of dynamic shared memory per block for 
+     * this function. Any launch must have a dynamic shared memory size
+     * smaller than this value.
+     */
+    public int maxDynamicSharedSizeBytes;
+
+    /**
+     * On devices where the L1 cache and shared memory use the same hardware
+     * resources, this sets the shared memory carveout preference, in percent of
+     * the maximum shared memory. This is only a hint, and the driver can choose
+     * a different ratio if required to execute the function.
+     */
+    public int preferredShmemCarveout;    
+    /**
      * Creates new, uninitialized cudaFuncAttributes
      */
     public cudaFuncAttributes()
@@ -107,7 +121,9 @@ public class cudaFuncAttributes
             "numRegs="+numRegs+","+
             "ptxVersion="+ptxVersion+","+
             "binaryVersion="+binaryVersion+"," +
-            "cacheModeCA="+cacheModeCA+"]";
+            "cacheModeCA="+cacheModeCA+","+
+            "maxDynamicSharedSizeBytes="+maxDynamicSharedSizeBytes+","+
+            "preferredShmemCarveout="+preferredShmemCarveout+"]";
     }
 
 

@@ -43,7 +43,7 @@ import jcuda.runtime.JCuda;
 public class JCudaDriver
 {
     /** The CUDA version */
-    public static final int CUDA_VERSION = 8000;
+    public static final int CUDA_VERSION = 9000;
 
     /**
      * If set, host memory is portable between CUDA contexts.
@@ -102,6 +102,22 @@ public class JCudaDriver
      * Flag for ::cuMemHostRegister()
      */
     public static final int CU_MEMHOSTREGISTER_IOMEMORY   =  0x04;
+    
+    /**
+     * If set, each kernel launched as part of
+     * ::cuLaunchCooperativeKernelMultiDevice only waits for prior work in the
+     * stream corresponding to that GPU to complete before the kernel begins
+     * execution.
+     */
+    public static final int CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_PRE_LAUNCH_SYNC   = 0x01;
+
+    /**
+     * If set, any subsequent work pushed in a stream that participated in a
+     * call to ::cuLaunchCooperativeKernelMultiDevice will only wait for the
+     * kernel launched on the GPU corresponding to that stream to complete
+     * before it begins execution.
+     */
+    public static final int CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_POST_LAUNCH_SYNC  = 0x02;
     
     /**
      * If set, the CUDA array is a collection of layers, where each layer is either a 1D
@@ -559,7 +575,7 @@ public class JCudaDriver
      * <div>
      *   <p>Returns the number of compute-capable
      *     devices.  Returns in <tt>*count</tt> the number of devices with
-     *     compute capability greater than or equal to 1.0 that are available for
+     *     compute capability greater than or equal to 2.0 that are available for
      *     execution. If there is
      *     no such device, cuDeviceGetCount()
      *     returns 0.
@@ -1251,6 +1267,11 @@ public class JCudaDriver
      *       </p>
      *     </li>
      *     <li>
+     *       <p>CU_DEVICE_ATTRIBUTE_PCI_DOMAIN_ID:
+     *         PCI domain identifier of the device
+     *       </p>
+     *     </li>
+     *     <li>
      *       <p>CU_DEVICE_ATTRIBUTE_TCC_DRIVER:
      *         1 if the device is using a TCC driver. TCC is only available on Tesla
      *         hardware running Windows Vista or later;
@@ -1290,6 +1311,77 @@ public class JCudaDriver
      *     <li>
      *       <p>CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR: Minor compute capability
      *         version number;
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CU_DEVICE_ATTRIBUTE_GLOBAL_L1_CACHE_SUPPORTED: 1 if device supports caching globals 
+     *       in L1 cache, 0 if caching globals in L1 cache is not supported by the device
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CU_DEVICE_ATTRIBUTE_LOCAL_L1_CACHE_SUPPORTED: 1 if device supports caching locals 
+     *       in L1 cache, 0 if caching locals in L1 cache is not supported by the device;
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_MULTIPROCESSOR: Maximum amount of
+     *       shared memory available to a multiprocessor in bytes; this amount is shared
+     *       by all thread blocks simultaneously resident on a multiprocessor;
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_MULTIPROCESSOR: Maximum number of 32-bit
+     *       registers available to a multiprocessor; this number is shared by all thread
+     *       blocks simultaneously resident on a multiprocessor;
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CU_DEVICE_ATTRIBUTE_MANAGED_MEMORY:  1 if device supports allocating managed memory
+     *       on this system, 0 if allocating managed memory is not supported by the device on this system.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD: 1 if device is on a multi-GPU board, 0 if not.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD_GROUP_ID: Unique identifier for a group of devices
+     *       associated with the same board. Devices on the same multi-GPU board will share the same identifier.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CU_DEVICE_ATTRIBUTE_HOST_NATIVE_ATOMIC_SUPPORTED: 1 if Link between the device and the host
+     *       supports native atomic operations.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CU_DEVICE_ATTRIBUTE_SINGLE_TO_DOUBLE_PRECISION_PERF_RATIO: Ratio of single precision performance
+     *       (in floating-point operations per second) to double precision performance.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS: Device suppports coherently accessing
+     *       pageable memory without calling cudaHostRegister on it.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CU_DEVICE_ATTRIBUTE_CONCURRENT_MANAGED_ACCESS: Device can coherently access managed memory
+     *        concurrently with the CPU.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CU_DEVICE_ATTRIBUTE_COMPUTE_PREEMPTION_SUPPORTED: Device supports Compute Preemption.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CU_DEVICE_ATTRIBUTE_CAN_USE_HOST_POINTER_FOR_REGISTERED_MEM: Device can access host registered
+     *       memory at the same virtual address as the CPU.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK_OPTIN: The maximum per block shared memory size
+     *       suported on this device. This is the maximum value that can be opted into when using the cuFuncSetAttribute() call.
+     *       For more details see ::CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES
      *       </p>
      *     </li>
      *   </ul>
@@ -7962,6 +8054,53 @@ public class JCudaDriver
     }
     private static native int cuFuncGetAttributeNative(int pi[], int attrib, CUfunction func);
 
+    /**
+     * Sets information about a function.<br>
+     * <br>
+     * This call sets the value of a specified attribute attrib on the kernel given
+     * by hfunc to an integer value specified by val
+     * This function returns CUDA_SUCCESS if the new value of the attribute could be
+     * successfully set. If the set fails, this call will return an error.
+     * Not all attributes can have values set. Attempting to set a value on a read-only
+     * attribute will result in an error (CUDA_ERROR_INVALID_VALUE)
+     * <br>
+     * Supported attributes for the cuFuncSetAttribute call are:
+     * <ul>
+     *   <li>CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES: This maximum size in bytes of
+     *   dynamically-allocated shared memory. The value should contain the requested
+     *   maximum size of dynamically-allocated shared memory. The sum of this value and
+     *   the function attribute ::CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES cannot exceed the
+     *   device attribute ::CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK_OPTIN.
+     *   The maximal size of requestable dynamic shared memory may differ by GPU
+     *   architecture.
+     *   </li>
+     *   <li>CU_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT: On devices where the L1 
+     *   cache and shared memory use the same hardware resources, this sets the shared memory
+     *   carveout preference, in percent of the total resources. This is only a hint, and the
+     *   driver can choose a different ratio if required to execute the function.
+     *   </li>
+     * </ul>
+     *
+     * @param hfunc  Function to query attribute of
+     * @param attrib Attribute requested
+     * @param value  The value to set
+     *
+     * @return CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_CONTEXT, CUDA_ERROR_INVALID_HANDLE, CUDA_ERROR_INVALID_VALUE
+     *
+     * @see JCudaDriver#cuCtxGetCacheConfig
+     * @see JCudaDriver#cuCtxSetCacheConfig
+     * @see JCudaDriver#cuFuncSetCacheConfig
+     * @see JCudaDriver#cuLaunchKernel
+     * @see JCuda#cudaFuncGetAttributes
+     * @see JCuda#cudaFuncSetAttribute
+     */
+    public static int cuFuncSetAttribute(CUfunction hfunc, int attrib, int value)
+    {
+        return checkResult(cuFuncSetAttributeNative(hfunc, attrib, value));
+    }
+    private static native int cuFuncSetAttributeNative(CUfunction hfunc, int attrib, int value);
+    
 
     /**
      * Sets the block-dimensions for the function.
@@ -12443,6 +12582,73 @@ public class JCudaDriver
     }
     private static native int cuStreamWriteValue32Native(CUstream stream, CUdeviceptr addr, int value, int flags);
 
+    
+    /**
+     * Wait on a memory location.<br>
+     * <br>
+     * Enqueues a synchronization of the stream on the given memory location.
+     * Work ordered after the operation will block until the given condition on
+     * the memory is satisfied. By default, the condition is to wait for
+     * (int64_t)(*addr - value) >= 0, a cyclic greater-or-equal. Other condition
+     * types can be specified via flags.<br>
+     * <br>
+     * If the memory was registered via cuMemHostRegister(), the device pointer
+     * should be obtained with cuMemHostGetDevicePointer(). This function cannot
+     * be used with managed memory (cuMemAllocManaged).<br>
+     * <br>
+     * On Windows, the device must be using TCC, or the operation is not
+     * supported. See cuDeviceGetAttributes().
+     * 
+     * @param stream The stream to synchronize on the memory location.
+     * @param addr The memory location to wait on.
+     * @param value The value to compare with the memory location.
+     * @param flags See {@link CUstreamWaitValue_flags}
+     * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_NOT_SUPPORTED
+     * 
+     * @see JCudaDriver#cuStreamWriteValue64
+     * @see JCudaDriver#cuStreamBatchMemOp
+     * @see JCudaDriver#cuMemHostRegister
+     * @see JCudaDriver#cuStreamWaitEvent
+     */
+    public static int cuStreamWaitValue64(CUstream stream, CUdeviceptr addr, long value, int flags)
+    {
+        return checkResult(cuStreamWaitValue64Native(stream, addr, value, flags));
+    }
+    private static native int cuStreamWaitValue64Native(CUstream stream, CUdeviceptr addr, long value, int flags);
+
+    /**
+     * Write a value to memory.<br>
+     * <br>
+     * Write a value to memory. Unless the
+     * CU_STREAM_WRITE_VALUE_NO_MEMORY_BARRIER flag is passed, the write is
+     * preceded by a system-wide memory fence, equivalent to a
+     * __threadfence_system() but scoped to the stream rather than a CUDA
+     * thread.<br>
+     * <br>
+     * If the memory was registered via cuMemHostRegister(), the device pointer
+     * should be obtained with cuMemHostGetDevicePointer(). This function cannot
+     * be used with managed memory (cuMemAllocManaged).<br>
+     * <br>
+     * On Windows, the device must be using TCC, or the operation is not
+     * supported. See cuDeviceGetAttribute().
+     * 
+     * @param stream The stream to do the write in.
+     * @param addr The device address to write to.
+     * @param value The value to write.
+     * @param flags See {@link CUstreamWriteValue_flags}
+     * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_NOT_SUPPORTED
+     * 
+     * @see JCudaDriver#cuStreamWaitValue64
+     * @see JCudaDriver#cuStreamBatchMemOp
+     * @see JCudaDriver#cuMemHostRegister
+     * @see JCudaDriver#cuEventRecord
+     */
+    public static int cuStreamWriteValue64(CUstream stream, CUdeviceptr addr, long value, int flags)
+    {
+        return checkResult(cuStreamWriteValue64Native(stream, addr, value, flags));
+    }
+    private static native int cuStreamWriteValue64Native(CUstream stream, CUdeviceptr addr, long value, int flags);
+    
     /**
      * <br>
      * <b>NOTE: This function is not yet supported in JCuda, and will throw an
@@ -15249,7 +15455,6 @@ public class JCudaDriver
     {
         return checkResult(cuLaunchKernelNative(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ, sharedMemBytes, hStream, kernelParams, extra));
     }
-
     private static native int cuLaunchKernelNative(
         CUfunction f,
         int gridDimX,
@@ -15263,6 +15468,382 @@ public class JCudaDriver
         Pointer kernelParams,
         Pointer extra);
 
+    
+    /**
+     * Launches a CUDA function where thread blocks can cooperate and synchronize as they execute.
+     * 
+     * <pre>
+     * CUresult cuLaunchCooperativeKernel (
+     *      CUfunction f,
+     *      unsigned int  gridDimX,
+     *      unsigned int  gridDimY,
+     *      unsigned int  gridDimZ,
+     *      unsigned int  blockDimX,
+     *      unsigned int  blockDimY,
+     *      unsigned int  blockDimZ,
+     *      unsigned int  sharedMemBytes,
+     *      CUstream hStream,
+     *      void** kernelParams )
+     * </pre>
+     * <div>Launches a CUDA function where thread blocks can cooperate
+     *   and synchronize as they execute. 
+     * </div>
+     * <div>
+     *   <h6>Description</h6>
+     *   <p>Invokes the kernel <tt>f</tt> on a
+     *     <tt>gridDimX</tt> x <tt>gridDimY</tt> x <tt>gridDimZ</tt> grid of
+     *     blocks. Each block contains <tt>blockDimX</tt> x <tt>blockDimY</tt>
+     *     x <tt>blockDimZ</tt> threads.
+     *   </p>
+     *   <p><tt>sharedMemBytes</tt> sets the
+     *     amount of dynamic shared memory that will be available to each thread
+     *     block.
+     *   </p>
+     *   <p>The device on which this kernel is
+     *     invoked must have a non-zero value for the device attribute
+     *     CU_DEVICE_ATTRIBUTE_COOPERATIVE_LAUNCH.
+     *   </p>
+     *   <p>The total number of blocks launched
+     *     cannot exceed the maximum number of blocks per multiprocessor as
+     *     returned by cuOccupancyMaxActiveBlocksPerMultiprocessor (or
+     *     cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags) times the number
+     *     of multiprocessors as specified by the device attribute
+     *     CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT.
+     *   </p>
+     *   <p>The kernel cannot make use of CUDA
+     *     dynamic parallelism.
+     *   </p>
+     *   <p>Kernel parameters must be specified
+     *     via <tt>kernelParams</tt>. If <tt>f</tt> has N parameters, then <tt>kernelParams</tt> needs to be an array of N pointers. Each of <tt>kernelParams</tt>[0] through <tt>kernelParams</tt>[N-1] must point
+     *     to a region of memory from which the actual kernel parameter will be
+     *     copied. The number of kernel parameters
+     *     and their offsets and sizes do not
+     *     need to be specified as that information is retrieved directly from
+     *     the kernel's image.
+     *   </p>
+     *   <p>Calling cuLaunchCooperativeKernel()
+     *     sets persistent function state that is the same as function state set
+     *     through cuLaunchKernel API
+     *   </p>
+     *   <p>When the kernel <tt>f</tt> is
+     *     launched via cuLaunchCooperativeKernel(), the previous block shape,
+     *     shared size and parameter info associated with <tt>f</tt> is
+     *     overwritten.
+     *   </p>
+     *   <p>Note that to use
+     *     cuLaunchCooperativeKernel(), the kernel <tt>f</tt> must either have
+     *     been compiled with toolchain version 3.2 or later so that it will
+     *     contain kernel parameter information,
+     *     or have no kernel parameters. If
+     *     either of these conditions is not met, then cuLaunchCooperativeKernel()
+     *     will return CUDA_ERROR_INVALID_IMAGE.
+     *   </p>
+     *   <div>
+     *     <span>Note:</span>
+     *     <ul>
+     *       <li>
+     *         <p>This function uses
+     *           standard  default stream semantics. 
+     *         </p>
+     *       </li>
+     *       <li>
+     *         <p>Note that this function
+     *           may also return error codes from previous, asynchronous launches.
+     *         </p>
+     *       </li>
+     *     </ul>
+     *   </div>
+     *   </p>
+     * </div>
+     * 
+     * @param f Kernel to launch
+     * @param gridDimX Width of grid in blocks
+     * @param gridDimY Height of grid in blocks
+     * @param gridDimZ Depth of grid in blocks
+     * @param blockDimX X dimension of each thread block
+     * @param blockDimY Y dimension of each thread block
+     * @param blockDimZ Z dimension of each thread block
+     * @param sharedMemBytes Dynamic shared-memory size per thread block in bytes
+     * @param hStream Stream identifier
+     * @param kernelParams Array of pointers to kernel parameters
+     * 
+     * @return CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_CONTEXT, CUDA_ERROR_INVALID_HANDLE,
+     * CUDA_ERROR_INVALID_IMAGE, CUDA_ERROR_INVALID_VALUE,
+     * CUDA_ERROR_LAUNCH_FAILED, CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES,
+     * CUDA_ERROR_LAUNCH_TIMEOUT, CUDA_ERROR_LAUNCH_INCOMPATIBLE_TEXTURING,
+     * CUDA_ERROR_COOPERATIVE_LAUNCH_TOO_LARGE,
+     * CUDA_ERROR_SHARED_OBJECT_INIT_FAILED
+     * 
+     * @see JCudaDriver#cuCtxGetCacheConfig
+     * @see JCudaDriver#cuCtxSetCacheConfig
+     * @see JCudaDriver#cuFuncSetCacheConfig
+     * @see JCudaDriver#cuFuncGetAttribute
+     * @see JCudaDriver#cuLaunchCooperativeKernelMultiDevice
+     * @see JCudaDriver#cudaLaunchCooperativeKernel
+     */
+    public static int cuLaunchCooperativeKernel(
+        CUfunction f,
+        int gridDimX,
+        int gridDimY,
+        int gridDimZ,
+        int blockDimX,
+        int blockDimY,
+        int blockDimZ,
+        int sharedMemBytes,
+        CUstream hStream,
+        Pointer kernelParams)
+    {
+        return checkResult(cuLaunchCooperativeKernelNative(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ, sharedMemBytes, hStream, kernelParams));
+    }
+    private static native int cuLaunchCooperativeKernelNative(
+        CUfunction f,
+        int gridDimX,
+        int gridDimY,
+        int gridDimZ,
+        int blockDimX,
+        int blockDimY,
+        int blockDimZ,
+        int sharedMemBytes,
+        CUstream hStream,
+        Pointer kernelParams);
+
+    
+    /**
+     * Launches CUDA functions on multiple devices where thread blocks can cooperate and synchronize as they execute.
+     * 
+     * <pre>
+     * CUresult cuLaunchCooperativeKernelMultiDevice (
+     *      CUDA_LAUNCH_PARAMS* launchParamsList,
+     *      unsigned int  numDevices,
+     *      unsigned int  flags )
+     * </pre>
+     * <div>Launches CUDA functions on multiple devices where thread
+     *   blocks can cooperate and synchronize as they execute. 
+     * </div>
+     * <div>
+     *   <h6>Description</h6>
+     *   <p>Invokes kernels as specified in the
+     *     <tt>launchParamsList</tt> array where each element of the array
+     *     specifies all the parameters required to perform a single kernel
+     *     launch. These kernels
+     *     can cooperate and synchronize as they
+     *     execute. The size of the array is specified by <tt>numDevices</tt>.
+     *   </p>
+     *   <p>No two kernels can be launched on
+     *     the same device. All the devices targeted by this multi-device launch
+     *     must be identical.
+     *     All devices must have a non-zero value
+     *     for the device attribute
+     *     CU_DEVICE_ATTRIBUTE_COOPERATIVE_MULTI_DEVICE_LAUNCH.
+     *   </p>
+     *   <p>All kernels launched must be identical
+     *     with respect to the compiled code. Note that any __device__, __constant__
+     *     or __managed__
+     *     variables present in the module that
+     *     owns the kernel launched on each device, are independently instantiated
+     *     on every device.
+     *     It is the application's responsiblity
+     *     to ensure these variables are initialized and used appropriately.
+     *   </p>
+     *   <p>The size of the grids as specified
+     *     in blocks, the size of the blocks themselves and the amount of shared
+     *     memory used by each
+     *     thread block must also match across
+     *     all launched kernels.
+     *   </p>
+     *   <p>The streams used to launch these
+     *     kernels must have been created via either cuStreamCreate or
+     *     cuStreamCreateWithPriority. The NULL stream or CU_STREAM_LEGACY or
+     *     CU_STREAM_PER_THREAD cannot be used.
+     *   </p>
+     *   <p>The total number of blocks launched
+     *     per kernel cannot exceed the maximum number of blocks per multiprocessor
+     *     as returned by
+     *     cuOccupancyMaxActiveBlocksPerMultiprocessor
+     *     (or cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags) times the
+     *     number of multiprocessors as specified by the device attribute
+     *     CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT. Since the total number of
+     *     blocks launched per device has to match across all devices, the maximum
+     *     number of blocks that
+     *     can be launched per device will be
+     *     limited by the device with the least number of multiprocessors.
+     *   </p>
+     *   <p>The kernels cannot make use of CUDA
+     *     dynamic parallelism.
+     *   </p>
+     *   <p>The CUDA_LAUNCH_PARAMS structure is
+     *     defined as: 
+     *   <pre>        typedef struct CUDA_LAUNCH_PARAMS_st
+     *               {
+     *                   CUfunction function;
+     *                   unsigned int gridDimX;
+     *                   unsigned int gridDimY;
+     *                   unsigned int gridDimZ;
+     *                   unsigned int blockDimX;
+     *                   unsigned int blockDimY;
+     *                   unsigned int blockDimZ;
+     *                   unsigned int sharedMemBytes;
+     *                   CUstream hStream;
+     *                   void **kernelParams;
+     *               } CUDA_LAUNCH_PARAMS;</pre>
+     *   where:
+     *   <ul>
+     *     <li>
+     *       <p>CUDA_LAUNCH_PARAMS::function
+     *         specifies the kernel to be launched. All functions must be identical
+     *         with respect to the compiled code.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CUDA_LAUNCH_PARAMS::gridDimX
+     *         is the width of the grid in blocks. This must match across all kernels
+     *         launched.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CUDA_LAUNCH_PARAMS::gridDimY
+     *         is the height of the grid in blocks. This must match across all kernels
+     *         launched.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CUDA_LAUNCH_PARAMS::gridDimZ
+     *         is the depth of the grid in blocks. This must match across all kernels
+     *         launched.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CUDA_LAUNCH_PARAMS::blockDimX
+     *         is the X dimension of each thread block. This must match across all
+     *         kernels launched.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CUDA_LAUNCH_PARAMS::blockDimX
+     *         is the Y dimension of each thread block. This must match across all
+     *         kernels launched.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CUDA_LAUNCH_PARAMS::blockDimZ
+     *         is the Z dimension of each thread block. This must match across all
+     *         kernels launched.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CUDA_LAUNCH_PARAMS::sharedMemBytes
+     *         is the dynamic shared-memory size per thread block in bytes. This must
+     *         match across all kernels launched.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CUDA_LAUNCH_PARAMS::hStream
+     *         is the handle to the stream to perform the launch in. This cannot be
+     *         the NULL stream or CU_STREAM_LEGACY or CU_STREAM_PER_THREAD. The CUDA
+     *         context associated with this stream must match that associated with
+     *         CUDA_LAUNCH_PARAMS::function.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CUDA_LAUNCH_PARAMS::kernelParams
+     *         is an array of pointers to kernel parameters. If CUDA_LAUNCH_PARAMS::function
+     *         has N parameters, then CUDA_LAUNCH_PARAMS::kernelParams needs to be an
+     *         array of N pointers. Each of CUDA_LAUNCH_PARAMS::kernelParams[0]
+     *         through CUDA_LAUNCH_PARAMS::kernelParams[N-1] must point to a region
+     *         of memory from which the actual kernel parameter will be copied. The
+     *         number of kernel parameters
+     *         and their offsets and sizes
+     *         do not need to be specified as that information is retrieved directly
+     *         from the kernel's image.
+     *       </p>
+     *     </li>
+     *   </ul>
+     *   </p>
+     *   <p>By default, the kernel won't begin
+     *     execution on any GPU until all prior work in all the specified streams
+     *     has completed. This
+     *     behavior can be overridden by
+     *     specifying the flag CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_PRE_LAUNCH_SYNC.
+     *     When this flag is specified, each kernel will only wait for prior work
+     *     in the stream corresponding to that GPU to complete
+     *     before it begins execution.
+     *   </p>
+     *   <p>Similarly, by default, any subsequent
+     *     work pushed in any of the specified streams will not begin execution
+     *     until the kernels
+     *     on all GPUs have completed. This
+     *     behavior can be overridden by specifying the flag
+     *     CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_POST_LAUNCH_SYNC. When this
+     *     flag is specified, any subsequent work pushed in any of the specified
+     *     streams will only wait for the kernel launched
+     *     on the GPU corresponding to that
+     *     stream to complete before it begins execution.
+     *   </p>
+     *   <p>Calling
+     *     cuLaunchCooperativeKernelMultiDevice() sets persistent function state
+     *     that is the same as function state set through cuLaunchKernel API when
+     *     called individually for each element in <tt>launchParamsList</tt>.
+     *   </p>
+     *   <p>When kernels are launched via
+     *     cuLaunchCooperativeKernelMultiDevice(), the previous block shape,
+     *     shared size and parameter info associated with each
+     *     CUDA_LAUNCH_PARAMS::function in <tt>launchParamsList</tt> is
+     *     overwritten.
+     *   </p>
+     *   <p>Note that to use
+     *     cuLaunchCooperativeKernelMultiDevice(), the kernels must either have
+     *     been compiled with toolchain version 3.2 or later so that it will
+     *     contain kernel parameter
+     *     information, or have no kernel
+     *     parameters. If either of these conditions is not met, then
+     *     cuLaunchCooperativeKernelMultiDevice() will return
+     *     CUDA_ERROR_INVALID_IMAGE.
+     *   </p>
+     *   <div>
+     *     <span>Note:</span>
+     *     <ul>
+     *       <li>
+     *         <p>This function uses
+     *           standard  default stream semantics. 
+     *         </p>
+     *       </li>
+     *       <li>
+     *         <p>Note that this function
+     *           may also return error codes from previous, asynchronous launches.
+     *         </p>
+     *       </li>
+     *     </ul>
+     *   </div>
+     *   </p>
+     * </div>
+     * 
+     * @param launchParamsList List of launch parameters, one per device
+     * @param numDevices Size of the launchParamsList array
+     * @param flags Flags to control launch behavior
+     * 
+     * @return CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_CONTEXT, CUDA_ERROR_INVALID_HANDLE,
+     * CUDA_ERROR_INVALID_IMAGE, CUDA_ERROR_INVALID_VALUE,
+     * CUDA_ERROR_LAUNCH_FAILED, CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES,
+     * CUDA_ERROR_LAUNCH_TIMEOUT, CUDA_ERROR_LAUNCH_INCOMPATIBLE_TEXTURING,
+     * CUDA_ERROR_COOPERATIVE_LAUNCH_TOO_LARGE,
+     * CUDA_ERROR_SHARED_OBJECT_INIT_FAILED
+     * 
+     * @see JCudaDriver#cuCtxGetCacheConfig
+     * @see JCudaDriver#cuCtxSetCacheConfig
+     * @see JCudaDriver#cuFuncSetCacheConfig
+     * @see JCudaDriver#cuFuncGetAttribute
+     * @see JCudaDriver#cuLaunchCooperativeKernel
+     * @see JCudaDriver#cudaLaunchCooperativeKernelMultiDevice
+     */
+    public static int cuLaunchCooperativeKernelMultiDevice(CUDA_LAUNCH_PARAMS launchParamsList[], int numDevices, int flags)
+    {
+        return checkResult(cuLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags));
+    }
+    private static native int cuLaunchCooperativeKernelMultiDeviceNative(CUDA_LAUNCH_PARAMS launchParamsList[], int numDevices, int flags);
+    
+    
     /**
      * Returns resource limits.
      *

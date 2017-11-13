@@ -81,9 +81,21 @@ public class CUfunction_attribute
      * user specified option "-Xptxas --dlcm=ca" set .
      */
     public static final int CU_FUNC_ATTRIBUTE_CACHE_MODE_CA = 7;
+    
+    /**
+     * The maximum size in bytes of dynamically-allocated shared memory that can
+     * be used by this function. If the user-specified dynamic shared memory
+     * size is larger than this value, the launch will fail.
+     */
+    public static final int CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES = 8;
 
-    //public static final int CU_FUNC_ATTRIBUTE_MAX = 8;
-
+    /**
+     * On devices where the L1 cache and shared memory use the same hardware
+     * resources, this sets the shared memory carveout preference, in percent of
+     * the total resources. This is only a hint, and the driver can choose a
+     * different ratio if required to execute the function.
+     */
+    public static final int CU_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT = 9;
 
     /**
      * Returns the String identifying the given CUfunction_attribute
@@ -103,6 +115,8 @@ public class CUfunction_attribute
             case CU_FUNC_ATTRIBUTE_PTX_VERSION: return "CU_FUNC_ATTRIBUTE_PTX_VERSION";
             case CU_FUNC_ATTRIBUTE_BINARY_VERSION: return "CU_FUNC_ATTRIBUTE_BINARY_VERSION";
             case CU_FUNC_ATTRIBUTE_CACHE_MODE_CA: return "CU_FUNC_ATTRIBUTE_CACHE_MODE_CA";
+            case CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES: return "CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES";
+            case CU_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT: return "CU_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT";
         }
         return "INVALID CUfunction_attribute: "+n;
     }

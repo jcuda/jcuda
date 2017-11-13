@@ -531,6 +531,37 @@ public class CUdevice_attribute
     public static final int CU_DEVICE_ATTRIBUTE_CAN_USE_HOST_POINTER_FOR_REGISTERED_MEM = 91; 
     
     /**
+     * ::cuStreamBatchMemOp and related APIs are supported. 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_MEM_OPS = 92;
+    
+    /**
+     * 64-bit operations are supported in ::cuStreamBatchMemOp and related APIs. 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS = 93;
+    
+    /**
+     * ::CU_STREAM_WAIT_VALUE_NOR is supported. 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR = 94;
+    
+    /**
+     * Device supports launching cooperative kernels via ::cuLaunchCooperativeKernel 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_COOPERATIVE_LAUNCH = 95;
+    
+    /**
+     * Device can participate in cooperative kernels launched via ::cuLaunchCooperativeKernelMultiDevice 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_COOPERATIVE_MULTI_DEVICE_LAUNCH = 96;
+    
+    /**
+     * Maximum optin shared memory per block 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK_OPTIN = 97;
+    
+    
+    /**
      * Returns the String identifying the given CUdevice_attribute
      *
      * @param n The CUdevice_attribute
@@ -630,6 +661,13 @@ public class CUdevice_attribute
             case CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS : return "CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS";
             case CU_DEVICE_ATTRIBUTE_CONCURRENT_MANAGED_ACCESS : return "CU_DEVICE_ATTRIBUTE_CONCURRENT_MANAGED_ACCESS";
             case CU_DEVICE_ATTRIBUTE_COMPUTE_PREEMPTION_SUPPORTED : return "CU_DEVICE_ATTRIBUTE_COMPUTE_PREEMPTION_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_CAN_USE_HOST_POINTER_FOR_REGISTERED_MEM: return "CU_DEVICE_ATTRIBUTE_CAN_USE_HOST_POINTER_FOR_REGISTERED_MEM";
+            case CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_MEM_OPS: return "CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_MEM_OPS";
+            case CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS: return "CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS";
+            case CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR: return "CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR";
+            case CU_DEVICE_ATTRIBUTE_COOPERATIVE_LAUNCH: return "CU_DEVICE_ATTRIBUTE_COOPERATIVE_LAUNCH";
+            case CU_DEVICE_ATTRIBUTE_COOPERATIVE_MULTI_DEVICE_LAUNCH: return "CU_DEVICE_ATTRIBUTE_COOPERATIVE_MULTI_DEVICE_LAUNCH";
+            case CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK_OPTIN: return "CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK_OPTIN";
         }
         return "INVALID CUdevice_attribute: "+n;
     }
