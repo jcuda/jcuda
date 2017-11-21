@@ -1637,6 +1637,8 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDevicePrimaryCtxRetainNat
 
     int result = cuDevicePrimaryCtxRetain(&nativePctx, nativeDev);
 
+	setNativePointerValue(env, pctx, (jlong)nativePctx);
+
     return result;
 }
 
