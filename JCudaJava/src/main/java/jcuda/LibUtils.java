@@ -83,9 +83,9 @@ public final class LibUtils
      */
     public static enum ArchType
     {
-        PPC, PPC_64, SPARC, X86, X86_64, ARM, ARM64, MIPS, MIPS64, RISC, UNKNOWN
+        PPC, PPC_64, SPARC, X86, X86_64, ARM, ARM64, AARCH64, MIPS, MIPS64, RISC, UNKNOWN
     }
-
+    
     /**
      * Private constructor to prevent instantiation.
      */
@@ -572,6 +572,10 @@ public final class LibUtils
         if (osArch.contains("risc"))
         {
             return ArchType.RISC;
+        }
+        if (osArch.startsWith("aarch64"))
+        {
+            return ArchType.AARCH64;
         }
         return ArchType.UNKNOWN;
     }
