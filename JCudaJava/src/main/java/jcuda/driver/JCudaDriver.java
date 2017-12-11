@@ -15839,7 +15839,7 @@ public class JCudaDriver
      */
     public static int cuLaunchCooperativeKernelMultiDevice(CUDA_LAUNCH_PARAMS launchParamsList[], int numDevices, int flags)
     {
-        return checkResult(cuLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags));
+        return checkResult(cuLaunchCooperativeKernelMultiDeviceNative(launchParamsList, numDevices, flags));
     }
     private static native int cuLaunchCooperativeKernelMultiDeviceNative(CUDA_LAUNCH_PARAMS launchParamsList[], int numDevices, int flags);
     
