@@ -5823,7 +5823,7 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuTexObjectCreateNative
 
     Logger::log(LOG_TRACE, "Executing cuTexObjectCreate\n");
 
-    CUtexObject *nativePTexObject = NULL;
+    CUtexObject nativePTexObject;
     CUDA_RESOURCE_DESC nativePResDesc = getCUDA_RESOURCE_DESC(env, pResDesc);
     CUDA_TEXTURE_DESC nativePTexDesc = getCUDA_TEXTURE_DESC(env, pTexDesc);
     CUDA_RESOURCE_VIEW_DESC nativePResViewDesc;
@@ -5833,8 +5833,7 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuTexObjectCreateNative
         nativePResViewDesc = getCUDA_RESOURCE_VIEW_DESC(env, pResViewDesc);
         nativePResViewDescPointer = &nativePResViewDesc;
     }
-
-    int result = cuTexObjectCreate(nativePTexObject, &nativePResDesc, &nativePTexDesc, nativePResViewDescPointer);
+    int result = cuTexObjectCreate(&nativePTexObject, &nativePResDesc, &nativePTexDesc, nativePResViewDescPointer);
 
     setNativePointerValue(env, pTexObject, (jlong)nativePTexObject);
     return result;
@@ -5976,10 +5975,10 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuSurfObjectCreateNative
 
     Logger::log(LOG_TRACE, "Executing cuSurfObjectCreate\n");
 
-    CUsurfObject *nativePSurfObject = NULL;
+    CUsurfObject nativePSurfObject;
     CUDA_RESOURCE_DESC nativePResDesc = getCUDA_RESOURCE_DESC(env, pResDesc);
 
-    int result = cuSurfObjectCreate(nativePSurfObject, &nativePResDesc);
+    int result = cuSurfObjectCreate(&nativePSurfObject, &nativePResDesc);
 
     setNativePointerValue(env, pSurfObject, (jlong)nativePSurfObject);
 
