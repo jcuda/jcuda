@@ -27,11 +27,14 @@
 
 package jcuda;
 
+import java.io.Serializable;
+
 /**
  * Base class for all classes that store a native pointer
  */
-public abstract class NativePointerObject
+public abstract class NativePointerObject implements Serializable
 {
+    static final long serialVersionUID = 1L;
     /**
      * The native pointer, written by native methods
      */
