@@ -94,10 +94,11 @@ public class cudaFuncAttributes
     /**
      * On devices where the L1 cache and shared memory use the same hardware
      * resources, this sets the shared memory carveout preference, in percent of
-     * the maximum shared memory. This is only a hint, and the driver can choose
+     * the total resources. This is only a hint, and the driver can choose
      * a different ratio if required to execute the function.
      */
-    public int preferredShmemCarveout;    
+    public int preferredShmemCarveout;
+    
     /**
      * Creates new, uninitialized cudaFuncAttributes
      */

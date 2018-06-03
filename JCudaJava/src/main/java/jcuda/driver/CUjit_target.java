@@ -123,6 +123,16 @@ public class CUjit_target
     public static final int CU_TARGET_COMPUTE_70 = 70;
 
     /**
+     * Compute device class 7.3.
+     */
+    public static final int CU_TARGET_COMPUTE_73 = 73;
+
+    /**
+     * Compute device class 7.5.
+     */
+    public static final int CU_TARGET_COMPUTE_75 = 75;
+
+    /**
      * Returns the String identifying the given CUjit_target
      *
      * @param n The CUjit_target
@@ -149,6 +159,8 @@ public class CUjit_target
             case CU_TARGET_COMPUTE_61: return "CU_TARGET_COMPUTE_61";
             case CU_TARGET_COMPUTE_62: return "CU_TARGET_COMPUTE_62";
             case CU_TARGET_COMPUTE_70: return "CU_TARGET_COMPUTE_70";
+            case CU_TARGET_COMPUTE_73: return "CU_TARGET_COMPUTE_73";
+            case CU_TARGET_COMPUTE_75: return "CU_TARGET_COMPUTE_75";
         }
         return "INVALID CUjit_target: "+n;
     }
