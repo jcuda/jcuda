@@ -43,7 +43,7 @@ import jcuda.runtime.JCuda;
 public class JCudaDriver
 {
     /** The CUDA version */
-    public static final int CUDA_VERSION = 9000;
+    public static final int CUDA_VERSION = 9020;
 
     /**
      * If set, host memory is portable between CUDA contexts.
@@ -653,6 +653,32 @@ public class JCudaDriver
 
     private static native int cuDeviceGetNameNative(byte name[], int len, CUdevice dev);
 
+    
+    /**
+     * Return an UUID for the device
+     *
+     * Returns 16-octets identifing the device \p dev in the structure
+     * pointed by the \p uuid.
+     *
+     * @param uuid Returned UUID
+     * @param dev  Device to get identifier string for
+     *
+     * @return CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_INVALID_DEVICE
+     *
+     * 
+     * @see JCudaDriver#cuDeviceGetAttribute
+     * JCudaDriver#cuDeviceGetCount
+     * JCudaDriver#cuDeviceGetName
+     * JCudaDriver#cuDeviceGet
+     * JCudaDriver#cuDeviceTotalMem
+     * JCudaDriver#cudaGetDeviceProperties
+     */
+    public static int cuDeviceGetUuid(CUuuid uuid, CUdevice dev)
+    {
+        return checkResult(cuDeviceGetUuidNative(uuid, dev));
+    }
+    private static native int cuDeviceGetUuidNative(CUuuid uuid, CUdevice dev);
 
     /**
      * Returns the compute capability of the device.
@@ -13252,26 +13278,156 @@ public class JCudaDriver
 
     private static native int cuStreamCreateNative(CUstream phStream, int Flags);
 
-
+    /**
+     * Create a stream with the given priority
+     *
+     * Creates a stream with the specified priority and returns a handle in phStream.
+     * This API alters the scheduler priority of work in the stream. Work in a higher
+     * priority stream may preempt work already executing in a low priority stream.
+     *
+     * priority follows a convention where lower numbers represent higher priorities.
+     * '0' represents default priority. The range of meaningful numerical priorities can
+     * be queried using ::cuCtxGetStreamPriorityRange. If the specified priority is
+     * outside the numerical range returned by ::cuCtxGetStreamPriorityRange,
+     * it will automatically be clamped to the lowest or the highest number in the range.
+     *
+     * @param phStream Returned newly created stream
+     * @param flags Flags for stream creation. See ::cuStreamCreate for a list of valid flags
+     * @param priority Stream priority. Lower numbers represent higher priorities.
+     * See ::cuCtxGetStreamPriorityRange for more information about
+     * meaningful stream priorities that can be passed.
+     * 
+     * Note: Stream priorities are supported only on GPUs
+     * with compute capability 3.5 or higher.
+     *
+     * Note: In the current implementation, only compute kernels launched in
+     * priority streams are affected by the stream's priority. Stream priorities have
+     * no effect on host-to-device and device-to-host memory operations.
+     *
+     * @return CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED, 
+     * CUDA_ERROR_NOT_INITIALIZED, CUDA_ERROR_INVALID_CONTEXT,
+     * CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_OUT_OF_MEMORY
+     *
+     * @see JCudaDriver#cuStreamDestroy
+     * @see JCudaDriver#cuStreamCreate
+     * @see JCudaDriver#cuStreamGetPriority
+     * @see JCudaDriver#cuCtxGetStreamPriorityRange
+     * @see JCudaDriver#cuStreamGetFlags
+     * @see JCudaDriver#cuStreamWaitEvent
+     * @see JCudaDriver#cuStreamQuery
+     * @see JCudaDriver#cuStreamSynchronize
+     * @see JCudaDriver#cuStreamAddCallback
+     * @see JCudaDriver#cudaStreamCreateWithPriority
+     */    
     public static int cuStreamCreateWithPriority(CUstream phStream, int flags, int priority)
     {
         return checkResult(cuStreamCreateWithPriorityNative(phStream, flags, priority));
     }
     private static native int cuStreamCreateWithPriorityNative(CUstream phStream, int flags, int priority);
 
-
+    /**
+     * Query the priority of a given stream.
+     *
+     * Query the priority of a stream created using ::cuStreamCreate or ::cuStreamCreateWithPriority
+     * and return the priority in priority. Note that if the stream was created with a
+     * priority outside the numerical range returned by ::cuCtxGetStreamPriorityRange,
+     * this function returns the clamped priority.
+     * See ::cuStreamCreateWithPriority for details about priority clamping.
+     *
+     * @param hStream Handle to the stream to be queried
+     * @param priority Pointer to a signed integer in which the stream's priority is returned
+     * @return CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED, 
+     * CUDA_ERROR_NOT_INITIALIZED, CUDA_ERROR_INVALID_CONTEXT,
+     * CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_INVALID_HANDLE,
+     * CUDA_ERROR_OUT_OF_MEMORY
+     *
+     * @see JCudaDriver#cuStreamDestroy
+     * @see JCudaDriver#cuStreamCreate
+     * @see JCudaDriver#cuStreamCreateWithPriority
+     * @see JCudaDriver#cuCtxGetStreamPriorityRange
+     * @see JCudaDriver#cuStreamGetFlags
+     * @see JCudaDriver#cudaStreamGetPriority
+     */    
     public static int cuStreamGetPriority(CUstream hStream, int priority[])
     {
         return checkResult(cuStreamGetPriorityNative(hStream, priority));
     }
     private static native int cuStreamGetPriorityNative(CUstream hStream, int priority[]);
 
+    /**
+     * Query the flags of a given stream.
+     *
+     * Query the flags of a stream created using ::cuStreamCreate or
+     * ::cuStreamCreateWithPriority and return the flags in flags.
+     *
+     * @param hStream Handle to the stream to be queried
+     * @param flags Pointer to an unsigned integer in which the stream's flags
+     *        are returned The value returned in flags is a logical 'OR' of
+     *        all flags that were used while creating this stream. See
+     *        ::cuStreamCreate for the list of valid flags 
+     * @return CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED, CUDA_ERROR_INVALID_CONTEXT,
+     * CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_INVALID_HANDLE,
+     * CUDA_ERROR_OUT_OF_MEMORY
+     *
+     * @see JCudaDriver#cuStreamDestroy
+     * @see JCudaDriver#cuStreamCreate
+     * @see JCudaDriver#cuStreamGetPriority
+     * @see JCudaDriver#cudaStreamGetFlags
+     */
     public static int cuStreamGetFlags(CUstream hStream, int flags[])
     {
         return checkResult(cuStreamGetFlagsNative(hStream, flags));
     }
     private static native int cuStreamGetFlagsNative(CUstream hStream, int flags[]);
 
+    /**
+     * Query the context associated with a stream.
+     *
+     * Returns the CUDA context that the stream is associated with. 
+     *
+     * The stream handle hStream can refer to any of the following:
+     * <ul>
+     *   <li>
+     *     a stream created via any of the CUDA driver APIs such as ::cuStreamCreate
+     *     and ::cuStreamCreateWithPriority, or their runtime API equivalents such as
+     *     ::cudaStreamCreate, ::cudaStreamCreateWithFlags and ::cudaStreamCreateWithPriority.
+     *     The returned context is the context that was active in the calling thread when the
+     *     stream was created. Passing an invalid handle will result in undefined behavior.
+     *   </li>
+     *   <li>
+     *     any of the special streams such as the NULL stream, ::CU_STREAM_LEGACY 
+     *     and ::CU_STREAM_PER_THREAD. The runtime API equivalents of these are 
+     *     also accepted, which are NULL, ::cudaStreamLegacy and ::cudaStreamPerThread 
+     *     respectively. Specifying any of the special handles will return the context 
+     *     current to the calling thread. If no context is current to the calling thread,
+     *     ::CUDA_ERROR_INVALID_CONTEXT is returned.
+     *   </li>
+     * </ul>
+     *
+     * @param hStream Handle to the stream to be queried
+     * @param pctx Returned context associated with the stream
+     *
+     * @return CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED, 
+     * CUDA_ERROR_NOT_INITIALIZED, CUDA_ERROR_INVALID_CONTEXT,
+     * CUDA_ERROR_INVALID_HANDLE,
+     *
+     * @see JCudaDriver#cuStreamDestroy
+     * @see JCudaDriver#cuStreamCreateWithPriority
+     * @see JCudaDriver#cuStreamGetPriority
+     * @see JCudaDriver#cuStreamGetFlags
+     * @see JCudaDriver#cuStreamWaitEvent
+     * @see JCudaDriver#cuStreamQuery
+     * @see JCudaDriver#cuStreamSynchronize
+     * @see JCudaDriver#cuStreamAddCallback
+     * @see JCudaDriver#cudaStreamCreate
+     * @see JCudaDriver#cudaStreamCreateWithFlags
+     */
+    public static int cuStreamGetCtx(CUstream hStream, CUcontext pctx)
+    {
+        return checkResult(cuStreamGetCtxNative(hStream, pctx));
+    }
+    private static native int cuStreamGetCtxNative(CUstream hStream, CUcontext pctx);
 
     /**
      * Make a compute stream wait on an event.

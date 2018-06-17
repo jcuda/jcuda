@@ -35,7 +35,7 @@
 extern "C" {
 #endif
 #undef jcuda_driver_JCudaDriver_CUDA_VERSION
-#define jcuda_driver_JCudaDriver_CUDA_VERSION 9000L
+#define jcuda_driver_JCudaDriver_CUDA_VERSION 9020L
 #undef jcuda_driver_JCudaDriver_CU_MEMHOSTALLOC_PORTABLE
 #define jcuda_driver_JCudaDriver_CU_MEMHOSTALLOC_PORTABLE 1L
 #undef jcuda_driver_JCudaDriver_CU_MEMHOSTALLOC_DEVICEMAP
@@ -143,6 +143,14 @@ extern "C" {
 	*/
 	JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDeviceGetNameNative
 		(JNIEnv *, jclass, jbyteArray, jint, jobject);
+
+	/*
+	* Class:     jcuda_driver_JCudaDriver
+	* Method:    cuDeviceGetUuidNative
+	* Signature: (Ljcuda/driver/CUuuid;Ljcuda/driver/CUdevice;)I
+	*/
+	JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDeviceGetUuidNative
+		(JNIEnv *, jclass, jobject, jobject);
 
 	/*
 	* Class:     jcuda_driver_JCudaDriver
@@ -1559,6 +1567,14 @@ extern "C" {
 	*/
 	JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamGetFlagsNative
 		(JNIEnv *, jclass, jobject, jintArray);
+
+	/*
+	* Class:     jcuda_driver_JCudaDriver
+	* Method:    cuStreamGetCtxNative
+	* Signature: (Ljcuda/driver/CUstream;Ljcuda/driver/CUcontext;)I
+	*/
+	JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamGetCtxNative
+		(JNIEnv *, jclass, jobject, jobject);
 
 	/*
 	* Class:     jcuda_driver_JCudaDriver

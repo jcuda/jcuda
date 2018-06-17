@@ -560,6 +560,28 @@ public class CUdevice_attribute
      */
     public static final int CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK_OPTIN = 97;
     
+    /**
+     * Both the ::CU_STREAM_WAIT_VALUE_FLUSH flag and the
+     * ::CU_STREAM_MEM_OP_FLUSH_REMOTE_WRITES MemOp are supported on the device.
+     * See \ref CUDA_MEMOP for additional details.
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_CAN_FLUSH_REMOTE_WRITES = 98;
+    
+    /** 
+     * Device supports host memory registration via ::cudaHostRegister. 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_HOST_REGISTER_SUPPORTED = 99;
+    
+    /** 
+     * Device accesses pageable memory via the host's page tables. 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES = 100;
+    
+    /**
+     * The host can directly access managed memory on the device without 
+     * migration.
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_DIRECT_MANAGED_MEM_ACCESS_FROM_HOST = 101;    
     
     /**
      * Returns the String identifying the given CUdevice_attribute
@@ -668,6 +690,10 @@ public class CUdevice_attribute
             case CU_DEVICE_ATTRIBUTE_COOPERATIVE_LAUNCH: return "CU_DEVICE_ATTRIBUTE_COOPERATIVE_LAUNCH";
             case CU_DEVICE_ATTRIBUTE_COOPERATIVE_MULTI_DEVICE_LAUNCH: return "CU_DEVICE_ATTRIBUTE_COOPERATIVE_MULTI_DEVICE_LAUNCH";
             case CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK_OPTIN: return "CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK_OPTIN";
+            case CU_DEVICE_ATTRIBUTE_CAN_FLUSH_REMOTE_WRITES: return "CU_DEVICE_ATTRIBUTE_CAN_FLUSH_REMOTE_WRITES";
+            case CU_DEVICE_ATTRIBUTE_HOST_REGISTER_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_HOST_REGISTER_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES: return "CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES";
+            case CU_DEVICE_ATTRIBUTE_DIRECT_MANAGED_MEM_ACCESS_FROM_HOST: return "CU_DEVICE_ATTRIBUTE_DIRECT_MANAGED_MEM_ACCESS_FROM_HOST";
         }
         return "INVALID CUdevice_attribute: "+n;
     }

@@ -40,7 +40,7 @@ public class JCuda
     /**
      * CUDA runtime version
      */
-    public static final int CUDART_VERSION = 9010;
+    public static final int CUDART_VERSION = 9020;
 
     /**
      * Returns an unspecified string that will be appended to native 
@@ -50,7 +50,7 @@ public class JCuda
      */
     public static String getJCudaVersion()
     {
-        return "0.9.1";
+        return "0.9.2";
     }
     
     /**

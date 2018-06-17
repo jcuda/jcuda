@@ -73,6 +73,12 @@ public class CUpointer_attribute
      * Indicates if the pointer points to managed memory
      */
     public static final int CU_POINTER_ATTRIBUTE_IS_MANAGED = 8;
+    
+    /** 
+     * A device ordinal of a device on which a pointer was allocated or 
+     * registered 
+     */
+    public static final int CU_POINTER_ATTRIBUTE_DEVICE_ORDINAL = 9;
 
     /**
      * Returns the String identifying the given CUpointer_attribute
@@ -92,6 +98,7 @@ public class CUpointer_attribute
             case CU_POINTER_ATTRIBUTE_SYNC_MEMOPS : return "CU_POINTER_ATTRIBUTE_SYNC_MEMOPS";
             case CU_POINTER_ATTRIBUTE_BUFFER_ID : return "CU_POINTER_ATTRIBUTE_BUFFER_ID";
             case CU_POINTER_ATTRIBUTE_IS_MANAGED : return "CU_POINTER_ATTRIBUTE_IS_MANAGED";
+            case CU_POINTER_ATTRIBUTE_DEVICE_ORDINAL : return "CU_POINTER_ATTRIBUTE_DEVICE_ORDINAL";
         }
         return "INVALID CUpointer_attribute: "+n;
     }
