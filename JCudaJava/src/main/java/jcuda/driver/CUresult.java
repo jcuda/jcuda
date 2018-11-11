@@ -265,6 +265,11 @@ public class CUresult
      */
     public static final int CUDA_ERROR_INVALID_HANDLE                 = 400;
 
+    /** 
+     * This indicates that a resource required by the API call is not in a
+     * valid state to perform the requested operation.
+     */
+    public static final int CUDA_ERROR_ILLEGAL_STATE                  = 401;
 
     /**
      * This indicates that a named symbol was not found. Examples of symbols
@@ -470,6 +475,62 @@ public class CUresult
     public static final int CUDA_ERROR_NOT_SUPPORTED                  = 801;
 
     /**
+     * This error indicates that the system is not yet ready to start any CUDA
+     * work.  To continue using CUDA, verify the system configuration is in a
+     * valid state and all required driver daemons are actively running.
+     */
+    public static final int CUDA_ERROR_SYSTEM_NOT_READY               = 802;
+
+    /**
+     * This error indicates that the operation is not permitted when
+     * the stream is capturing.
+     */
+    public static final int CUDA_ERROR_STREAM_CAPTURE_UNSUPPORTED     = 900;
+
+    /**
+     * This error indicates that the current capture sequence on the stream
+     * has been invalidated due to a previous error.
+     */
+    public static final int CUDA_ERROR_STREAM_CAPTURE_INVALIDATED     = 901;
+
+    /**
+     * This error indicates that the operation would have resulted in a merge
+     * of two independent capture sequences.
+     */
+    public static final int CUDA_ERROR_STREAM_CAPTURE_MERGE           = 902;
+
+    /**
+     * This error indicates that the capture was not initiated in this stream.
+     */
+    public static final int CUDA_ERROR_STREAM_CAPTURE_UNMATCHED       = 903;
+
+    /**
+     * This error indicates that the capture sequence contains a fork that was
+     * not joined to the primary stream.
+     */
+    public static final int CUDA_ERROR_STREAM_CAPTURE_UNJOINED        = 904;
+
+    /**
+     * This error indicates that a dependency would have been created which
+     * crosses the capture sequence boundary. Only implicit in-stream ordering
+     * dependencies are allowed to cross the boundary.
+     */
+    public static final int CUDA_ERROR_STREAM_CAPTURE_ISOLATION       = 905;
+
+    /**
+     * This error indicates a disallowed implicit dependency on a current capture
+     * sequence from cudaStreamLegacy.
+     */
+    public static final int CUDA_ERROR_STREAM_CAPTURE_IMPLICIT        = 906;
+
+    /**
+     * This error indicates that the operation is not permitted on an event which
+     * was last recorded in a capturing stream.
+     */
+    public static final int CUDA_ERROR_CAPTURED_EVENT                 = 907;
+    
+    
+    /**
      * This indicates that an unknown internal error has occurred.
      */
     public static final int CUDA_ERROR_UNKNOWN                        = 999;
@@ -522,6 +583,7 @@ public class CUresult
             case CUDA_ERROR_SHARED_OBJECT_INIT_FAILED      : return "CUDA_ERROR_SHARED_OBJECT_INIT_FAILED";
             case CUDA_ERROR_OPERATING_SYSTEM               : return "CUDA_ERROR_OPERATING_SYSTEM";
             case CUDA_ERROR_INVALID_HANDLE                 : return "CUDA_ERROR_INVALID_HANDLE";
+            case CUDA_ERROR_ILLEGAL_STATE                  : return "CUDA_ERROR_ILLEGAL_STATE";
             case CUDA_ERROR_NOT_FOUND                      : return "CUDA_ERROR_NOT_FOUND";
             case CUDA_ERROR_NOT_READY                      : return "CUDA_ERROR_NOT_READY";
             case CUDA_ERROR_ILLEGAL_ADDRESS                : return "CUDA_ERROR_ILLEGAL_ADDRESS";
@@ -547,6 +609,15 @@ public class CUresult
             case CUDA_ERROR_COOPERATIVE_LAUNCH_TOO_LARGE   : return "CUDA_ERROR_COOPERATIVE_LAUNCH_TOO_LARGE";
             case CUDA_ERROR_NOT_PERMITTED                  : return "CUDA_ERROR_NOT_PERMITTED";
             case CUDA_ERROR_NOT_SUPPORTED                  : return "CUDA_ERROR_NOT_SUPPORTED";
+            case CUDA_ERROR_SYSTEM_NOT_READY               : return "CUDA_ERROR_SYSTEM_NOT_READY";
+            case CUDA_ERROR_STREAM_CAPTURE_UNSUPPORTED     : return "CUDA_ERROR_STREAM_CAPTURE_UNSUPPORTED";
+            case CUDA_ERROR_STREAM_CAPTURE_INVALIDATED     : return "CUDA_ERROR_STREAM_CAPTURE_INVALIDATED";
+            case CUDA_ERROR_STREAM_CAPTURE_MERGE           : return "CUDA_ERROR_STREAM_CAPTURE_MERGE";
+            case CUDA_ERROR_STREAM_CAPTURE_UNMATCHED       : return "CUDA_ERROR_STREAM_CAPTURE_UNMATCHED";
+            case CUDA_ERROR_STREAM_CAPTURE_UNJOINED        : return "CUDA_ERROR_STREAM_CAPTURE_UNJOINED";
+            case CUDA_ERROR_STREAM_CAPTURE_ISOLATION       : return "CUDA_ERROR_STREAM_CAPTURE_ISOLATION";
+            case CUDA_ERROR_STREAM_CAPTURE_IMPLICIT        : return "CUDA_ERROR_STREAM_CAPTURE_IMPLICIT";
+            case CUDA_ERROR_CAPTURED_EVENT                 : return "CUDA_ERROR_CAPTURED_EVENT";
             case CUDA_ERROR_UNKNOWN                        : return "CUDA_ERROR_UNKNOWN";
         }
         return "INVALID CUresult: "+result;

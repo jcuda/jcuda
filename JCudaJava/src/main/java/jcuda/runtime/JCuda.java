@@ -40,7 +40,7 @@ public class JCuda
     /**
      * CUDA runtime version
      */
-    public static final int CUDART_VERSION = 9020;
+    public static final int CUDART_VERSION = 10000;
 
     /**
      * Returns an unspecified string that will be appended to native 
@@ -50,7 +50,7 @@ public class JCuda
      */
     public static String getJCudaVersion()
     {
-        return "0.9.2";
+        return "10.0.0";
     }
     
     /**
@@ -208,6 +208,11 @@ public class JCuda
      */
     public static final int cudaArrayTextureGather         = 0x08;
 
+    /**
+     * Must be set in cudaExternalMemoryGetMappedMipmappedArray if the 
+     * mipmapped array is used as a color target in a graphics API
+     */
+    public static final int cudaArrayColorAttachment       = 0x20;
 
     /**
      * Automatically enable peer access between remote devices as needed
@@ -6891,6 +6896,7 @@ public class JCuda
     }
     private static native int cudaStreamAttachMemAsyncNative(cudaStream_t stream, Pointer devPtr, long length, int flags);
 
+    
 
     /**
      * [C++ API] Creates an event object with the specified flags
@@ -10096,6 +10102,74 @@ public class JCuda
     private static native int cudaGetSurfaceObjectResourceDescNative(cudaResourceDesc pResDesc, cudaSurfaceObject surfObject);
 
 
+    /**
+     * Enqueues a host function call in a stream<br>
+     *
+     * Enqueues a host function to run in a stream.  The function will be called
+     * after currently enqueued work and will block work added after it.<br>
+     * <br>
+     * The host function must not make any CUDA API calls.  Attempting to use a
+     * CUDA API may result in ::cudaErrorNotPermitted, but this is not required.
+     * The host function must not perform any synchronization that may depend on
+     * outstanding CUDA work not mandated to run earlier.  Host functions without a
+     * mandated order (such as in independent streams) execute in undefined order
+     * and may be serialized.<br>
+     * <br>
+     * For the purposes of Unified Memory, execution makes a number of guarantees:
+     * <ul>
+     *   <li>The stream is considered idle for the duration of the function's
+     *   execution.  Thus, for example, the function may always use memory attached
+     *   to the stream it was enqueued in.</li>
+     *   <li>The start of execution of the function has the same effect as
+     *   synchronizing an event recorded in the same stream immediately prior to
+     *   the function.  It thus synchronizes streams which have been "joined"
+     *   prior to the function.</li>
+     *   <li>Adding device work to any stream does not have the effect of making
+     *   the stream active until all preceding host functions and stream callbacks
+     *   have executed.  Thus, for
+     *   example, a function might use global attached memory even if work has
+     *   been added to another stream, if the work has been ordered behind the
+     *   function call with an event.</li>
+     *   <li>Completion of the function does not cause a stream to become
+     *   active except as described above.  The stream will remain idle
+     *   if no device work follows the function, and will remain idle across
+     *   consecutive host functions or stream callbacks without device work in
+     *   between.  Thus, for example,
+     *   stream synchronization can be done by signaling from a host function at the
+     *   end of the stream.</li>
+     * </ul>
+     *
+     * Note that, in constrast to ::cuStreamAddCallback, the function will not be
+     * called in the event of an error in the CUDA context.
+     *
+     * @param hStream  - Stream to enqueue function call in
+     * @param fn       - The function to call once preceding stream operations are complete
+     * @param userData - User-specified data to be passed to the function
+     *
+     * @return
+     * cudaSuccess,
+     * cudaErrorInvalidResourceHandle,
+     * cudaErrorInvalidValue,
+     * cudaErrorNotSupported
+     *
+     * @see 
+     * JCuda#cudaStreamCreate
+     * JCuda#cudaStreamQuery
+     * JCuda#cudaStreamSynchronize
+     * JCuda#cudaStreamWaitEvent
+     * JCuda#cudaStreamDestroy
+     * JCuda#cudaMallocManaged
+     * JCuda#cudaStreamAttachMemAsync
+     * JCuda#cudaStreamAddCallback
+     * JCuda#cuLaunchHostFunc
+     */
+    public static int cudaLaunchHostFunc(cudaStream_t stream, cudaHostFn fn, Object userData)
+    {
+        return checkResult(cudaLaunchHostFuncNative(stream, fn, userData));
+    }
+    private static native int cudaLaunchHostFuncNative(cudaStream_t stream, cudaHostFn fn, Object userData);
+
+    
 
     /**
      * Configure a device-launch.

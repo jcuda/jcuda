@@ -158,5 +158,22 @@ typedef struct CUDA_LAUNCH_PARAMSData
 
 } CUDA_LAUNCH_PARAMSData;
 
+/**
+* A structure containing all information necessary for maintaining
+* the CUDA_KERNEL_NODE_PARAMS parameters
+*/
+typedef struct CUDA_KERNEL_NODE_PARAMSData
+{
+	/** The actual CUDA_KERNEL_NODE_PARAMS */
+	CUDA_KERNEL_NODE_PARAMS cudaKernelNodeParams;
+
+	/** The data for the kernel parameters */
+	PointerData *kernelParamsPointerData;
+
+	/** The data for the extra parameters */
+	PointerData *extraPointerData;
+
+} CUDA_KERNEL_NODE_PARAMSData;
+
 
 #endif

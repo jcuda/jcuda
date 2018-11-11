@@ -43,7 +43,7 @@ import jcuda.runtime.JCuda;
 public class JCudaDriver
 {
     /** The CUDA version */
-    public static final int CUDA_VERSION = 9020;
+    public static final int CUDA_VERSION = 10000;
 
     /**
      * If set, host memory is portable between CUDA contexts.
@@ -162,6 +162,12 @@ public class JCudaDriver
     */
     public static final int CUDA_ARRAY3D_DEPTH_TEXTURE = 0x10;
 
+    /**
+     * This flag indicates that the CUDA array may be bound as a color target
+     * in an external graphics API
+     */
+    public static final int CUDA_ARRAY3D_COLOR_ATTACHMENT = 0x20;
+    
     /**
      * For texture references loaded into the module, use default
      * texunit from texture reference
@@ -655,7 +661,7 @@ public class JCudaDriver
 
     
     /**
-     * Return an UUID for the device
+     * Return an UUID for the device.
      *
      * Returns 16-octets identifing the device \p dev in the structure
      * pointed by the \p uuid.
@@ -680,6 +686,35 @@ public class JCudaDriver
     }
     private static native int cuDeviceGetUuidNative(CUuuid uuid, CUdevice dev);
 
+    /**
+     * Return an LUID and device node mask for the device.
+     *
+     * Return identifying information (\p luid and \p deviceNodeMask) to allow
+     * matching device with graphics APIs.
+     *
+     * @param luid - Returned LUID
+     * @param deviceNodeMask - Returned device node mask
+     * @param dev  - Device to get identifier string for
+     *
+     * @return CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE,
+     * CUDA_ERROR_INVALID_DEVICE
+     *
+     * @see JCudaDriver#cuDeviceGetAttribute
+     * JCudaDriver#cuDeviceGetCount
+     * JCudaDriver#cuDeviceGetName
+     * JCudaDriver#cuDeviceGet
+     * JCudaDriver#cuDeviceTotalMem
+     * JCudaDriver#cudaGetDeviceProperties
+     */
+    public static int cuDeviceGetLuid(byte luid[], int deviceNodeMask[], CUdevice dev)
+    {
+        return checkResult(cuDeviceGetLuidNative(luid, deviceNodeMask, dev));
+    }
+    public static native int cuDeviceGetLuidNative(byte luid[], int deviceNodeMask[], CUdevice dev);
+    
     /**
      * Returns the compute capability of the device.
      *
@@ -1444,7 +1479,7 @@ public class JCudaDriver
 
 
     /**
-     * Returns the CUDA driver version.
+     * Returns the latest CUDA version supported by driver.
      *
      * <pre>
      * CUresult cuDriverGetVersion (
@@ -1452,8 +1487,11 @@ public class JCudaDriver
      * </pre>
      * <div>
      *   <p>Returns the CUDA driver version.  Returns
-     *     in <tt>*driverVersion</tt> the version number of the installed CUDA
-     *     driver. This function automatically returns CUDA_ERROR_INVALID_VALUE
+     *     in <tt>*driverVersion</tt> the version  of CUDA supported by
+     *     the driver.
+     *     The version is returned as (1000 * major + 10 * minor). 
+     *     For example, CUDA 9.2 would be represented by 9020.
+     *     This function automatically returns CUDA_ERROR_INVALID_VALUE
      *     if the <tt>driverVersion</tt> argument is NULL.
      *   </p>
      *   <div>
@@ -11911,6 +11949,1087 @@ public class JCudaDriver
 
     private static native int cuParamSetTexRefNative(CUfunction hfunc, int texunit, CUtexref hTexRef);
 
+    
+    
+    /**
+     * Creates a graph.<br>
+     * <br>
+     * Creates an empty graph, which is returned via \p phGraph.
+     *
+     * @param phGraph - Returns newly created graph
+     * @param flags   - Graph creation flags, must be 0
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE,
+     * CUDA_ERROR_OUT_OF_MEMORY
+     *
+     * @see
+     * JCudaDriver#cuGraphAddChildGraphNode
+     * JCudaDriver#cuGraphAddEmptyNode
+     * JCudaDriver#cuGraphAddKernelNode
+     * JCudaDriver#cuGraphAddHostNode
+     * JCudaDriver#cuGraphAddMemcpyNode
+     * JCudaDriver#cuGraphAddMemsetNode
+     * JCudaDriver#cuGraphInstantiate
+     * JCudaDriver#cuGraphDestroy
+     * JCudaDriver#cuGraphGetNodes
+     * JCudaDriver#cuGraphGetRootNodes
+     * JCudaDriver#cuGraphGetEdges
+     * JCudaDriver#cuGraphClone
+     */
+    public static int cuGraphCreate(CUgraph phGraph, int flags) 
+    {
+        return checkResult(cuGraphCreateNative(phGraph, flags));
+    }
+    private static native int cuGraphCreateNative(CUgraph phGraph, int flags);
+    
+
+    /**
+     * Creates a kernel execution node and adds it to a graph.<br>
+     * <br>
+     * Creates a new kernel execution node and adds it to \p hGraph with \p numDependencies
+     * dependencies specified via \p dependencies and arguments specified in \p nodeParams.
+     * It is possible for \p numDependencies to be 0, in which case the node will be placed
+     * at the root of the graph. \p dependencies may not have any duplicate entries.
+     * A handle to the new node will be returned in \p phGraphNode.<br>
+     * <br>
+     * The CUDA_KERNEL_NODE_PARAMS structure is defined as:<br>
+     * <br>
+     * <pre><code>
+     *  typedef struct CUDA_KERNEL_NODE_PARAMS_st {
+     *      CUfunction func;
+     *      unsigned int gridDimX;
+     *      unsigned int gridDimY;
+     *      unsigned int gridDimZ;
+     *      unsigned int blockDimX;
+     *      unsigned int blockDimY;
+     *      unsigned int blockDimZ;
+     *      unsigned int sharedMemBytes;
+     *      void **kernelParams;
+     *      void **extra;
+     *  } CUDA_KERNEL_NODE_PARAMS;
+     * </code></pre>
+     * <br>
+     * When the graph is launched, the node will invoke kernel \p func on a (\p gridDimX x
+     * \p gridDimY x \p gridDimZ) grid of blocks. Each block contains
+     * (\p blockDimX x \p blockDimY x \p blockDimZ) threads.<br>
+     * <br>
+     * \p sharedMemBytes sets the amount of dynamic shared memory that will be
+     * available to each thread block.<br>
+     * <br>
+     * Kernel parameters to \p func can be specified in one of two ways:<br>
+     * <br>
+     * 1) Kernel parameters can be specified via \p kernelParams. If the kernel has N
+     * parameters, then \p kernelParams needs to be an array of N pointers. Each pointer,
+     * from \p kernelParams[0] to \p kernelParams[N-1], points to the region of memory from which the actual
+     * parameter will be copied. The number of kernel parameters and their offsets and sizes do not need
+     * to be specified as that information is retrieved directly from the kernel's image.<br>
+     * <br>
+     * 2) Kernel parameters can also be packaged by the application into a single buffer that is passed in
+     * via \p extra. This places the burden on the application of knowing each kernel
+     * parameter's size and alignment/padding within the buffer. The \p extra parameter exists
+     * to allow this function to take additional less commonly used arguments. \p extra specifies
+     * a list of names of extra settings and their corresponding values. Each extra setting name is
+     * immediately followed by the corresponding value. The list must be terminated with either NULL or
+     * CU_LAUNCH_PARAM_END.<br>
+     * <br>
+     * <ul>
+     * <li> ::CU_LAUNCH_PARAM_END, which indicates the end of the \p extra
+     *   array;</li>
+     * <li> ::CU_LAUNCH_PARAM_BUFFER_POINTER, which specifies that the next
+     *   value in \p extra will be a pointer to a buffer
+     *   containing all the kernel parameters for launching kernel
+     *   \p func;</li>
+     * <li> ::CU_LAUNCH_PARAM_BUFFER_SIZE, which specifies that the next
+     *   value in \p extra will be a pointer to a size_t
+     *   containing the size of the buffer specified with
+     *   ::CU_LAUNCH_PARAM_BUFFER_POINTER;</li>
+     * </ul>
+     * <br>
+     * The error ::CUDA_ERROR_INVALID_VALUE will be returned if kernel parameters are specified with both
+     * \p kernelParams and \p extra (i.e. both \p kernelParams and
+     * \p extra are non-NULL).<br>
+     * <br>
+     * The \p kernelParams or \p extra array, as well as the argument values it points to,
+     * are copied during this call.
+     * <br>
+     * Kernels launched using graphs must not use texture and surface references. Reading or
+     * writing through any texture or surface reference is undefined behavior.
+     * This restriction does not apply to texture and surface objects.
+     *
+     * @param phGraphNode     - Returns newly created node
+     * @param hGraph          - Graph to which to add the node
+     * @param dependencies    - Dependencies of the node
+     * @param numDependencies - Number of dependencies
+     * @param nodeParams      - Parameters for the GPU execution node
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuLaunchKernel
+     * JCudaDriver#cuGraphKernelNodeGetParams
+     * JCudaDriver#cuGraphKernelNodeSetParams
+     * JCudaDriver#cuGraphCreate
+     * JCudaDriver#cuGraphDestroyNode
+     * JCudaDriver#cuGraphAddChildGraphNode
+     * JCudaDriver#cuGraphAddEmptyNode
+     * JCudaDriver#cuGraphAddHostNode
+     * JCudaDriver#cuGraphAddMemcpyNode
+     * JCudaDriver#cuGraphAddMemsetNode
+     */
+    public static int cuGraphAddKernelNode(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUDA_KERNEL_NODE_PARAMS nodeParams) 
+    {
+        return checkResult(cuGraphAddKernelNodeNative(phGraphNode, hGraph, dependencies, numDependencies, nodeParams));
+    }
+    private static native int cuGraphAddKernelNodeNative(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUDA_KERNEL_NODE_PARAMS nodeParams);
+    
+
+    /**
+     * Returns a kernel node's parameters.<br>
+     * <br>
+     * Returns the parameters of kernel node \p hNode in \p nodeParams.
+     * The \p kernelParams or \p extra array returned in \p nodeParams,
+     * as well as the argument values it points to, are owned by the node.
+     * This memory remains valid until the node is destroyed or its
+     * parameters are modified, and should not be modified
+     * directly. Use ::cuGraphKernelNodeSetParams to update the
+     * parameters of this node.<br>
+     * <br>
+     * The params will contain either \p kernelParams or \p extra,
+     * according to which of these was most recently set on the node.
+     *
+     * @param hNode      - Node to get the parameters for
+     * @param nodeParams - Pointer to return the parameters
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuLaunchKernel
+     * JCudaDriver#cuGraphAddKernelNode
+     * JCudaDriver#cuGraphKernelNodeSetParams
+     */
+    public static int cuGraphKernelNodeGetParams(CUgraphNode hNode, CUDA_KERNEL_NODE_PARAMS nodeParams) 
+    {
+        return checkResult(cuGraphKernelNodeGetParamsNative(hNode, nodeParams));
+    }
+    private static native int cuGraphKernelNodeGetParamsNative(CUgraphNode hNode, CUDA_KERNEL_NODE_PARAMS nodeParams);
+    
+
+    /**
+     * Sets a kernel node's parameters.
+     *
+     * Sets the parameters of kernel node \p hNode to \p nodeParams.
+     *
+     * @param hNode      - Node to set the parameters for
+     * @param nodeParams - Parameters to copy
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_INVALID_VALUE,
+     * CUDA_ERROR_INVALID_HANDLE,
+     * CUDA_ERROR_OUT_OF_MEMORY
+     *
+     * @see
+     * JCudaDriver#cuLaunchKernel
+     * JCudaDriver#cuGraphAddKernelNode
+     * JCudaDriver#cuGraphKernelNodeGetParams
+     */
+    public static int cuGraphKernelNodeSetParams(CUgraphNode hNode, CUDA_KERNEL_NODE_PARAMS nodeParams) 
+    {
+        return checkResult(cuGraphKernelNodeSetParamsNative(hNode, nodeParams));
+    }
+    private static native int cuGraphKernelNodeSetParamsNative(CUgraphNode hNode, CUDA_KERNEL_NODE_PARAMS nodeParams);
+    
+
+    /**
+     * Creates a memcpy node and adds it to a graph.<br>
+     * <br>
+     * Creates a new memcpy node and adds it to \p hGraph with \p numDependencies
+     * dependencies specified via \p dependencies.
+     * It is possible for \p numDependencies to be 0, in which case the node will be placed
+     * at the root of the graph. \p dependencies may not have any duplicate entries.
+     * A handle to the new node will be returned in \p phGraphNode.<br>
+     * <br>
+     * When the graph is launched, the node will perform the memcpy described by \p copyParams.
+     * See ::cuMemcpy3D() for a description of the structure and its restrictions.<br>
+     * <br>
+     * Memcpy nodes have some additional restrictions with regards to managed memory, if the
+     * system contains at least one device which has a zero value for the device attribute
+     * ::CU_DEVICE_ATTRIBUTE_CONCURRENT_MANAGED_ACCESS. If one or more of the operands refer
+     * to managed memory, then using the memory type ::CU_MEMORYTYPE_UNIFIED is disallowed
+     * for those operand(s). The managed memory will be treated as residing on either the
+     * host or the device, depending on which memory type is specified.
+     *
+     * @param phGraphNode     - Returns newly created node
+     * @param hGraph          - Graph to which to add the node
+     * @param dependencies    - Dependencies of the node
+     * @param numDependencies - Number of dependencies
+     * @param copyParams      - Parameters for the memory copy
+     * @param ctx             - Context on which to run the node
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuMemcpy3D
+     * JCudaDriver#cuGraphMemcpyNodeGetParams
+     * JCudaDriver#cuGraphMemcpyNodeSetParams
+     * JCudaDriver#cuGraphCreate
+     * JCudaDriver#cuGraphDestroyNode
+     * JCudaDriver#cuGraphAddChildGraphNode
+     * JCudaDriver#cuGraphAddEmptyNode
+     * JCudaDriver#cuGraphAddKernelNode
+     * JCudaDriver#cuGraphAddHostNode
+     * JCudaDriver#cuGraphAddMemsetNode
+     */
+    public static int cuGraphAddMemcpyNode(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUDA_MEMCPY3D copyParams, CUcontext ctx) 
+    {
+        return checkResult(cuGraphAddMemcpyNodeNative(phGraphNode, hGraph, dependencies, numDependencies, copyParams, ctx));
+    }
+    private static native int cuGraphAddMemcpyNodeNative(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUDA_MEMCPY3D copyParams, CUcontext ctx);
+    
+
+    /**
+     * Returns a memcpy node's parameters.<br>
+     * <br>
+     * Returns the parameters of memcpy node \p hNode in \p nodeParams.
+     *
+     * @param hNode      - Node to get the parameters for
+     * @param nodeParams - Pointer to return the parameters
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuMemcpy3D
+     * JCudaDriver#cuGraphAddMemcpyNode
+     * JCudaDriver#cuGraphMemcpyNodeSetParams
+     */
+    public static int cuGraphMemcpyNodeGetParams(CUgraphNode hNode, CUDA_MEMCPY3D nodeParams) 
+    {
+        return checkResult(cuGraphMemcpyNodeGetParamsNative(hNode, nodeParams));
+    }
+    private static native int cuGraphMemcpyNodeGetParamsNative(CUgraphNode hNode, CUDA_MEMCPY3D nodeParams);
+    
+
+    /**
+     * Sets a memcpy node's parameters.<br>
+     * <br>
+     * Sets the parameters of memcpy node \p hNode to \p nodeParams.
+     *
+     * @param hNode      - Node to set the parameters for
+     * @param nodeParams - Parameters to copy
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE,
+     *
+     * @see
+     * JCudaDriver#cuMemcpy3D
+     * JCudaDriver#cuGraphAddMemcpyNode
+     * JCudaDriver#cuGraphMemcpyNodeGetParams
+     */
+    public static int cuGraphMemcpyNodeSetParams(CUgraphNode hNode, CUDA_MEMCPY3D nodeParams) 
+    {
+        return checkResult(cuGraphMemcpyNodeSetParamsNative(hNode, nodeParams));
+    }
+    private static native int cuGraphMemcpyNodeSetParamsNative(CUgraphNode hNode, CUDA_MEMCPY3D nodeParams);
+    
+
+    /**
+     * Creates a memset node and adds it to a graph.<br>
+     * <br>
+     * Creates a new memset node and adds it to \p hGraph with \p numDependencies
+     * dependencies specified via \p dependencies.
+     * It is possible for \p numDependencies to be 0, in which case the node will be placed
+     * at the root of the graph. \p dependencies may not have any duplicate entries.
+     * A handle to the new node will be returned in \p phGraphNode.<br>
+     * <br>
+     * The element size must be 1, 2, or 4 bytes.
+     * When the graph is launched, the node will perform the memset described by \p memsetParams.
+     *
+     * @param phGraphNode     - Returns newly created node
+     * @param hGraph          - Graph to which to add the node
+     * @param dependencies    - Dependencies of the node
+     * @param numDependencies - Number of dependencies
+     * @param memsetParams    - Parameters for the memory set
+     * @param ctx             - Context on which to run the node
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE,
+     * CUDA_ERROR_INVALID_CONTEXT
+     *
+     * @see
+     * JCudaDriver#cuMemsetD2D32
+     * JCudaDriver#cuGraphMemsetNodeGetParams
+     * JCudaDriver#cuGraphMemsetNodeSetParams
+     * JCudaDriver#cuGraphCreate
+     * JCudaDriver#cuGraphDestroyNode
+     * JCudaDriver#cuGraphAddChildGraphNode
+     * JCudaDriver#cuGraphAddEmptyNode
+     * JCudaDriver#cuGraphAddKernelNode
+     * JCudaDriver#cuGraphAddHostNode
+     * JCudaDriver#cuGraphAddMemcpyNode
+     */
+    public static int cuGraphAddMemsetNode(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUDA_MEMSET_NODE_PARAMS memsetParams, CUcontext ctx) 
+    {
+        return checkResult(cuGraphAddMemsetNodeNative(phGraphNode, hGraph, dependencies, numDependencies, memsetParams, ctx));
+    }
+    private static native int cuGraphAddMemsetNodeNative(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUDA_MEMSET_NODE_PARAMS memsetParams, CUcontext ctx);
+    
+
+    /**
+     * Returns a memset node's parameters.<br>
+     * <br>
+     * Returns the parameters of memset node \p hNode in \p nodeParams.
+     *
+     * @param hNode      - Node to get the parameters for
+     * @param nodeParams - Pointer to return the parameters
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuMemsetD2D32
+     * JCudaDriver#cuGraphAddMemsetNode
+     * JCudaDriver#cuGraphMemsetNodeSetParams
+     */
+    public static int cuGraphMemsetNodeGetParams(CUgraphNode hNode, CUDA_MEMSET_NODE_PARAMS nodeParams) 
+    {
+        return checkResult(cuGraphMemsetNodeGetParamsNative(hNode, nodeParams));
+    }
+    private static native int cuGraphMemsetNodeGetParamsNative(CUgraphNode hNode, CUDA_MEMSET_NODE_PARAMS nodeParams);
+    
+
+    /**
+     * Sets a memset node's parameters.<br>
+     * <br>
+     * Sets the parameters of memset node \p hNode to \p nodeParams.
+     *
+     * @param hNode      - Node to set the parameters for
+     * @param nodeParams - Parameters to copy
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuMemsetD2D32
+     * JCudaDriver#cuGraphAddMemsetNode
+     * JCudaDriver#cuGraphMemsetNodeGetParams
+     */
+    public static int cuGraphMemsetNodeSetParams(CUgraphNode hNode, CUDA_MEMSET_NODE_PARAMS nodeParams) 
+    {
+        return checkResult(cuGraphMemsetNodeSetParamsNative(hNode, nodeParams));
+    }
+    private static native int cuGraphMemsetNodeSetParamsNative(CUgraphNode hNode, CUDA_MEMSET_NODE_PARAMS nodeParams);
+    
+
+    /**
+     * Creates a host execution node and adds it to a graph.<br>
+     * <br>
+     * Creates a new CPU execution node and adds it to \p hGraph with \p numDependencies
+     * dependencies specified via \p dependencies and arguments specified in \p nodeParams.
+     * It is possible for \p numDependencies to be 0, in which case the node will be placed
+     * at the root of the graph. \p dependencies may not have any duplicate entries.
+     * A handle to the new node will be returned in \p phGraphNode.<br>
+     * <br>
+     * When the graph is launched, the node will invoke the specified CPU function.
+     *
+     * @param phGraphNode     - Returns newly created node
+     * @param hGraph          - Graph to which to add the node
+     * @param dependencies    - Dependencies of the node
+     * @param numDependencies - Number of dependencies
+     * @param nodeParams      - Parameters for the host node
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuLaunchHostFunc
+     * JCudaDriver#cuGraphHostNodeGetParams
+     * JCudaDriver#cuGraphHostNodeSetParams
+     * JCudaDriver#cuGraphCreate
+     * JCudaDriver#cuGraphDestroyNode
+     * JCudaDriver#cuGraphAddChildGraphNode
+     * JCudaDriver#cuGraphAddEmptyNode
+     * JCudaDriver#cuGraphAddKernelNode
+     * JCudaDriver#cuGraphAddMemcpyNode
+     * JCudaDriver#cuGraphAddMemsetNode
+     */
+    public static int cuGraphAddHostNode(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUDA_HOST_NODE_PARAMS nodeParams) 
+    {
+        return checkResult(cuGraphAddHostNodeNative(phGraphNode, hGraph, dependencies, numDependencies, nodeParams));
+    }
+    private static native int cuGraphAddHostNodeNative(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUDA_HOST_NODE_PARAMS nodeParams);
+    
+
+    /**
+     * Returns a host node's parameters.<br>
+     * <br>
+     * Returns the parameters of host node \p hNode in \p nodeParams.
+     *
+     * @param hNode      - Node to get the parameters for
+     * @param nodeParams - Pointer to return the parameters
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuLaunchHostFunc
+     * JCudaDriver#cuGraphAddHostNode
+     * JCudaDriver#cuGraphHostNodeSetParams
+     */
+    public static int cuGraphHostNodeGetParams(CUgraphNode hNode, CUDA_HOST_NODE_PARAMS nodeParams) 
+    {
+        return checkResult(cuGraphHostNodeGetParamsNative(hNode, nodeParams));
+    }
+    private static native int cuGraphHostNodeGetParamsNative(CUgraphNode hNode, CUDA_HOST_NODE_PARAMS nodeParams);
+    
+
+    /**
+     * Sets a host node's parameters.<br>
+     * <br>
+     * Sets the parameters of host node \p hNode to \p nodeParams.
+     *
+     * @param hNode      - Node to set the parameters for
+     * @param nodeParams - Parameters to copy
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuLaunchHostFunc
+     * JCudaDriver#cuGraphAddHostNode
+     * JCudaDriver#cuGraphHostNodeGetParams
+     */
+    public static int cuGraphHostNodeSetParams(CUgraphNode hNode, CUDA_HOST_NODE_PARAMS nodeParams) 
+    {
+        return checkResult(cuGraphHostNodeSetParamsNative(hNode, nodeParams));
+    }
+    private static native int cuGraphHostNodeSetParamsNative(CUgraphNode hNode, CUDA_HOST_NODE_PARAMS nodeParams);
+    
+
+    /**
+     * Creates a child graph node and adds it to a graph.<br>
+     * <br>
+     * Creates a new node which executes an embedded graph, and adds it to \p hGraph with
+     * \p numDependencies dependencies specified via \p dependencies.
+     * It is possible for \p numDependencies to be 0, in which case the node will be placed
+     * at the root of the graph. \p dependencies may not have any duplicate entries.
+     * A handle to the new node will be returned in \p phGraphNode.<br>
+     * <br>
+     * The node executes an embedded child graph. The child graph is cloned in this call.
+     *
+     * @param phGraphNode     - Returns newly created node
+     * @param hGraph          - Graph to which to add the node
+     * @param dependencies    - Dependencies of the node
+     * @param numDependencies - Number of dependencies
+     * @param childGraph      - The graph to clone into this node
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE,
+     *
+     * @see
+     * JCudaDriver#cuGraphChildGraphNodeGetGraph
+     * JCudaDriver#cuGraphCreate
+     * JCudaDriver#cuGraphDestroyNode
+     * JCudaDriver#cuGraphAddEmptyNode
+     * JCudaDriver#cuGraphAddKernelNode
+     * JCudaDriver#cuGraphAddHostNode
+     * JCudaDriver#cuGraphAddMemcpyNode
+     * JCudaDriver#cuGraphAddMemsetNode
+     * JCudaDriver#cuGraphClone
+     */
+    public static int cuGraphAddChildGraphNode(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUgraph childGraph) 
+    {
+        return checkResult(cuGraphAddChildGraphNodeNative(phGraphNode, hGraph, dependencies, numDependencies, childGraph));
+    }
+    private static native int cuGraphAddChildGraphNodeNative(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUgraph childGraph);
+    
+
+    /**
+     * Gets a handle to the embedded graph of a child graph node.<br>
+     * <br>
+     * Gets a handle to the embedded graph in a child graph node. This call
+     * does not clone the graph. Changes to the graph will be reflected in
+     * the node, and the node retains ownership of the graph.
+     *
+     * @param hNode   - Node to get the embedded graph for
+     * @param phGraph - Location to store a handle to the graph
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE,
+     *
+     * @see
+     * JCudaDriver#cuGraphAddChildGraphNode
+     * JCudaDriver#cuGraphNodeFindInClone
+     */
+    public static int cuGraphChildGraphNodeGetGraph(CUgraphNode hNode, CUgraph phGraph) 
+    {
+        return checkResult(cuGraphChildGraphNodeGetGraphNative(hNode, phGraph));
+    }
+    private static native int cuGraphChildGraphNodeGetGraphNative(CUgraphNode hNode, CUgraph phGraph);
+    
+
+    /**
+     * Creates an empty node and adds it to a graph.<br>
+     * <br>
+     * Creates a new node which performs no operation, and adds it to \p hGraph with
+     * \p numDependencies dependencies specified via \p dependencies.
+     * It is possible for \p numDependencies to be 0, in which case the node will be placed
+     * at the root of the graph. \p dependencies may not have any duplicate entries.
+     * A handle to the new node will be returned in \p phGraphNode.
+     *
+     * An empty node performs no operation during execution, but can be used for
+     * transitive ordering. For example, a phased execution graph with 2 groups of n
+     * nodes with a barrier between them can be represented using an empty node and
+     * 2*n dependency edges, rather than no empty node and n^2 dependency edges.
+     *
+     * @param phGraphNode     - Returns newly created node
+     * @param hGraph          - Graph to which to add the node
+     * @param dependencies    - Dependencies of the node
+     * @param numDependencies - Number of dependencies
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE,
+     *
+     * @see
+     * JCudaDriver#cuGraphCreate
+     * JCudaDriver#cuGraphDestroyNode
+     * JCudaDriver#cuGraphAddChildGraphNode
+     * JCudaDriver#cuGraphAddKernelNode
+     * JCudaDriver#cuGraphAddHostNode
+     * JCudaDriver#cuGraphAddMemcpyNode
+     * JCudaDriver#cuGraphAddMemsetNode
+     */
+    public static int cuGraphAddEmptyNode(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies) 
+    {
+        return checkResult(cuGraphAddEmptyNodeNative(phGraphNode, hGraph, dependencies, numDependencies));
+    }
+    private static native int cuGraphAddEmptyNodeNative(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies);
+    
+
+    /**
+     * Clones a graph.<br>
+     * <br>
+     * This function creates a copy of \p originalGraph and returns it in \p * phGraphClone.
+     * All parameters are copied into the cloned graph. The original graph may be modified
+     * after this call without affecting the clone.<br>
+     * <br>
+     * Child graph nodes in the original graph are recursively copied into the clone.
+     *
+     * @param phGraphClone  - Returns newly created cloned graph
+     * @param originalGraph - Graph to clone
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_INVALID_VALUE,
+     * CUDA_ERROR_OUT_OF_MEMORY
+     *
+     * @see
+     * JCudaDriver#cuGraphCreate
+     * JCudaDriver#cuGraphNodeFindInClone
+     */
+    public static int cuGraphClone(CUgraph phGraphClone, CUgraph originalGraph) 
+    {
+        return checkResult(cuGraphCloneNative(phGraphClone, originalGraph));
+    }
+    private static native int cuGraphCloneNative(CUgraph phGraphClone, CUgraph originalGraph);
+    
+
+    /**
+     * Finds a cloned version of a node.<br>
+     * <br>
+     * This function returns the node in \p hClonedGraph corresponding to \p hOriginalNode
+     * in the original graph.<br>
+     * <br>
+     * \p hClonedGraph must have been cloned from \p hOriginalGraph via ::cuGraphClone.
+     * \p hOriginalNode must have been in \p hOriginalGraph at the time of the call to
+     * ::cuGraphClone, and the corresponding cloned node in \p hClonedGraph must not have
+     * been removed. The cloned node is then returned via \p phClonedNode.
+     *
+     * @param phNode  - Returns handle to the cloned node
+     * @param hOriginalNode - Handle to the original node
+     * @param hClonedGraph - Cloned graph to query
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_INVALID_VALUE,
+     *
+     * @see
+     * JCudaDriver#cuGraphClone
+     */
+    public static int cuGraphNodeFindInClone(CUgraphNode phNode, CUgraphNode hOriginalNode, CUgraph hClonedGraph) 
+    {
+        return checkResult(cuGraphNodeFindInCloneNative(phNode, hOriginalNode, hClonedGraph));
+    }
+    private static native int cuGraphNodeFindInCloneNative(CUgraphNode phNode, CUgraphNode hOriginalNode, CUgraph hClonedGraph);
+    
+
+    /**
+     * Returns a node's type.<br>
+     * <br>
+     * Returns the node type of \p hNode in \p type.
+     *
+     * @param hNode - Node to query
+     * @param type  - Pointer to return the node type
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuGraphGetNodes
+     * JCudaDriver#cuGraphGetRootNodes
+     * JCudaDriver#cuGraphChildGraphNodeGetGraph
+     * JCudaDriver#cuGraphKernelNodeGetParams
+     * JCudaDriver#cuGraphKernelNodeSetParams
+     * JCudaDriver#cuGraphHostNodeGetParams
+     * JCudaDriver#cuGraphHostNodeSetParams
+     * JCudaDriver#cuGraphMemcpyNodeGetParams
+     * JCudaDriver#cuGraphMemcpyNodeSetParams
+     * JCudaDriver#cuGraphMemsetNodeGetParams
+     * JCudaDriver#cuGraphMemsetNodeSetParams
+     */
+    public static int cuGraphNodeGetType(CUgraphNode hNode, int type[]) 
+    {
+        return checkResult(cuGraphNodeGetTypeNative(hNode, type));
+    }
+    private static native int cuGraphNodeGetTypeNative(CUgraphNode hNode, int type[]);
+    
+
+    /**
+     * Returns a graph's nodes.<br>
+     * <br>
+     * Returns a list of \p hGraph's nodes. \p nodes may be NULL, in which case this
+     * function will return the number of nodes in \p numNodes. Otherwise,
+     * \p numNodes entries will be filled in. If \p numNodes is higher than the actual
+     * number of nodes, the remaining entries in \p nodes will be set to NULL, and the
+     * number of nodes actually obtained will be returned in \p numNodes.
+     *
+     * @param hGraph   - Graph to query
+     * @param nodes    - Pointer to return the nodes
+     * @param numNodes - See description
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuGraphCreate
+     * JCudaDriver#cuGraphGetRootNodes
+     * JCudaDriver#cuGraphGetEdges
+     * JCudaDriver#cuGraphNodeGetType
+     * JCudaDriver#cuGraphNodeGetDependencies
+     * JCudaDriver#cuGraphNodeGetDependentNodes
+     */
+    public static int cuGraphGetNodes(CUgraph hGraph, CUgraphNode nodes[], long numNodes[]) 
+    {
+        return checkResult(cuGraphGetNodesNative(hGraph, nodes, numNodes));
+    }
+    private static native int cuGraphGetNodesNative(CUgraph hGraph, CUgraphNode nodes[], long numNodes[]);
+    
+
+    /**
+     * Returns a graph's root nodes.<br>
+     * <br>
+     * Returns a list of \p hGraph's root nodes. \p rootNodes may be NULL, in which case this
+     * function will return the number of root nodes in \p numRootNodes. Otherwise,
+     * \p numRootNodes entries will be filled in. If \p numRootNodes is higher than the actual
+     * number of root nodes, the remaining entries in \p rootNodes will be set to NULL, and the
+     * number of nodes actually obtained will be returned in \p numRootNodes.
+     *
+     * @param hGraph       - Graph to query
+     * @param rootNodes    - Pointer to return the root nodes
+     * @param numRootNodes - See description
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuGraphCreate
+     * JCudaDriver#cuGraphGetNodes
+     * JCudaDriver#cuGraphGetEdges
+     * JCudaDriver#cuGraphNodeGetType
+     * JCudaDriver#cuGraphNodeGetDependencies
+     * JCudaDriver#cuGraphNodeGetDependentNodes
+     */
+    public static int cuGraphGetRootNodes(CUgraph hGraph, CUgraphNode rootNodes[], long numRootNodes[]) 
+    {
+        return checkResult(cuGraphGetRootNodesNative(hGraph, rootNodes, numRootNodes));
+    }
+    private static native int cuGraphGetRootNodesNative(CUgraph hGraph, CUgraphNode rootNodes[], long numRootNodes[]);
+    
+
+    /**
+     * Returns a graph's dependency edges.<br>
+     * <br>
+     * Returns a list of \p hGraph's dependency edges. Edges are returned via corresponding
+     * indices in \p from and \p to; that is, the node in \p to[i] has a dependency on the
+     * node in \p from[i]. \p from and \p to may both be NULL, in which
+     * case this function only returns the number of edges in \p numEdges. Otherwise,
+     * \p numEdges entries will be filled in. If \p numEdges is higher than the actual
+     * number of edges, the remaining entries in \p from and \p to will be set to NULL, and
+     * the number of edges actually returned will be written to \p numEdges.
+     *
+     * @param hGraph   - Graph to get the edges from
+     * @param from     - Location to return edge endpoints
+     * @param to       - Location to return edge endpoints
+     * @param numEdges - See description
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuGraphGetNodes
+     * JCudaDriver#cuGraphGetRootNodes
+     * JCudaDriver#cuGraphAddDependencies
+     * JCudaDriver#cuGraphRemoveDependencies
+     * JCudaDriver#cuGraphNodeGetDependencies
+     * JCudaDriver#cuGraphNodeGetDependentNodes
+     */
+    public static int cuGraphGetEdges(CUgraph hGraph, CUgraphNode from[], CUgraphNode to[], long numEdges[]) 
+    {
+        return checkResult(cuGraphGetEdgesNative(hGraph, from, to, numEdges));
+    }
+    private static native int cuGraphGetEdgesNative(CUgraph hGraph, CUgraphNode from[], CUgraphNode to[], long numEdges[]);
+    
+
+    /**
+     * Returns a node's dependencies.<br>
+     * <br>
+     * Returns a list of \p node's dependencies. \p dependencies may be NULL, in which case this
+     * function will return the number of dependencies in \p numDependencies. Otherwise,
+     * \p numDependencies entries will be filled in. If \p numDependencies is higher than the actual
+     * number of dependencies, the remaining entries in \p dependencies will be set to NULL, and the
+     * number of nodes actually obtained will be returned in \p numDependencies.
+     *
+     * @param hNode           - Node to query
+     * @param dependencies    - Pointer to return the dependencies
+     * @param numDependencies - See description
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuGraphNodeGetDependentNodes
+     * JCudaDriver#cuGraphGetNodes
+     * JCudaDriver#cuGraphGetRootNodes
+     * JCudaDriver#cuGraphGetEdges
+     * JCudaDriver#cuGraphAddDependencies
+     * JCudaDriver#cuGraphRemoveDependencies
+     */
+    public static int cuGraphNodeGetDependencies(CUgraphNode hNode, CUgraphNode dependencies[], long numDependencies[]) 
+    {
+        return checkResult(cuGraphNodeGetDependenciesNative(hNode, dependencies, numDependencies));
+    }
+    private static native int cuGraphNodeGetDependenciesNative(CUgraphNode hNode, CUgraphNode dependencies[], long numDependencies[]);
+    
+
+    /**
+     * Returns a node's dependent nodes.<br>
+     * <br>
+     * Returns a list of \p node's dependent nodes. \p dependentNodes may be NULL, in which
+     * case this function will return the number of dependent nodes in \p numDependentNodes.
+     * Otherwise, \p numDependentNodes entries will be filled in. If \p numDependentNodes is
+     * higher than the actual number of dependent nodes, the remaining entries in
+     * \p dependentNodes will be set to NULL, and the number of nodes actually obtained will
+     * be returned in \p numDependentNodes.
+     *
+     * @param hNode             - Node to query
+     * @param dependentNodes    - Pointer to return the dependent nodes
+     * @param numDependentNodes - See description
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuGraphNodeGetDependencies
+     * JCudaDriver#cuGraphGetNodes
+     * JCudaDriver#cuGraphGetRootNodes
+     * JCudaDriver#cuGraphGetEdges
+     * JCudaDriver#cuGraphAddDependencies
+     * JCudaDriver#cuGraphRemoveDependencies
+     */
+    public static int cuGraphNodeGetDependentNodes(CUgraphNode hNode, CUgraphNode dependentNodes[], long numDependentNodes[]) 
+    {
+        return checkResult(cuGraphNodeGetDependentNodesNative(hNode, dependentNodes, numDependentNodes));
+    }
+    private static native int cuGraphNodeGetDependentNodesNative(CUgraphNode hNode, CUgraphNode dependentNodes[], long numDependentNodes[]);
+    
+
+    /**
+     * Adds dependency edges to a graph.<br>
+     * <br>
+     * The number of dependencies to be added is defined by \p numDependencies
+     * Elements in \p from and \p to at corresponding indices define a dependency.
+     * Each node in \p from and \p to must belong to \p hGraph.<br>
+     * <br>
+     * If \p numDependencies is 0, elements in \p from and \p to will be ignored.
+     * Specifying an existing dependency will return an error.<br>
+     *
+     * @param hGraph - Graph to which dependencies are added
+     * @param from - Array of nodes that provide the dependencies
+     * @param to - Array of dependent nodes
+     * @param numDependencies - Number of dependencies to be added
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuGraphRemoveDependencies
+     * JCudaDriver#cuGraphGetEdges
+     * JCudaDriver#cuGraphNodeGetDependencies
+     * JCudaDriver#cuGraphNodeGetDependentNodes
+     */
+    public static int cuGraphAddDependencies(CUgraph hGraph, CUgraphNode from[], CUgraphNode to[], long numDependencies) 
+    {
+        return checkResult(cuGraphAddDependenciesNative(hGraph, from, to, numDependencies));
+    }
+    private static native int cuGraphAddDependenciesNative(CUgraph hGraph, CUgraphNode from[], CUgraphNode to[], long numDependencies);
+    
+
+    /**
+     * Removes dependency edges from a graph.<br>
+     * <br>
+     * The number of \p dependencies to be removed is defined by \p numDependencies.
+     * Elements in \p from and \p to at corresponding indices define a dependency.
+     * Each node in \p from and \p to must belong to \p hGraph.<br>
+     * <br>
+     * If \p numDependencies is 0, elements in \p from and \p to will be ignored.
+     * Specifying a non-existing dependency will return an error.
+     *
+     * @param hGraph - Graph from which to remove dependencies
+     * @param from - Array of nodes that provide the dependencies
+     * @param to - Array of dependent nodes
+     * @param numDependencies - Number of dependencies to be removed
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuGraphAddDependencies
+     * JCudaDriver#cuGraphGetEdges
+     * JCudaDriver#cuGraphNodeGetDependencies
+     * JCudaDriver#cuGraphNodeGetDependentNodes
+     */
+    public static int cuGraphRemoveDependencies(CUgraph hGraph, CUgraphNode from[], CUgraphNode to[], long numDependencies) 
+    {
+        return checkResult(cuGraphRemoveDependenciesNative(hGraph, from, to, numDependencies));
+    }
+    private static native int cuGraphRemoveDependenciesNative(CUgraph hGraph, CUgraphNode from[], CUgraphNode to[], long numDependencies);
+    
+
+    /**
+     * Remove a node from the graph.<br>
+     * <br>
+     * Removes \p hNode from its graph. This operation also severs any dependencies of other nodes
+     * on \p hNode and vice versa.<br>
+     *
+     * @param hNode  - Node to remove
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuGraphAddChildGraphNode
+     * JCudaDriver#cuGraphAddEmptyNode
+     * JCudaDriver#cuGraphAddKernelNode
+     * JCudaDriver#cuGraphAddHostNode
+     * JCudaDriver#cuGraphAddMemcpyNode
+     * JCudaDriver#cuGraphAddMemsetNode
+     */
+    public static int cuGraphDestroyNode(CUgraphNode hNode) 
+    {
+        return checkResult(cuGraphDestroyNodeNative(hNode));
+    }
+    private static native int cuGraphDestroyNodeNative(CUgraphNode hNode);
+    
+
+    /**
+     * Creates an executable graph from a graph.<br>
+     * <br>
+     * Instantiates \p hGraph as an executable graph. The graph is validated for any
+     * structural constraints or intra-node constraints which were not previously
+     * validated. If instantiation is successful, a handle to the instantiated graph
+     * is returned in \p graphExec.<br>
+     * <br>
+     * If there are any errors, diagnostic information may be returned in \p errorNode and
+     * \p logBuffer. This is the primary way to inspect instantiation errors. The output
+     * will be null terminated unless the diagnostics overflow
+     * the buffer. In this case, they will be truncated, and the last byte can be
+     * inspected to determine if truncation occurred.<br>
+     *
+     * @param phGraphExec - Returns instantiated graph
+     * @param hGraph      - Graph to instantiate
+     * @param phErrorNode - In case of an instantiation error, this may be modified to
+     *                      indicate a node contributing to the error
+     * @param logBuffer   - A character buffer to store diagnostic messages
+     * @param bufferSize  - Size of the log buffer in bytes
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuGraphCreate
+     * JCudaDriver#cuGraphLaunch
+     * JCudaDriver#cuGraphExecDestroy
+     */
+    public static int cuGraphInstantiate(CUgraphExec phGraphExec, CUgraph hGraph, CUgraphNode phErrorNode, byte logBuffer[], long bufferSize) 
+    {
+        return checkResult(cuGraphInstantiateNative(phGraphExec, hGraph, phErrorNode, logBuffer, bufferSize));
+    }
+    private static native int cuGraphInstantiateNative(CUgraphExec phGraphExec, CUgraph hGraph, CUgraphNode phErrorNode, byte logBuffer[], long bufferSize);
+    
+
+    /**
+     * Launches an executable graph in a stream.<br>
+     * <br>
+     * Executes \p hGraphExec in \p hStream. Only one instance of \p hGraphExec may be executing
+     * at a time. Each launch is ordered behind both any previous work in \p hStream
+     * and any previous launches of \p hGraphExec. To execute a graph concurrently, it must be
+     * instantiated multiple times into multiple executable graphs.
+     *
+     * @param hGraphExec - Executable graph to launch
+     * @param hStream    - Stream in which to launch the graph
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuGraphInstantiate
+     * JCudaDriver#cuGraphExecDestroy
+     */
+    public static int cuGraphLaunch(CUgraphExec hGraphExec, CUstream hStream) 
+    {
+        return checkResult(cuGraphLaunchNative(hGraphExec, hStream));
+    }
+    private static native int cuGraphLaunchNative(CUgraphExec hGraphExec, CUstream hStream);
+    
+
+    /**
+     * Destroys an executable graph.<br>
+     * <br>
+     * Destroys the executable graph specified by \p hGraphExec, as well
+     * as all of its executable nodes. If the executable graph is
+     * in-flight, it will not be terminated, but rather freed
+     * asynchronously on completion.
+     *
+     * @param hGraphExec - Executable graph to destroy
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuGraphInstantiate
+     * JCudaDriver#cuGraphLaunch
+     */
+    public static int cuGraphExecDestroy(CUgraphExec hGraphExec) 
+    {
+        return checkResult(cuGraphExecDestroyNative(hGraphExec));
+    }
+    private static native int cuGraphExecDestroyNative(CUgraphExec hGraphExec);
+    
+
+    /**
+     * Destroys a graph.<br>
+     * <br>
+     * Destroys the graph specified by \p hGraph, as well as all of its nodes.
+     *
+     * @param hGraph - Graph to destroy
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuGraphCreate
+     */
+    public static int cuGraphDestroy(CUgraph hGraph) 
+    {
+        return checkResult(cuGraphDestroyNative(hGraph));
+    }
+    private static native int cuGraphDestroyNative(CUgraph hGraph);
+    
+    
+    
+    
     /**
      * <code><pre>
      * \brief Returns occupancy of a function
@@ -13493,6 +14612,12 @@ public class JCudaDriver
 
     /**
      * Add a callback to a compute stream.
+     * 
+     * This function is slated for eventual deprecation and removal. If
+     * you do not require the callback to execute in case of a device error,
+     * consider using ::cuLaunchHostFunc. Additionally, this function is not
+     * supported with ::cuStreamBeginCapture and ::cuStreamEndCapture, unlike
+     * ::cuLaunchHostFunc.
      *
      * <pre>
      * CUresult cuStreamAddCallback (
@@ -13559,7 +14684,200 @@ public class JCudaDriver
     }
     private static native int cuStreamAddCallbackNative(CUstream hStream, CUstreamCallback callback, Object userData, int flags);
 
+    
+    /**
+     * Begins graph capture on a stream.
+     *
+     * Begin graph capture on \p hStream. When a stream is in capture mode, all operations
+     * pushed into the stream will not be executed, but will instead be captured into
+     * a graph, which will be returned via ::cuStreamEndCapture. Capture may not be initiated
+     * if \p stream is CU_STREAM_LEGACY. Capture must be ended on the same stream in which
+     * it was initiated, and it may only be initiated if the stream is not already in capture
+     * mode. The capture mode may be queried via ::cuStreamIsCapturing.
+     *
+     * @param hStream - Stream in which to initiate capture
+     *
+     * Kernels captured using this API must not use texture and surface references.
+     * Reading or writing through any texture or surface reference is undefined
+     * behavior. This restriction does not apply to texture and surface objects.
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuStreamCreate
+     * JCudaDriver#cuStreamIsCapturing
+     * JCudaDriver#cuStreamEndCapture
+     */
+    public static int cuStreamBeginCapture(CUstream hStream)
+    {
+        return checkResult(cuStreamBeginCaptureNative(hStream));
+    }
+    private static native int cuStreamBeginCaptureNative(CUstream hStream);
 
+    /**
+     * Ends capture on a stream, returning the captured graph.
+     *
+     * End capture on \p hStream, returning the captured graph via \p phGraph.
+     * Capture must have been initiated on \p hStream via a call to ::cuStreamBeginCapture.
+     * If capture was invalidated, due to a violation of the rules of stream capture, then
+     * a NULL graph will be returned.
+     *
+     * @param hStream - Stream to query
+     * @param phGraph - The captured graph
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see
+     * JCudaDriver#cuStreamCreate
+     * JCudaDriver#cuStreamBeginCapture
+     * JCudaDriver#cuStreamIsCapturing
+     */
+    public static int cuStreamEndCapture(CUstream hStream, CUgraph phGraph)
+    {
+        return checkResult(cuStreamEndCaptureNative(hStream, phGraph));
+    }
+    private static native int cuStreamEndCaptureNative(CUstream hStream, CUgraph phGraph);
+    
+    /**
+     * Returns a stream's capture status
+     *
+     * Return the capture status of \p hStream via \p captureStatus. After a successful
+     * call, \p *captureStatus will contain one of the following:
+     * <ul>
+     * <li>::CU_STREAM_CAPTURE_STATUS_NONE: The stream is not capturing.</li>
+     * <li>::CU_STREAM_CAPTURE_STATUS_ACTIVE: The stream is capturing.</li>
+     * <li>::CU_STREAM_CAPTURE_STATUS_INVALIDATED: The stream was capturing but an error
+     *   has invalidated the capture sequence. The capture sequence must be terminated
+     *   with ::cuStreamEndCapture on the stream where it was initiated in order to
+     *   continue using \p hStream.</li>
+     * </ul>
+     * Note that, if this is called on ::CU_STREAM_LEGACY (the "null stream") while
+     * a blocking stream in the same context is capturing, it will return
+     * ::CUDA_ERROR_STREAM_CAPTURE_IMPLICIT and \p *captureStatus is unspecified
+     * after the call. The blocking stream capture is not invalidated.<br>
+     * <br>
+     * When a blocking stream is capturing, the legacy stream is in an
+     * unusable state until the blocking stream capture is terminated. The legacy
+     * stream is not supported for stream capture, but attempted use would have an
+     * implicit dependency on the capturing stream(s).
+     *
+     * @param hStream       - Stream to query
+     * @param captureStatus - Returns the stream's capture status
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE,
+     * CUDA_ERROR_STREAM_CAPTURE_IMPLICIT
+     *
+     * @see
+     * JCudaDriver#cuStreamCreate
+     * JCudaDriver#cuStreamBeginCapture
+     * JCudaDriver#cuStreamEndCapture
+     */
+    public static int cuStreamIsCapturing(CUstream hStream, int captureStatus[])
+    {
+        return checkResult(cuStreamIsCapturingNative(hStream, captureStatus));
+    }
+    private static native int cuStreamIsCapturingNative(CUstream hStream, int captureStatus[]);
+    
+    
+    
+    /**
+     * Attach memory to a stream asynchronously.
+     *
+     * Enqueues an operation in hStream to specify stream association of
+     * length bytes of memory starting from dptr. This function is a
+     * stream-ordered operation, meaning that it is dependent on, and will
+     * only take effect when, previous work in stream has completed. Any
+     * previous association is automatically replaced.
+     *
+     * dptr must point to one of the following types of memories:
+     * <ul>
+     *   <li>managed memory declared using the __managed__ keyword or allocated with
+     *   ::cuMemAllocManaged.</li>
+     *   <li>a valid host-accessible region of system-allocated pageable memory. This
+     *   type of memory may only be specified if the device associated with the
+     *   stream reports a non-zero value for the device attribute
+     *   ::CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS.</li>
+     * </ul>
+     *
+     * For managed allocations, length must be either zero or the entire
+     * allocation's size. Both indicate that the entire allocation's stream
+     * association is being changed. Currently, it is not possible to change stream
+     * association for a portion of a managed allocation.<br>
+     * <br>
+     * For pageable host allocations, length must be non-zero.<br>
+     * <br>
+     * The stream association is specified using flags which must be
+     * one of ::CUmemAttach_flags.
+     * If the ::CU_MEM_ATTACH_GLOBAL flag is specified, the memory can be accessed
+     * by any stream on any device.
+     * If the ::CU_MEM_ATTACH_HOST flag is specified, the program makes a guarantee
+     * that it won't access the memory on the device from any stream on a device that
+     * has a zero value for the device attribute ::CU_DEVICE_ATTRIBUTE_CONCURRENT_MANAGED_ACCESS.
+     * If the ::CU_MEM_ATTACH_SINGLE flag is specified and hStream is associated with
+     * a device that has a zero value for the device attribute ::CU_DEVICE_ATTRIBUTE_CONCURRENT_MANAGED_ACCESS,
+     * the program makes a guarantee that it will only access the memory on the device
+     * from hStream. It is illegal to attach singly to the NULL stream, because the
+     * NULL stream is a virtual global stream and not a specific stream. An error will
+     * be returned in this case.<br>
+     * <br>
+     * When memory is associated with a single stream, the Unified Memory system will
+     * allow CPU access to this memory region so long as all operations in hStream
+     * have completed, regardless of whether other streams are active. In effect,
+     * this constrains exclusive ownership of the managed memory region by
+     * an active GPU to per-stream activity instead of whole-GPU activity.<br>
+     * <br>
+     * Accessing memory on the device from streams that are not associated with
+     * it will produce undefined results. No error checking is performed by the
+     * Unified Memory system to ensure that kernels launched into other streams
+     * do not access this region.<br>
+     * <br>
+     * It is a program's responsibility to order calls to ::cuStreamAttachMemAsync
+     * via events, synchronization or other means to ensure legal access to memory
+     * at all times. Data visibility and coherency will be changed appropriately
+     * for all kernels which follow a stream-association change.<br>
+     * <br>
+     * If hStream is destroyed while data is associated with it, the association is
+     * removed and the association reverts to the default visibility of the allocation
+     * as specified at ::cuMemAllocManaged. For __managed__ variables, the default
+     * association is always ::CU_MEM_ATTACH_GLOBAL. Note that destroying a stream is an
+     * asynchronous operation, and as a result, the change to default association won't
+     * happen until all work in the stream has completed.
+     *
+     * @param hStream - Stream in which to enqueue the attach operation
+     * @param  dptr    - Pointer to memory (must be a pointer to managed memory or
+     *                  to a valid host-accessible region of system-allocated
+     *                  pageable memory)
+     * @param  length  - Length of memory
+     * @param flags   - Must be one of ::CUmemAttach_flags
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_CONTEXT,
+     * CUDA_ERROR_INVALID_HANDLE,
+     * CUDA_ERROR_NOT_SUPPORTED
+     *
+     * @see JCudaDriver#cuStreamCreate
+     * JCudaDriver#cuStreamQuery
+     * JCudaDriver#cuStreamSynchronize
+     * JCudaDriver#cuStreamWaitEvent
+     * JCudaDriver#cuStreamDestroy
+     * JCudaDriver#cuMemAllocManaged
+     * JCudaDriver#cudaStreamAttachMemAsync
+     */
     public static int cuStreamAttachMemAsync(CUstream hStream, CUdeviceptr dptr, long length, int flags)
     {
         return checkResult(cuStreamAttachMemAsyncNative(hStream, dptr, length, flags));
@@ -15998,6 +17316,75 @@ public class JCudaDriver
         return checkResult(cuLaunchCooperativeKernelMultiDeviceNative(launchParamsList, numDevices, flags));
     }
     private static native int cuLaunchCooperativeKernelMultiDeviceNative(CUDA_LAUNCH_PARAMS launchParamsList[], int numDevices, int flags);
+    
+    
+    /**
+     * Enqueues a host function call in a stream.
+     *
+     * Enqueues a host function to run in a stream.  The function will be called
+     * after currently enqueued work and will block work added after it.<br>
+     * <br>
+     * The host function must not make any CUDA API calls.  Attempting to use a
+     * CUDA API may result in ::CUDA_ERROR_NOT_PERMITTED, but this is not required.
+     * The host function must not perform any synchronization that may depend on
+     * outstanding CUDA work not mandated to run earlier.  Host functions without a
+     * mandated order (such as in independent streams) execute in undefined order
+     * and may be serialized.<br>
+     * <br>
+     * For the purposes of Unified Memory, execution makes a number of guarantees:
+     * <ul>
+     *   <li>The stream is considered idle for the duration of the function's
+     *   execution.  Thus, for example, the function may always use memory attached
+     *   to the stream it was enqueued in.</li>
+     *   <li>The start of execution of the function has the same effect as
+     *   synchronizing an event recorded in the same stream immediately prior to
+     *   the function.  It thus synchronizes streams which have been "joined"
+     *   prior to the function.</li>
+     *   <li>Adding device work to any stream does not have the effect of making
+     *   the stream active until all preceding host functions and stream callbacks
+     *   have executed.  Thus, for
+     *   example, a function might use global attached memory even if work has
+     *   been added to another stream, if the work has been ordered behind the
+     *   function call with an event.</li>
+     *   <li>Completion of the function does not cause a stream to become
+     *   active except as described above.  The stream will remain idle
+     *   if no device work follows the function, and will remain idle across
+     *   consecutive host functions or stream callbacks without device work in
+     *   between.  Thus, for example,
+     *   stream synchronization can be done by signaling from a host function at the
+     *   end of the stream.</li>
+     * </ul>
+     *
+     * Note that, in contrast to ::cuStreamAddCallback, the function will not be
+     * called in the event of an error in the CUDA context.
+     *
+     * @param hStream  - Stream to enqueue function call in
+     * @param fn       - The function to call once preceding stream operations are complete
+     * @param userData - User-specified data to be passed to the function
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_CONTEXT,
+     * CUDA_ERROR_INVALID_HANDLE,
+     * CUDA_ERROR_NOT_SUPPORTED
+     *
+     * @see 
+     * JCudaDriver#cuStreamCreate
+     * JCudaDriver#cuStreamQuery
+     * JCudaDriver#cuStreamSynchronize
+     * JCudaDriver#cuStreamWaitEvent
+     * JCudaDriver#cuStreamDestroy
+     * JCudaDriver#cuMemAllocManaged
+     * JCudaDriver#cuStreamAttachMemAsync
+     * JCudaDriver#cuStreamAddCallback
+     */
+    public static int cuLaunchHostFunc(CUstream hStream, CUhostFn fn, Object userData)
+    {
+        return checkResult(cuLaunchHostFuncNative(hStream, fn, userData));
+    }
+    private static native int cuLaunchHostFuncNative(CUstream hStream, CUhostFn fn, Object userData);
     
     
     /**

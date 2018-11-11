@@ -58,6 +58,12 @@ public class CUlimit
     public static final int CU_LIMIT_DEV_RUNTIME_PENDING_LAUNCH_COUNT = 0x04;
 
     /**
+     * A value between 0 and 128 that indicates the maximum fetch 
+     * granularity of L2 (in Bytes). This is a hint 
+     */
+    public static final int CU_LIMIT_MAX_L2_FETCH_GRANULARITY         = 0x05;
+    
+    /**
      * Returns the String identifying the given CUlimit
      *
      * @param n The CUlimit
@@ -72,6 +78,7 @@ public class CUlimit
             case CU_LIMIT_MALLOC_HEAP_SIZE : return "CU_LIMIT_MALLOC_HEAP_SIZE";
             case CU_LIMIT_DEV_RUNTIME_SYNC_DEPTH : return "CU_LIMIT_DEV_RUNTIME_SYNC_DEPTH";
             case CU_LIMIT_DEV_RUNTIME_PENDING_LAUNCH_COUNT : return "CU_LIMIT_DEV_RUNTIME_PENDING_LAUNCH_COUNT";
+            case CU_LIMIT_MAX_L2_FETCH_GRANULARITY : return "CU_LIMIT_MAX_L2_FETCH_GRANULARITY";
         }
         return "INVALID CUlimit: "+n;
     }

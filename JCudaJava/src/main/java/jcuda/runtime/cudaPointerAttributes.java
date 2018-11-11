@@ -37,17 +37,25 @@ public class cudaPointerAttributes
     /**
      * The physical location of the memory, ::cudaMemoryTypeHost or
      * ::cudaMemoryTypeDevice.
+     * 
+     * @deprecated Replaced by {@link #type} in CUDA 10
      */
     public int memoryType;
 
     /**
+     * The type of memory - ::cudaMemoryTypeUnregistered, ::cudaMemoryTypeHost,
+     * ::cudaMemoryTypeDevice or ::cudaMemoryTypeManaged.
+     */
+    public int type;
+    
+    /**
      * The device against which the memory was allocated or registered.
-     * If the memory type is ::cudaMemoryTypeDevice then this identifies
+     * If the memory type is ::cudaMemoryTypeDevice then this identifies 
      * the device on which the memory referred physically resides.  If
-     * the memory type is ::cudaMemoryTypeHost then this identifies the
-     * device which was current when the memory was allocated or registered
-     * (and if that device is deinitialized then this allocation will vanish
-     * with that device's state).
+     * the memory type is ::cudaMemoryTypeHost or::cudaMemoryTypeManaged then
+     * this identifies the device which was current when the memory was allocated
+     * or registered (and if that device is deinitialized then this allocation
+     * will vanish with that device's state).     
      */
     public int device;
 
@@ -65,6 +73,8 @@ public class cudaPointerAttributes
 
     /**
      * Indicates if this pointer points to managed memory
+     * 
+     * @deprecated As of CUDA 10, this is part of the {@link #type}  
      */
     public int isManaged;
 
@@ -84,11 +94,10 @@ public class cudaPointerAttributes
     public String toString()
     {
         return "cudaPointerAttributes["+
-            "memoryType="+cudaMemoryType.stringFor(memoryType)+","+
+            "type="+cudaMemoryType.stringFor(type)+","+
             "device="+device+","+
             "devicePointer="+devicePointer+","+
-            "hostPointer="+hostPointer+"," +
-            "isManaged="+isManaged+"]";
+            "hostPointer="+hostPointer+"]";
     }
 
 };

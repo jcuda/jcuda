@@ -164,6 +164,37 @@ public class CUjit_option
      */
     public static final int CU_JIT_CACHE_MODE = 14;
 
+    /**
+     * Array of device symbol names that will be relocated to the corresponding
+     * host addresses stored in ::CU_JIT_GLOBAL_SYMBOL_ADDRESSES.\n
+     * Must contain ::CU_JIT_GLOBAL_SYMBOL_COUNT entries.\n
+     * When loading a device module, driver will relocate all encountered
+     * unresolved symbols to the host addresses.\n
+     * It is only allowed to register symbols that correspond to unresolved
+     * global variables.\n
+     * It is illegal to register the same device symbol at multiple addresses.\n
+     * Option type: const char **\n
+     * Applies to: dynamic linker only
+     */
+    public static final int CU_JIT_GLOBAL_SYMBOL_NAMES = 17;
+
+    /**
+     * Array of host addresses that will be used to relocate corresponding
+     * device symbols stored in ::CU_JIT_GLOBAL_SYMBOL_NAMES.\n
+     * Must contain ::CU_JIT_GLOBAL_SYMBOL_COUNT entries.\n
+     * Option type: void **\n
+     * Applies to: dynamic linker only
+     */
+    public static final int CU_JIT_GLOBAL_SYMBOL_ADDRESSES = 18;
+
+    /**
+     * Number of entries in ::CU_JIT_GLOBAL_SYMBOL_NAMES and
+     * ::CU_JIT_GLOBAL_SYMBOL_ADDRESSES arrays.\n
+     * Option type: unsigned int\n
+     * Applies to: dynamic linker only
+     */
+    public static final int CU_JIT_GLOBAL_SYMBOL_COUNT = 19;
+    
 
     /**
      * Returns the String identifying the given CUjit_option
@@ -190,6 +221,9 @@ public class CUjit_option
             case CU_JIT_LOG_VERBOSE: return "CU_JIT_LOG_VERBOSE";
             case CU_JIT_GENERATE_LINE_INFO: return "CU_JIT_GENERATE_LINE_INFO";
             case CU_JIT_CACHE_MODE: return "CU_JIT_CACHE_MODE";
+            case CU_JIT_GLOBAL_SYMBOL_NAMES: return "CU_JIT_GLOBAL_SYMBOL_NAMES";
+            case CU_JIT_GLOBAL_SYMBOL_ADDRESSES: return "CU_JIT_GLOBAL_SYMBOL_ADDRESSES";
+            case CU_JIT_GLOBAL_SYMBOL_COUNT: return "CU_JIT_GLOBAL_SYMBOL_COUNT";
         }
         return "INVALID CUjit_option: "+n;
     }

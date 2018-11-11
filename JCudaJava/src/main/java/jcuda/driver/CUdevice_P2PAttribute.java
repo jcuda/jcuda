@@ -50,9 +50,14 @@ public class CUdevice_P2PAttribute
     public static final int CU_DEVICE_P2P_ATTRIBUTE_NATIVE_ATOMIC_SUPPORTED = 0x03;
     
     /**
-     * Accessing CUDA arrays over the link supported 
+     * @deprecated use CU_DEVICE_P2P_ATTRIBUTE_CUDA_ARRAY_ACCESS_SUPPORTED instead 
      */
     public static final int CU_DEVICE_P2P_ATTRIBUTE_ARRAY_ACCESS_ACCESS_SUPPORTED = 0x04;
+    
+    /**
+     * Accessing CUDA arrays over the link supported 
+     */
+    public static final int CU_DEVICE_P2P_ATTRIBUTE_CUDA_ARRAY_ACCESS_SUPPORTED  = 0x04;
 
     /**
      * Returns the String identifying the given CUdevice_P2PAttribute
@@ -67,7 +72,7 @@ public class CUdevice_P2PAttribute
             case CU_DEVICE_P2P_ATTRIBUTE_PERFORMANCE_RANK: return "CU_DEVICE_P2P_ATTRIBUTE_PERFORMANCE_RANK";
             case CU_DEVICE_P2P_ATTRIBUTE_ACCESS_SUPPORTED: return "CU_DEVICE_P2P_ATTRIBUTE_ACCESS_SUPPORTED";
             case CU_DEVICE_P2P_ATTRIBUTE_NATIVE_ATOMIC_SUPPORTED: return "CU_DEVICE_P2P_ATTRIBUTE_NATIVE_ATOMIC_SUPPORTED";
-            case CU_DEVICE_P2P_ATTRIBUTE_ARRAY_ACCESS_ACCESS_SUPPORTED: return "CU_DEVICE_P2P_ATTRIBUTE_ARRAY_ACCESS_ACCESS_SUPPORTED";
+            case CU_DEVICE_P2P_ATTRIBUTE_CUDA_ARRAY_ACCESS_SUPPORTED: return "CU_DEVICE_P2P_ATTRIBUTE_CUDA_ARRAY_ACCESS_SUPPORTED";
         }
         return "INVALID CUdevice_P2PAttribute: "+n;
     }

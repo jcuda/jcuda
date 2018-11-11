@@ -33,14 +33,24 @@ package jcuda.runtime;
 public class cudaMemoryType
 {
     /**
-     *  Host memory
+     * Unregistered memory
+     */
+    public static final int cudaMemoryTypeUnregistered = 0;
+
+    /**
+     * Host memory
      */
     public static final int cudaMemoryTypeHost   = 1;
-
+    
     /**
      * Device memory
      */
     public static final int cudaMemoryTypeDevice = 2;
+
+    /**
+     * Managed memory
+     */
+    public static final int cudaMemoryTypeManaged = 3;
 
     /**
      * Returns the String identifying the given cudaMemoryType
@@ -52,8 +62,10 @@ public class cudaMemoryType
     {
         switch (k)
         {
+            case cudaMemoryTypeUnregistered: return "cudaMemoryTypeUnregistered";
             case cudaMemoryTypeHost: return "cudaMemoryTypeHost";
             case cudaMemoryTypeDevice: return "cudaMemoryTypeDevice";
+            case cudaMemoryTypeManaged: return "cudaMemoryTypeManaged";
         }
         return "INVALID cudaMemoryType: "+k;
     }

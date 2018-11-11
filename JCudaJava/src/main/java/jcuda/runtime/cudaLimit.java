@@ -59,6 +59,12 @@ public class cudaLimit
      */
     public static final int cudaLimitDevRuntimePendingLaunchCount = 0x04;
 
+    /** 
+     * A value between 0 and 128 that indicates the maximum fetch 
+     * granularity of L2 (in Bytes). This is a hint 
+     */
+    public static final int cudaLimitMaxL2FetchGranularity        = 0x05;
+    
     /**
      * Returns the String identifying the given cudaLimit
      *
@@ -74,6 +80,7 @@ public class cudaLimit
             case cudaLimitMallocHeapSize: return "cudaLimitMallocHeapSize";
             case cudaLimitDevRuntimeSyncDepth: return "cudaLimitDevRuntimeSyncDepth";
             case cudaLimitDevRuntimePendingLaunchCount: return "cudaLimitDevRuntimePendingLaunchCount";
+            case cudaLimitMaxL2FetchGranularity: return "cudaLimitMaxL2FetchGranularity";
         }
         return "INVALID cudaLimit: "+n;
     }

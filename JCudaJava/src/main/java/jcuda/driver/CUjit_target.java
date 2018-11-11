@@ -124,6 +124,8 @@ public class CUjit_target
 
     /**
      * Compute device class 7.3.
+     * 
+     * @deprecated Removed as of CUDA 10
      */
     public static final int CU_TARGET_COMPUTE_73 = 73;
 

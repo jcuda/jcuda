@@ -26,7 +26,7 @@
  */
 
 package jcuda.runtime;
-import java.util.*;
+import java.util.Arrays;
 
 /**
  * Java port of the cudaDeviceProp.<br />
@@ -48,7 +48,24 @@ public class cudaDeviceProp
      * An ASCII string identifying the device;
      */
     public byte name[] = new byte[256];
+    
+    /**
+     * 16-byte unique identifier
+     */
+    public cudaUUID uuid = new cudaUUID();
+    
+    /** 
+     * 8-byte locally unique identifier. Value is undefined on TCC and 
+     * non-Windows platforms 
+     */
+    public byte luid[] = new byte[8];    
 
+    /**
+     * LUID device node mask. Value is undefined on TCC and non-Windows 
+     * platforms 
+     */
+    public int luidDeviceNodeMask;         
+    
     /**
      * The total amount of global memory available on the device in bytes;
      */
@@ -473,6 +490,9 @@ public class cudaDeviceProp
     {
         return
             "name="+createString(name)+f+
+            "uuid="+uuid+f+
+            "luid="+createByteString(luid)+f+
+            "luidDeviceNodeMask="+luidDeviceNodeMask+f+
             "totalGlobalMem="+totalGlobalMem+f+
             "sharedMemPerBlock="+sharedMemPerBlock+f+
             "regsPerBlock="+regsPerBlock+f+
@@ -554,16 +574,47 @@ public class cudaDeviceProp
      */
     private static String createString(byte bytes[])
     {
-        StringBuffer sb = new StringBuffer();
-        for (byte b : bytes)
+        StringBuilder sb = new StringBuilder();
+        if (bytes == null)
         {
-            if (Character.isLetterOrDigit(b) || Character.isWhitespace(b))
+            sb.append("null");
+        }
+        else
+        {
+            for (byte b : bytes)
             {
-                sb.append((char)b);
+                if (Character.isLetterOrDigit(b) || Character.isWhitespace(b))
+                {
+                    sb.append((char)b);
+                }
             }
         }
         return sb.toString();
     }
+    
+    /**
+     * Creates a String containing the hex representation of the given bytes
+     *
+     * @param bytes The bytes for the String
+     * @return The String
+     */
+    private static String createByteString(byte bytes[])
+    {
+        StringBuilder sb = new StringBuilder();
+        if (bytes == null)
+        {
+            sb.append("null");
+        }
+        else
+        {
+            for (byte b : bytes)
+            {
+                sb.append(String.format("%02x", b));
+            }
+        }
+        return sb.toString();
+    }
+    
 
 
 }

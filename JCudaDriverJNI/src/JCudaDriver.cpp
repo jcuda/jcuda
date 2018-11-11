@@ -180,6 +180,15 @@ jfieldID CUuuid_bytes; // char[16]
 jclass CUdevice_class;
 jmethodID CUdevice_constructor;
 
+jclass CUdeviceptr_class;
+jmethodID CUdeviceptr_constructor;
+
+jclass CUfunction_class;
+jmethodID CUfunction_constructor;
+
+jclass CUgraphNode_class;
+jmethodID CUgraphNode_constructor;
+
 // Static method ID for the "function pointer" interface
 jmethodID CUoccupancyB2DSize_call; // "(I)J"
 
@@ -193,6 +202,29 @@ JNIEnv *currentOccupancyEnv = NULL;
 // Static method ID for the CUstreamCallback#call function
 static jmethodID CUstreamCallback_call; // (Ljcuda/driver/CUstream;ILjava/lang/Object;)V
 
+// Static method ID for the CUhostFn#call function
+static jmethodID CUhostFn_call; // (Ljava/lang/Object;)V
+
+jfieldID CUDA_KERNEL_NODE_PARAMS_func; // CUfunction
+jfieldID CUDA_KERNEL_NODE_PARAMS_gridDimX; // unsigned int
+jfieldID CUDA_KERNEL_NODE_PARAMS_gridDimY; // unsigned int
+jfieldID CUDA_KERNEL_NODE_PARAMS_gridDimZ; // unsigned int
+jfieldID CUDA_KERNEL_NODE_PARAMS_blockDimX; // unsigned int
+jfieldID CUDA_KERNEL_NODE_PARAMS_blockDimY; // unsigned int
+jfieldID CUDA_KERNEL_NODE_PARAMS_blockDimZ; // unsigned int
+jfieldID CUDA_KERNEL_NODE_PARAMS_sharedMemBytes; // unsigned int
+jfieldID CUDA_KERNEL_NODE_PARAMS_kernelParams; // void * *
+jfieldID CUDA_KERNEL_NODE_PARAMS_extra; // void * *
+
+jfieldID CUDA_MEMSET_NODE_PARAMS_dst; // CUdeviceptr
+jfieldID CUDA_MEMSET_NODE_PARAMS_pitch; // size_t
+jfieldID CUDA_MEMSET_NODE_PARAMS_value; // unsigned int
+jfieldID CUDA_MEMSET_NODE_PARAMS_elementSize; // unsigned int
+jfieldID CUDA_MEMSET_NODE_PARAMS_width; // size_t
+jfieldID CUDA_MEMSET_NODE_PARAMS_height; // size_t
+
+jfieldID CUDA_HOST_NODE_PARAMS_fn; // CUhostFn
+jfieldID CUDA_HOST_NODE_PARAMS_userData; // void *
 
 
 /**
@@ -397,6 +429,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, "jcuda/driver/CUuuid")) return JNI_ERR;
     if (!init(env, cls, CUuuid_bytes, "bytes", "[B")) return JNI_ERR;
 
+
     // Obtain the constructor of the CUdevice class
     if (!init(env, cls, "jcuda/driver/CUdevice")) return JNI_ERR;
     CUdevice_class = (jclass)env->NewGlobalRef(cls);
@@ -408,13 +441,77 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, CUdevice_constructor, "<init>", "()V")) return JNI_ERR;
 
 
-    // Obtain the methodID for jcuda.driver.CUoccupancyB2DSize
+	// Obtain the constructor of the CUdeviceptr class
+	if (!init(env, cls, "jcuda/driver/CUdeviceptr")) return JNI_ERR;
+	CUdeviceptr_class = (jclass)env->NewGlobalRef(cls);
+	if (CUdeviceptr_class == NULL)
+	{
+		Logger::log(LOG_ERROR, "Failed to create reference to class CUdeviceptr\n");
+		return JNI_ERR;
+	}
+	if (!init(env, cls, CUdeviceptr_constructor, "<init>", "()V")) return JNI_ERR;
+
+
+	// Obtain the constructor of the CUfunction class
+	if (!init(env, cls, "jcuda/driver/CUfunction")) return JNI_ERR;
+	CUfunction_class = (jclass)env->NewGlobalRef(cls);
+	if (CUfunction_class == NULL)
+	{
+		Logger::log(LOG_ERROR, "Failed to create reference to class CUfunction\n");
+		return JNI_ERR;
+	}
+	if (!init(env, cls, CUfunction_constructor, "<init>", "()V")) return JNI_ERR;
+
+
+	// Obtain the constructor of the CUgraphNode class
+	if (!init(env, cls, "jcuda/driver/CUgraphNode")) return JNI_ERR;
+	CUgraphNode_class = (jclass)env->NewGlobalRef(cls);
+	if (CUgraphNode_class == NULL)
+	{
+		Logger::log(LOG_ERROR, "Failed to create reference to class CUgraphNode\n");
+		return JNI_ERR;
+	}
+	if (!init(env, cls, CUgraphNode_constructor, "<init>", "()V")) return JNI_ERR;
+
+
+	// Obtain the methodID for jcuda.driver.CUoccupancyB2DSize
     if (!init(env, cls, "jcuda/driver/CUoccupancyB2DSize")) return JNI_ERR;
     if (!init(env, cls, CUoccupancyB2DSize_call, "call", "(I)J")) return JNI_ERR;
 
     // Obtain the methodID for jcuda.driver.CUstreamCallback#call
     if (!init(env, cls, "jcuda/driver/CUstreamCallback")) return JNI_ERR;
     if (!init(env, cls, CUstreamCallback_call, "call", "(Ljcuda/driver/CUstream;ILjava/lang/Object;)V")) return JNI_ERR;
+
+	// Obtain the methodID for jcuda.driver.CUhostFn#call
+	if (!init(env, cls, "jcuda/driver/CUhostFn")) return JNI_ERR;
+	if (!init(env, cls, CUhostFn_call, "call", "(Ljava/lang/Object;)V")) return JNI_ERR;
+
+	// Initialize the field IDs for the CUDA_KERNEL_NODE_PARAMS class
+	if (!init(env, cls, "jcuda/driver/CUDA_KERNEL_NODE_PARAMS")) return JNI_ERR;
+	if (!init(env, cls, CUDA_KERNEL_NODE_PARAMS_func           , "func"          , "Ljcuda/driver/CUfunction;")) return JNI_ERR;
+	if (!init(env, cls, CUDA_KERNEL_NODE_PARAMS_gridDimX       , "gridDimX"      , "I"                        )) return JNI_ERR;
+	if (!init(env, cls, CUDA_KERNEL_NODE_PARAMS_gridDimY       , "gridDimY"      , "I"                        )) return JNI_ERR;
+	if (!init(env, cls, CUDA_KERNEL_NODE_PARAMS_gridDimZ       , "gridDimZ"      , "I"                        )) return JNI_ERR;
+	if (!init(env, cls, CUDA_KERNEL_NODE_PARAMS_blockDimX      , "blockDimX"     , "I"                        )) return JNI_ERR;
+	if (!init(env, cls, CUDA_KERNEL_NODE_PARAMS_blockDimY      , "blockDimY"     , "I"                        )) return JNI_ERR;
+	if (!init(env, cls, CUDA_KERNEL_NODE_PARAMS_blockDimZ      , "blockDimZ"     , "I"                        )) return JNI_ERR;
+	if (!init(env, cls, CUDA_KERNEL_NODE_PARAMS_sharedMemBytes , "sharedMemBytes", "I"                        )) return JNI_ERR;
+	if (!init(env, cls, CUDA_KERNEL_NODE_PARAMS_kernelParams   , "kernelParams"  , "Ljcuda/Pointer;"          )) return JNI_ERR;
+	if (!init(env, cls, CUDA_KERNEL_NODE_PARAMS_extra          , "extra"         , "Ljcuda/Pointer;"          )) return JNI_ERR;
+
+	// Initialize the field IDs for the CUDA_MEMSET_NODE_PARAMS class
+	if (!init(env, cls, "jcuda/driver/CUDA_MEMSET_NODE_PARAMS")) return JNI_ERR;
+	if (!init(env, cls, CUDA_MEMSET_NODE_PARAMS_dst         , "dst"        , "Ljcuda/driver/CUdeviceptr;")) return JNI_ERR;
+	if (!init(env, cls, CUDA_MEMSET_NODE_PARAMS_pitch       , "pitch"      , "J"                         )) return JNI_ERR;
+	if (!init(env, cls, CUDA_MEMSET_NODE_PARAMS_value       , "value"      , "I"                         )) return JNI_ERR;
+	if (!init(env, cls, CUDA_MEMSET_NODE_PARAMS_elementSize , "elementSize", "I"                         )) return JNI_ERR;
+	if (!init(env, cls, CUDA_MEMSET_NODE_PARAMS_width       , "width"      , "J"                         )) return JNI_ERR;
+	if (!init(env, cls, CUDA_MEMSET_NODE_PARAMS_height      , "height"     , "J"                         )) return JNI_ERR;
+
+	// Initialize the field IDs for the CUDA_HOST_NODE_PARAMS class
+	if (!init(env, cls, "jcuda/driver/CUDA_HOST_NODE_PARAMS")) return JNI_ERR;
+	if (!init(env, cls, CUDA_HOST_NODE_PARAMS_fn       , "fn"      , "Ljcuda/driver/CUhostFn;")) return JNI_ERR;
+	if (!init(env, cls, CUDA_HOST_NODE_PARAMS_userData , "userData", "Ljava/lang/Object;"     )) return JNI_ERR;
 
 
     return JNI_VERSION_1_4;
@@ -483,6 +580,45 @@ void CUDA_CB cuStreamAddCallback_NativeCallback(CUstream hStream, CUresult statu
     {
         globalJvm->DetachCurrentThread();
     }
+}
+
+
+/**
+* A pointer to this function will be passed to cuLaunchHostFunc function.
+* The given callbackInfoUserData will be a pointer to the CallbackInfo that was
+* created when the callback was established. The contents of this CallbackInfo
+* will be extracted here, and the actual (Java) callback function will be called.
+*/
+void CUDA_CB cuLaunchHostFunc_NativeCallback(void *callbackInfoUserData)
+{
+	Logger::log(LOG_DEBUGTRACE, "Executing cuLaunchHostFunc_NativeCallback\n");
+
+	CallbackInfo *callbackInfo = (CallbackInfo*)callbackInfoUserData;
+
+	jobject javaCallbackObject = callbackInfo->globalJavaCallbackObject;
+	if (javaCallbackObject == NULL)
+	{
+		return;
+	}
+	jobject userData = callbackInfo->globalUserData;
+
+	JNIEnv *env = NULL;
+	jint attached = globalJvm->GetEnv((void**)&env, JNI_VERSION_1_4);
+	if (attached != JNI_OK)
+	{
+		globalJvm->AttachCurrentThread((void**)&env, NULL);
+	}
+
+	Logger::log(LOG_DEBUGTRACE, "Calling Java callback method\n");
+	env->CallVoidMethod(javaCallbackObject, CUhostFn_call, userData);
+	Logger::log(LOG_DEBUGTRACE, "Calling Java callback method done\n");
+
+	finishCallback(env);
+	deleteCallbackInfo(env, callbackInfo);
+	if (attached != JNI_OK)
+	{
+		globalJvm->DetachCurrentThread();
+	}
 }
 
 
@@ -745,6 +881,46 @@ Memcpy3DData* initMemcpy3DData(JNIEnv *env, jobject pCopy)
     mc.Depth         = (size_t)env->GetLongField(pCopy, CUDA_MEMCPY3D_Depth);
 
     return memcpyData;
+}
+
+/**
+* Write the values from the native CUDA_MEMCPY3D object into the given Java object
+*/
+bool writeCUDA_MEMCPY3D(JNIEnv *env, CUDA_MEMCPY3D &nativeObject, jobject &javaObject)
+{
+	env->SetLongField(javaObject, CUDA_MEMCPY3D_srcXInBytes, (jlong)nativeObject.srcXInBytes);
+	env->SetLongField(javaObject, CUDA_MEMCPY3D_srcY, (jlong)nativeObject.srcY);
+	env->SetLongField(javaObject, CUDA_MEMCPY3D_srcZ, (jlong)nativeObject.srcZ);
+	env->SetLongField(javaObject, CUDA_MEMCPY3D_srcLOD, (jlong)nativeObject.srcLOD);
+	env->SetLongField(javaObject, CUDA_MEMCPY3D_srcPitch, (jlong)nativeObject.srcPitch);
+	env->SetLongField(javaObject, CUDA_MEMCPY3D_srcHeight, (jlong)nativeObject.srcHeight);
+	env->SetLongField(javaObject, CUDA_MEMCPY3D_dstXInBytes, (jlong)nativeObject.dstXInBytes);
+	env->SetLongField(javaObject, CUDA_MEMCPY3D_dstY, (jlong)nativeObject.dstY);
+	env->SetLongField(javaObject, CUDA_MEMCPY3D_dstZ, (jlong)nativeObject.dstZ);
+	env->SetLongField(javaObject, CUDA_MEMCPY3D_dstLOD, (jlong)nativeObject.dstLOD);
+	env->SetLongField(javaObject, CUDA_MEMCPY3D_dstPitch, (jlong)nativeObject.dstPitch);
+	env->SetLongField(javaObject, CUDA_MEMCPY3D_dstHeight, (jlong)nativeObject.dstHeight);
+	env->SetLongField(javaObject, CUDA_MEMCPY3D_WidthInBytes, (jlong)nativeObject.WidthInBytes);
+	env->SetLongField(javaObject, CUDA_MEMCPY3D_Height, (jlong)nativeObject.Height);
+	env->SetLongField(javaObject, CUDA_MEMCPY3D_Depth, (jlong)nativeObject.Depth);
+
+	env->SetIntField(javaObject, CUDA_MEMCPY3D_srcMemoryType, (jint)nativeObject.srcMemoryType);
+	env->SetIntField(javaObject, CUDA_MEMCPY3D_dstMemoryType, (jint)nativeObject.dstMemoryType);
+
+	// XXX These cannot be set sensibly here. One could try to create the instances
+	// in the Java object based on the non-NULL fields of the struct, but this is
+	// brittle and will not work as expected for certain usage patterns
+	Logger::log(LOG_WARNING, "The CUDA_MEMCPY3D object may not be filled properly");
+	/*
+	env->SetObjectField(javaObject, CUDA_MEMCPY3D_srcHost, javaObject_srcHost);
+	env->SetObjectField(javaObject, CUDA_MEMCPY3D_srcDevice, javaObject_srcDevice);
+	env->SetObjectField(javaObject, CUDA_MEMCPY3D_srcArray, javaObject_srcArray);
+	env->SetObjectField(javaObject, CUDA_MEMCPY3D_dstHost, javaObject_dstHost);
+	env->SetObjectField(javaObject, CUDA_MEMCPY3D_dstDevice, javaObject_dstDevice);
+	env->SetObjectField(javaObject, CUDA_MEMCPY3D_dstArray, javaObject_dstArray);
+	*/
+
+	return true;
 }
 
 
@@ -1160,14 +1336,12 @@ bool initCUDA_LAUNCH_PARAMSData(JNIEnv *env, jobject javaObject, CUDA_LAUNCH_PAR
     jobject stream = env->GetObjectField(javaObject, CUDA_LAUNCH_PARAMS_hStream);
     cudaLaunchParams.hStream = (CUstream)getNativePointerValue(env, stream);
 
-    cudaLaunchParams.sharedMemBytes = (unsigned int)env->GetIntField(javaObject, CUDA_LAUNCH_PARAMS_sharedMemBytes);
-
     jobject kernelParams = env->GetObjectField(javaObject, CUDA_LAUNCH_PARAMS_kernelParams);
     data->kernelParamsPointerData = initPointerData(env, kernelParams);
     if (data->kernelParamsPointerData == NULL)
     {
         delete data;
-        return NULL;
+        return false;
     }
     return true;
 }
@@ -1402,6 +1576,169 @@ bool releaseJITOptionsData(JNIEnv *env, JITOptionsData* &jitOptionsData, jobject
 
 
 
+
+/**
+* Initializes the given CUDA_KERNEL_NODE_PARAMSData from the given CUDA_KERNEL_NODE_PARAMS Java object.
+* Returns whether the initialization succeeded.
+*/
+bool initCUDA_KERNEL_NODE_PARAMSData(JNIEnv *env, jobject javaObject, CUDA_KERNEL_NODE_PARAMSData* &data)
+{
+	data = new CUDA_KERNEL_NODE_PARAMSData();
+	CUDA_KERNEL_NODE_PARAMS &cudaKernelNodeParams = data->cudaKernelNodeParams;
+
+	jobject func = env->GetObjectField(javaObject, CUDA_KERNEL_NODE_PARAMS_func);
+	cudaKernelNodeParams.func = (CUfunction)getNativePointerValue(env, func);
+	cudaKernelNodeParams.gridDimX = (unsigned int)env->GetIntField(javaObject, CUDA_KERNEL_NODE_PARAMS_gridDimX);
+	cudaKernelNodeParams.gridDimY = (unsigned int)env->GetIntField(javaObject, CUDA_KERNEL_NODE_PARAMS_gridDimY);
+	cudaKernelNodeParams.gridDimZ = (unsigned int)env->GetIntField(javaObject, CUDA_KERNEL_NODE_PARAMS_gridDimZ);
+	cudaKernelNodeParams.blockDimX = (unsigned int)env->GetIntField(javaObject, CUDA_KERNEL_NODE_PARAMS_blockDimX);
+	cudaKernelNodeParams.blockDimY = (unsigned int)env->GetIntField(javaObject, CUDA_KERNEL_NODE_PARAMS_blockDimY);
+	cudaKernelNodeParams.blockDimZ = (unsigned int)env->GetIntField(javaObject, CUDA_KERNEL_NODE_PARAMS_blockDimZ);
+	cudaKernelNodeParams.sharedMemBytes = (unsigned int)env->GetIntField(javaObject, CUDA_KERNEL_NODE_PARAMS_sharedMemBytes);
+
+	jobject kernelParams = env->GetObjectField(javaObject, CUDA_KERNEL_NODE_PARAMS_kernelParams);
+	if (kernelParams != NULL)
+	{
+		data->kernelParamsPointerData = initPointerData(env, kernelParams);
+		if (data->kernelParamsPointerData == NULL)
+		{
+			delete data;
+			return false;
+		}
+		cudaKernelNodeParams.kernelParams = (void**)data->kernelParamsPointerData->getPointer(env);
+	}
+	else
+	{
+		cudaKernelNodeParams.kernelParams = NULL;
+	}
+
+	jobject extra = env->GetObjectField(javaObject, CUDA_KERNEL_NODE_PARAMS_extra);
+	if (extra != NULL)
+	{
+		data->extraPointerData = initPointerData(env, extra);
+		if (data->extraPointerData == NULL)
+		{
+			delete data;
+			return false;
+		}
+		cudaKernelNodeParams.extra = (void**)data->extraPointerData->getPointer(env);
+	}
+	else
+	{
+		cudaKernelNodeParams.extra = NULL;
+	}
+	return true;
+}
+
+/**
+* Write the values from the native CUDA_KERNEL_NODE_PARAMS object into the given Java object
+*/
+bool writeCUDA_KERNEL_NODE_PARAMS(JNIEnv *env, CUDA_KERNEL_NODE_PARAMS &nativeObject, jobject &javaObject)
+{
+	env->SetIntField(javaObject, CUDA_KERNEL_NODE_PARAMS_gridDimX, (jint)nativeObject.gridDimX);
+	env->SetIntField(javaObject, CUDA_KERNEL_NODE_PARAMS_gridDimY, (jint)nativeObject.gridDimY);
+	env->SetIntField(javaObject, CUDA_KERNEL_NODE_PARAMS_gridDimZ, (jint)nativeObject.gridDimZ);
+	env->SetIntField(javaObject, CUDA_KERNEL_NODE_PARAMS_blockDimX, (jint)nativeObject.blockDimX);
+	env->SetIntField(javaObject, CUDA_KERNEL_NODE_PARAMS_blockDimY, (jint)nativeObject.blockDimY);
+	env->SetIntField(javaObject, CUDA_KERNEL_NODE_PARAMS_blockDimZ, (jint)nativeObject.blockDimZ);
+	env->SetIntField(javaObject, CUDA_KERNEL_NODE_PARAMS_sharedMemBytes, (jint)nativeObject.sharedMemBytes);
+
+	jobject func = env->NewObject(CUfunction_class, CUfunction_constructor);
+	setNativePointerValue(env, func, (jlong)nativeObject.func);
+	env->SetObjectField(javaObject, CUDA_KERNEL_NODE_PARAMS_func, func);
+
+	// XXX These cannot be set sensibly here. One could try to create the instances
+	// in the Java object based on the non-NULL fields of the struct, but this is
+	// brittle and will not work as expected for certain usage patterns
+	Logger::log(LOG_WARNING, "The CUDA_KERNEL_NODE_PARAMS object may not be filled properly");
+	/*
+	jobject kernelParams = env->NewObject(CUdevicePtr_class, CUdevicePtr_constructor);
+	setNativePointerValue(env, kernelParams, (jlong)nativeObject.kernelParams);
+	env->SetObjectField(javaObject, CUDA_KERNEL_NODE_PARAMS_kernelParams, kernelParams);
+
+	jobject extra = env->NewObject(CUdevicePtr_class, CUdevicePtr_constructor);
+	setNativePointerValue(env, extra, (jlong)nativeObject.extra);
+	env->SetObjectField(javaObject, CUDA_KERNEL_NODE_PARAMS_extra, extra);
+	*/
+	return true;
+}
+
+
+/**
+* Release the given CUDA_KERNEL_NODE_PARAMSData object
+* Returns whether this operation succeeded
+*/
+bool releaseCUDA_KERNEL_NODE_PARAMSData(JNIEnv *env, CUDA_KERNEL_NODE_PARAMSData* &data)
+{
+	if (!releasePointerData(env, data->kernelParamsPointerData)) return false;
+	if (!releasePointerData(env, data->extraPointerData)) return false;
+	delete data;
+	return true;
+}
+
+
+
+
+
+
+
+
+
+
+
+/**
+* Reads the values for the given native CUDA_MEMSET_NODE_PARAMS object from the given Java object.
+* Returns whether this operation succeeded.
+*/
+bool readCUDA_MEMSET_NODE_PARAMS(JNIEnv *env, jobject &javaObject, CUDA_MEMSET_NODE_PARAMS &nativeObject)
+{
+	nativeObject.pitch = (size_t)env->GetLongField(javaObject, CUDA_MEMSET_NODE_PARAMS_pitch);
+	nativeObject.value = (unsigned int)env->GetIntField(javaObject, CUDA_MEMSET_NODE_PARAMS_value);
+	nativeObject.elementSize = (unsigned int)env->GetIntField(javaObject, CUDA_MEMSET_NODE_PARAMS_elementSize);
+	nativeObject.width = (size_t)env->GetLongField(javaObject, CUDA_MEMSET_NODE_PARAMS_width);
+	nativeObject.height = (size_t)env->GetLongField(javaObject, CUDA_MEMSET_NODE_PARAMS_height);
+
+	jobject dst = env->GetObjectField(javaObject, CUDA_MEMSET_NODE_PARAMS_dst);
+	nativeObject.dst = (CUdeviceptr)(intptr_t)getNativePointerValue(env, dst);
+
+	return true;
+}
+
+/**
+* Writes the values from the given native CUDA_MEMSET_NODE_PARAMS object into the given Java object.
+* Returns whether this operation succeeded.
+*/
+bool writeCUDA_MEMSET_NODE_PARAMS(JNIEnv *env, CUDA_MEMSET_NODE_PARAMS &nativeObject, jobject &javaObject)
+{
+	env->SetLongField(javaObject, CUDA_MEMSET_NODE_PARAMS_pitch, (jlong)nativeObject.pitch);
+	env->SetIntField(javaObject, CUDA_MEMSET_NODE_PARAMS_value, (jint)nativeObject.value);
+	env->SetIntField(javaObject, CUDA_MEMSET_NODE_PARAMS_elementSize, (jint)nativeObject.elementSize);
+	env->SetLongField(javaObject, CUDA_MEMSET_NODE_PARAMS_width, (jlong)nativeObject.width);
+	env->SetLongField(javaObject, CUDA_MEMSET_NODE_PARAMS_height, (jlong)nativeObject.height);
+
+	// Note: A CUdeviceptr is only a wrapper around the pointer value.
+	// So in contrast to the other functions that try to obtain parameter
+	// value objects, this is actually feasible:
+	jobject dst = env->NewObject(CUdeviceptr_class, CUdeviceptr_constructor);
+	setNativePointerValue(env, dst, (jlong)nativeObject.dst);
+	env->SetObjectField(javaObject, CUDA_MEMSET_NODE_PARAMS_dst, dst);
+
+	return true;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //============================================================================
 
 
@@ -1624,6 +1961,53 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDeviceGetUuidNative
     }
     env->ReleaseByteArrayElements(bytes, bytesElements, 0);
     return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuDeviceGetLuidNative
+* Signature: ([B[ILjcuda/driver/CUdevice;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDeviceGetLuidNative
+    (JNIEnv *env, jclass cls, jbyteArray luid, jintArray deviceNodeMask, jobject dev)
+{
+	if (luid == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'luid' is null for cuDeviceGetLuid");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (deviceNodeMask == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'deviceNodeMask' is null for cuDeviceGetLuid");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (dev == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'dev' is null for cuDeviceGetLuid");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	Logger::log(LOG_TRACE, "Executing cuDeviceGetLuid\n");
+
+	jsize size = env->GetArrayLength(luid);
+	if (size != 8)
+	{
+		ThrowByName(env, "java/lang/IllegalArgumentException",
+			"Field luid has wrong length for cuDeviceGetLuid (must be 8)");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	CUdevice nativeDev = (CUdevice)(intptr_t)getNativePointerValue(env, dev);
+	char nativeLuid[8];
+	unsigned int nativeDeviceNodeMask = 0;
+	int result = cuDeviceGetLuid(nativeLuid, &nativeDeviceNodeMask, nativeDev);
+	jbyte* luidElements = env->GetByteArrayElements(luid, NULL);
+	for (int i = 0; i < size; i++)
+	{
+		luidElements[i] = (jbyte)nativeLuid[i];
+	}
+	env->ReleaseByteArrayElements(luid, luidElements, 0);
+	if (!set(env, deviceNodeMask, 0, nativeDeviceNodeMask)) return JCUDA_INTERNAL_ERROR;
+	return result;
 }
 
 
@@ -4647,9 +5031,47 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuLaunchCooperativeKernelMu
             return JCUDA_INTERNAL_ERROR;
         }
     }
+	delete[] launchParamsListNative;
+	delete[] launchParamsDatas;
     return result;
 }
 
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuLaunchHostFuncNative
+* Signature: (Ljcuda/driver/CUstream;Ljcuda/driver/CUhostFn;Ljava/lang/Object;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuLaunchHostFuncNative
+    (JNIEnv *env, jclass cls, jobject hStream, jobject fn, jobject userData)
+{
+	if (hStream == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hStream' is null for cuLaunchHostFunc");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (fn == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'fn' is null for cuLaunchHostFunc");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	Logger::log(LOG_TRACE, "Executing cuLaunchHostFunc\n");
+
+	CUstream nativeHStream = (CUstream)getNativePointerValue(env, hStream);
+
+	CallbackInfo *callbackInfo = NULL;
+	void* nativeUserData = NULL;
+
+	callbackInfo = initCallbackInfo(env, hStream, fn, userData);
+	if (callbackInfo == NULL)
+	{
+		return JCUDA_INTERNAL_ERROR;
+	}
+	nativeUserData = (void*)callbackInfo;
+
+	int result = cuLaunchHostFunc(nativeHStream, cuLaunchHostFunc_NativeCallback, nativeUserData);
+	return result;
+}
 
 
 
@@ -4672,7 +5094,7 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuFuncGetAttributeNative
         ThrowByName(env, "java/lang/NullPointerException", "Parameter 'func' is null for cuFuncGetAttribute");
         return JCUDA_INTERNAL_ERROR;
     }
-    Logger::log(LOG_TRACE, "Executing cuFuncGetAttribute\n");
+	Logger::log(LOG_TRACE, "Executing cuFuncGetAttribute\n");
 
     int nativePi;
     CUfunction nativeFunc = (CUfunction)getNativePointerValue(env, func);
@@ -6445,6 +6867,1332 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuParamSetTexRefNative
     return result;
 }
 
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphCreateNative
+* Signature: (Ljcuda/driver/CUgraph;I)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphCreateNative
+	(JNIEnv *env, jclass cls, jobject phGraph, jint flags)
+{
+	if (phGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'phGraph' is null for cuGraphCreate");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphCreate\n");
+
+	unsigned int nativeFlags = (unsigned int)flags;
+
+	CUgraph nativePhGraph = (CUgraph)getNativePointerValue(env, phGraph);
+	int result = cuGraphCreate(&nativePhGraph, nativeFlags);
+	setNativePointerValue(env, phGraph, (jlong)nativePhGraph);
+
+	return result;
+}
+
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphAddKernelNodeNative
+* Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUgraph;[Ljcuda/driver/CUgraphNode;JLjcuda/driver/CUDA_KERNEL_NODE_PARAMS;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphAddKernelNodeNative
+	(JNIEnv *env, jclass cls, jobject phGraphNode, jobject hGraph, jobjectArray dependencies, jlong numDependencies, jobject nodeParams)
+{
+	if (phGraphNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'phGraphNode' is null for cuGraphAddKernelNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (hGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraph' is null for cuGraphAddKernelNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	// dependencies may be null
+	if (nodeParams == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'nodeParams' is null for cuGraphAddKernelNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphAddKernelNode\n");
+
+	CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
+
+	size_t nativeNumDependencies = (size_t)numDependencies;
+	CUgraphNode* nativeDependencies = NULL;
+	if (dependencies != NULL)
+	{
+		nativeDependencies = new CUgraphNode[nativeNumDependencies];
+		for (int i = 0; i < nativeNumDependencies; i++)
+		{
+			jobject dependency = env->GetObjectArrayElement(dependencies, i);
+			nativeDependencies[i] = (CUgraphNode)getNativePointerValue(env, dependency);
+		}
+	}
+
+	CUDA_KERNEL_NODE_PARAMSData* nativeNodeParamsData;
+	if (!initCUDA_KERNEL_NODE_PARAMSData(env, nodeParams, nativeNodeParamsData)) return JCUDA_INTERNAL_ERROR;
+
+	CUDA_KERNEL_NODE_PARAMS* nativeNodeParams = &nativeNodeParamsData->cudaKernelNodeParams;
+	CUgraphNode nativePhGraphNode;
+	int result = cuGraphAddKernelNode(&nativePhGraphNode, nativeHGraph, nativeDependencies, nativeNumDependencies, nativeNodeParams);
+
+	setNativePointerValue(env, phGraphNode, (jlong)nativePhGraphNode);
+
+	if (!releaseCUDA_KERNEL_NODE_PARAMSData(env, nativeNodeParamsData)) return JCUDA_INTERNAL_ERROR;
+	delete[] nativeDependencies;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphKernelNodeGetParamsNative
+* Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUDA_KERNEL_NODE_PARAMS;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphKernelNodeGetParamsNative(JNIEnv *env, jclass cls, jobject hNode, jobject nodeParams)
+{
+	if (hNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hNode' is null for cuGraphKernelNodeGetParams");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (nodeParams == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'nodeParams' is null for cuGraphKernelNodeGetParams");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphKernelNodeGetParams\n");
+
+	CUgraphNode nativeHNode = (CUgraphNode)getNativePointerValue(env, hNode);
+	CUDA_KERNEL_NODE_PARAMS nativeNodeParams;
+
+	int result = cuGraphKernelNodeGetParams(nativeHNode, &nativeNodeParams);
+
+	if (!writeCUDA_KERNEL_NODE_PARAMS(env, nativeNodeParams, nodeParams)) return JCUDA_INTERNAL_ERROR;
+	
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphKernelNodeSetParamsNative
+* Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUDA_KERNEL_NODE_PARAMS;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphKernelNodeSetParamsNative(JNIEnv *env, jclass cls, jobject hNode, jobject nodeParams)
+{
+	if (hNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hNode' is null for cuGraphKernelNodeSetParams");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (nodeParams == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'nodeParams' is null for cuGraphKernelNodeSetParams");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphKernelNodeSetParams\n");
+
+	CUgraphNode nativeHNode = (CUgraphNode)getNativePointerValue(env, hNode);
+
+	CUDA_KERNEL_NODE_PARAMSData* nativeNodeParamsData;
+	if (!initCUDA_KERNEL_NODE_PARAMSData(env, nodeParams, nativeNodeParamsData)) return JCUDA_INTERNAL_ERROR;
+
+	CUDA_KERNEL_NODE_PARAMS* nativeNodeParams = &nativeNodeParamsData->cudaKernelNodeParams;
+	int result = cuGraphKernelNodeSetParams(nativeHNode, nativeNodeParams);
+
+	if (!releaseCUDA_KERNEL_NODE_PARAMSData(env, nativeNodeParamsData)) return JCUDA_INTERNAL_ERROR;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphAddMemcpyNodeNative
+* Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUgraph;[Ljcuda/driver/CUgraphNode;JLjcuda/driver/CUDA_MEMCPY3D;Ljcuda/driver/CUcontext;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphAddMemcpyNodeNative(JNIEnv *env, jclass cls, jobject phGraphNode, jobject hGraph, jobjectArray dependencies, jlong numDependencies, jobject copyParams, jobject ctx)
+{
+	// Null-checks for non-primitive arguments
+	if (phGraphNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'phGraphNode' is null for cuGraphAddMemcpyNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (hGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraph' is null for cuGraphAddMemcpyNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	// depdenencies may be null
+	if (copyParams == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'copyParams' is null for cuGraphAddMemcpyNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (ctx == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'ctx' is null for cuGraphAddMemcpyNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphAddMemcpyNode\n");
+
+	CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
+
+	size_t nativeNumDependencies = (size_t)numDependencies;
+	CUgraphNode* nativeDependencies = NULL;
+	if (dependencies != NULL)
+	{
+		nativeDependencies = new CUgraphNode[nativeNumDependencies];
+		for (int i = 0; i < nativeNumDependencies; i++)
+		{
+			jobject dependency = env->GetObjectArrayElement(dependencies, i);
+			nativeDependencies[i] = (CUgraphNode)getNativePointerValue(env, dependency);
+		}
+	}
+
+	Memcpy3DData *copyParamsData = initMemcpy3DData(env, copyParams);
+	if (copyParamsData == NULL)
+	{
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	CUcontext nativeCtx = (CUcontext)getNativePointerValue(env, ctx);
+
+	CUgraphNode nativePhGraphNode;
+	int result = cuGraphAddMemcpyNode(&nativePhGraphNode, nativeHGraph, nativeDependencies, nativeNumDependencies, &copyParamsData->memcpy3d, nativeCtx);
+
+	setNativePointerValue(env, phGraphNode, (jlong)nativePhGraphNode);
+
+	if (!releaseMemcpy3DData(env, copyParamsData)) return JCUDA_INTERNAL_ERROR;
+	delete[] nativeDependencies;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphMemcpyNodeGetParamsNative
+* Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUDA_MEMCPY3D;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphMemcpyNodeGetParamsNative(JNIEnv *env, jclass cls, jobject hNode, jobject nodeParams)
+{
+	if (hNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hNode' is null for cuGraphMemcpyNodeGetParams");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (nodeParams == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'nodeParams' is null for cuGraphMemcpyNodeGetParams");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphMemcpyNodeGetParams\n");
+
+	CUgraphNode nativeHNode = (CUgraphNode)getNativePointerValue(env, hNode);
+	Memcpy3DData *nodeParamsData = initMemcpy3DData(env, nodeParams);
+	if (nodeParamsData == NULL)
+	{
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	int result = cuGraphMemcpyNodeGetParams(nativeHNode, &nodeParamsData->memcpy3d);
+
+	if (!writeCUDA_MEMCPY3D(env, nodeParamsData->memcpy3d, nodeParams)) return JCUDA_INTERNAL_ERROR;
+	if (!releaseMemcpy3DData(env, nodeParamsData)) return JCUDA_INTERNAL_ERROR;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphMemcpyNodeSetParamsNative
+* Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUDA_MEMCPY3D;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphMemcpyNodeSetParamsNative(JNIEnv *env, jclass cls, jobject hNode, jobject nodeParams)
+{
+	if (hNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hNode' is null for cuGraphMemcpyNodeSetParams");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (nodeParams == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'nodeParams' is null for cuGraphMemcpyNodeSetParams");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphMemcpyNodeSetParams\n");
+
+	CUgraphNode nativeHNode = (CUgraphNode)getNativePointerValue(env, hNode);
+	Memcpy3DData *nodeParamsData = initMemcpy3DData(env, nodeParams);
+	if (nodeParamsData == NULL)
+	{
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	int result = cuGraphMemcpyNodeSetParams(nativeHNode, &nodeParamsData->memcpy3d);
+
+	if (!releaseMemcpy3DData(env, nodeParamsData)) return JCUDA_INTERNAL_ERROR;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphAddMemsetNodeNative
+* Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUgraph;[Ljcuda/driver/CUgraphNode;JLjcuda/driver/CUDA_MEMSET_NODE_PARAMS;Ljcuda/driver/CUcontext;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphAddMemsetNodeNative(JNIEnv *env, jclass cls, jobject phGraphNode, jobject hGraph, jobjectArray dependencies, jlong numDependencies, jobject memsetParams, jobject ctx)
+{
+	if (phGraphNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'phGraphNode' is null for cuGraphAddMemsetNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (hGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraph' is null for cuGraphAddMemsetNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	// dependencies may be null
+	if (memsetParams == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'memsetParams' is null for cuGraphAddMemsetNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (ctx == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'ctx' is null for cuGraphAddMemsetNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	// Log message
+	Logger::log(LOG_TRACE, "Executing cuGraphAddMemsetNode\n");
+
+	CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
+
+	size_t nativeNumDependencies = (size_t)numDependencies;
+	CUgraphNode* nativeDependencies = NULL;
+	if (dependencies != NULL)
+	{
+		nativeDependencies = new CUgraphNode[nativeNumDependencies];
+		for (int i = 0; i < nativeNumDependencies; i++)
+		{
+			jobject dependency = env->GetObjectArrayElement(dependencies, i);
+			nativeDependencies[i] = (CUgraphNode)getNativePointerValue(env, dependency);
+		}
+	}
+
+	CUDA_MEMSET_NODE_PARAMS nativeMemsetParams;
+	if (!readCUDA_MEMSET_NODE_PARAMS(env, memsetParams, nativeMemsetParams)) return JCUDA_INTERNAL_ERROR;
+
+	CUcontext nativeCtx = (CUcontext)getNativePointerValue(env, ctx);
+
+	CUgraphNode nativePhGraphNode;
+	int result = cuGraphAddMemsetNode(&nativePhGraphNode, nativeHGraph, nativeDependencies, nativeNumDependencies, &nativeMemsetParams, nativeCtx);
+
+	setNativePointerValue(env, phGraphNode, (jlong)nativePhGraphNode);
+	delete[] nativeDependencies;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphMemsetNodeGetParamsNative
+* Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUDA_MEMSET_NODE_PARAMS;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphMemsetNodeGetParamsNative(JNIEnv *env, jclass cls, jobject hNode, jobject nodeParams)
+{
+	if (hNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hNode' is null for cuGraphMemsetNodeGetParams");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (nodeParams == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'nodeParams' is null for cuGraphMemsetNodeGetParams");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphMemsetNodeGetParams\n");
+
+	CUgraphNode nativeHNode = (CUgraphNode)getNativePointerValue(env, hNode);
+	
+	CUDA_MEMSET_NODE_PARAMS nativeNodeParams;
+	int result = cuGraphMemsetNodeGetParams(nativeHNode, &nativeNodeParams);
+
+	if (!writeCUDA_MEMSET_NODE_PARAMS(env, nativeNodeParams, nodeParams)) return JCUDA_INTERNAL_ERROR;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphMemsetNodeSetParamsNative
+* Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUDA_MEMSET_NODE_PARAMS;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphMemsetNodeSetParamsNative(JNIEnv *env, jclass cls, jobject hNode, jobject nodeParams)
+{
+	if (hNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hNode' is null for cuGraphMemsetNodeSetParams");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (nodeParams == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'nodeParams' is null for cuGraphMemsetNodeSetParams");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphMemsetNodeSetParams\n");
+
+	CUgraphNode nativeHNode = (CUgraphNode)getNativePointerValue(env, hNode);
+
+	CUDA_MEMSET_NODE_PARAMS nativeNodeParams;
+	if (!readCUDA_MEMSET_NODE_PARAMS(env, nodeParams, nativeNodeParams)) return JCUDA_INTERNAL_ERROR;
+
+	int result = cuGraphMemsetNodeGetParams(nativeHNode, &nativeNodeParams);
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphAddHostNodeNative
+* Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUgraph;[Ljcuda/driver/CUgraphNode;JLjcuda/driver/CUDA_HOST_NODE_PARAMS;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphAddHostNodeNative(JNIEnv *env, jclass cls, jobject phGraphNode, jobject hGraph, jobjectArray dependencies, jlong numDependencies, jobject nodeParams)
+{
+	if (phGraphNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'phGraphNode' is null for cuGraphAddHostNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (hGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraph' is null for cuGraphAddHostNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	// dependencies may be null
+	if (nodeParams == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'nodeParams' is null for cuGraphAddHostNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphAddHostNode\n");
+
+	CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
+
+	size_t nativeNumDependencies = (size_t)numDependencies;
+	CUgraphNode* nativeDependencies = NULL;
+	if (dependencies != NULL)
+	{
+		nativeDependencies = new CUgraphNode[nativeNumDependencies];
+		for (int i = 0; i < nativeNumDependencies; i++)
+		{
+			jobject dependency = env->GetObjectArrayElement(dependencies, i);
+			nativeDependencies[i] = (CUgraphNode)getNativePointerValue(env, dependency);
+		}
+	}
+
+	CallbackInfo *callbackInfo = NULL;
+	void* nativeUserData = NULL;
+
+	jobject fn = env->GetObjectField(nodeParams, CUDA_HOST_NODE_PARAMS_fn);
+	jobject userData = env->GetObjectField(nodeParams, CUDA_HOST_NODE_PARAMS_userData);
+	callbackInfo = initCallbackInfo(env, NULL, fn, userData);
+	if (callbackInfo == NULL)
+	{
+		return JCUDA_INTERNAL_ERROR;
+	}
+	nativeUserData = (void*)callbackInfo;
+
+	CUDA_HOST_NODE_PARAMS nativeNodeParams;
+	nativeNodeParams.fn = cuLaunchHostFunc_NativeCallback;
+	nativeNodeParams.userData = nativeUserData;
+
+	CUgraphNode nativePhGraphNode;
+	int result = cuGraphAddHostNode(&nativePhGraphNode, nativeHGraph, nativeDependencies, nativeNumDependencies, &nativeNodeParams);
+
+	setNativePointerValue(env, phGraphNode, (jlong)nativePhGraphNode);
+	delete[] nativeDependencies;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphHostNodeGetParamsNative
+* Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUDA_HOST_NODE_PARAMS;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphHostNodeGetParamsNative(JNIEnv *env, jclass cls, jobject hNode, jobject nodeParams)
+{
+	if (hNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hNode' is null for cuGraphHostNodeGetParams");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (nodeParams == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'nodeParams' is null for cuGraphHostNodeGetParams");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphHostNodeGetParams\n");
+
+	CUgraphNode nativeHNode = (CUgraphNode)getNativePointerValue(env, hNode);
+
+	CUDA_HOST_NODE_PARAMS nativeNodeParams;
+	int result = cuGraphHostNodeGetParams(nativeHNode, &nativeNodeParams);
+
+	// XXX These cannot be set sensibly here. One could try to create the instances
+	// in the Java object based on the non-NULL fields of the struct, but this is
+	// brittle and will not work as expected for certain usage patterns
+	Logger::log(LOG_WARNING, "The CUDA_HOST_NODE_PARAMS object may not be filled properly");
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphHostNodeSetParamsNative
+* Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUDA_HOST_NODE_PARAMS;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphHostNodeSetParamsNative(JNIEnv *env, jclass cls, jobject hNode, jobject nodeParams)
+{
+	// Null-checks for non-primitive arguments
+	if (hNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hNode' is null for cuGraphHostNodeSetParams");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (nodeParams == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'nodeParams' is null for cuGraphHostNodeSetParams");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphHostNodeSetParams\n");
+
+	// XXX This should actually be disallowed: The callback that
+	// has been assigned initially is never executed and never
+	// deleted...
+	Logger::log(LOG_WARNING, "The initial host function may not be changed");
+
+	CUgraphNode nativeHNode = (CUgraphNode)getNativePointerValue(env, hNode);
+
+	CallbackInfo *callbackInfo = NULL;
+	void* nativeUserData = NULL;
+
+	jobject fn = env->GetObjectField(nodeParams, CUDA_HOST_NODE_PARAMS_fn);
+	jobject userData = env->GetObjectField(nodeParams, CUDA_HOST_NODE_PARAMS_userData);
+	callbackInfo = initCallbackInfo(env, NULL, fn, userData);
+	if (callbackInfo == NULL)
+	{
+		return JCUDA_INTERNAL_ERROR;
+	}
+	nativeUserData = (void*)callbackInfo;
+
+	CUDA_HOST_NODE_PARAMS nativeNodeParams;
+	nativeNodeParams.fn = cuLaunchHostFunc_NativeCallback;
+	nativeNodeParams.userData = nativeUserData;
+
+	CUgraphNode nativePhGraphNode;
+	int result = cuGraphHostNodeSetParams(nativeHNode, &nativeNodeParams);
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphAddChildGraphNodeNative
+* Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUgraph;[Ljcuda/driver/CUgraphNode;JLjcuda/driver/CUgraph;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphAddChildGraphNodeNative(JNIEnv *env, jclass cls, jobject phGraphNode, jobject hGraph, jobjectArray dependencies, jlong numDependencies, jobject childGraph)
+{
+	if (phGraphNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'phGraphNode' is null for cuGraphAddChildGraphNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (hGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraph' is null for cuGraphAddChildGraphNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	// dependencies may be null
+	if (childGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'childGraph' is null for cuGraphAddChildGraphNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphAddChildGraphNode\n");
+
+	CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
+
+	size_t nativeNumDependencies = (size_t)numDependencies;
+	CUgraphNode* nativeDependencies = NULL;
+	if (dependencies != NULL)
+	{
+		nativeDependencies = new CUgraphNode[nativeNumDependencies];
+		for (int i = 0; i < nativeNumDependencies; i++)
+		{
+			jobject dependency = env->GetObjectArrayElement(dependencies, i);
+			nativeDependencies[i] = (CUgraphNode)getNativePointerValue(env, dependency);
+		}
+	}
+
+	CUgraph nativeChildGraph = (CUgraph)getNativePointerValue(env, childGraph);
+
+	CUgraphNode nativePhGraphNode;
+	int result = cuGraphAddChildGraphNode(&nativePhGraphNode, nativeHGraph, nativeDependencies, nativeNumDependencies, nativeChildGraph);
+
+	setNativePointerValue(env, phGraphNode, (jlong)nativePhGraphNode);
+	delete[] nativeDependencies;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphChildGraphNodeGetGraphNative
+* Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUgraph;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphChildGraphNodeGetGraphNative(JNIEnv *env, jclass cls, jobject hNode, jobject phGraph)
+{
+	if (hNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hNode' is null for cuGraphChildGraphNodeGetGraph");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (phGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'phGraph' is null for cuGraphChildGraphNodeGetGraph");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphChildGraphNodeGetGraph\n");
+
+	CUgraphNode nativeHNode = (CUgraphNode)getNativePointerValue(env, hNode);
+	CUgraph nativePhGraph;
+
+	int result = cuGraphChildGraphNodeGetGraph(nativeHNode, &nativePhGraph);
+
+	setNativePointerValue(env, phGraph, (jlong)nativePhGraph);
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphAddEmptyNodeNative
+* Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUgraph;[Ljcuda/driver/CUgraphNode;J)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphAddEmptyNodeNative(JNIEnv *env, jclass cls, jobject phGraphNode, jobject hGraph, jobjectArray dependencies, jlong numDependencies)
+{
+	if (phGraphNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'phGraphNode' is null for cuGraphAddEmptyNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (hGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraph' is null for cuGraphAddEmptyNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	// dependencies may be null
+
+	Logger::log(LOG_TRACE, "Executing cuGraphAddEmptyNode\n");
+
+	CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
+
+	size_t nativeNumDependencies = (size_t)numDependencies;
+	CUgraphNode* nativeDependencies = NULL;
+	if (dependencies != NULL)
+	{
+		nativeDependencies = new CUgraphNode[nativeNumDependencies];
+		for (int i = 0; i < nativeNumDependencies; i++)
+		{
+			jobject dependency = env->GetObjectArrayElement(dependencies, i);
+			nativeDependencies[i] = (CUgraphNode)getNativePointerValue(env, dependency);
+		}
+	}
+
+	CUgraphNode nativePhGraphNode;
+	int result = cuGraphAddEmptyNode(&nativePhGraphNode, nativeHGraph, nativeDependencies, nativeNumDependencies);
+
+	setNativePointerValue(env, phGraphNode, (jlong)nativePhGraphNode);
+	delete[] nativeDependencies;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphCloneNative
+* Signature: (Ljcuda/driver/CUgraph;Ljcuda/driver/CUgraph;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphCloneNative(JNIEnv *env, jclass cls, jobject phGraphClone, jobject originalGraph)
+{
+	if (phGraphClone == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'phGraphClone' is null for cuGraphClone");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (originalGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'originalGraph' is null for cuGraphClone");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphClone\n");
+
+	CUgraph nativeOriginalGraph = (CUgraph)getNativePointerValue(env, originalGraph);
+	CUgraph nativePhGraphClone;
+
+	int result = cuGraphClone(&nativePhGraphClone, nativeOriginalGraph);
+
+	setNativePointerValue(env, phGraphClone, (jlong)nativePhGraphClone);
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphNodeFindInCloneNative
+* Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUgraph;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphNodeFindInCloneNative(JNIEnv *env, jclass cls, jobject phNode, jobject hOriginalNode, jobject hClonedGraph)
+{
+	if (phNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'phNode' is null for cuGraphNodeFindInClone");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (hOriginalNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hOriginalNode' is null for cuGraphNodeFindInClone");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (hClonedGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hClonedGraph' is null for cuGraphNodeFindInClone");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphNodeFindInClone\n");
+
+	CUgraphNode nativeHOriginalNode = (CUgraphNode)getNativePointerValue(env, hOriginalNode);
+	CUgraph nativeHClonedGraph = (CUgraph)getNativePointerValue(env, hClonedGraph);
+	CUgraphNode nativePhNode;
+
+	int result = cuGraphNodeFindInClone(&nativePhNode, nativeHOriginalNode, nativeHClonedGraph);
+
+	setNativePointerValue(env, phNode, (jlong)nativePhNode);
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphNodeGetTypeNative
+* Signature: (Ljcuda/driver/CUgraphNode;[I)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphNodeGetTypeNative(JNIEnv *env, jclass cls, jobject hNode, jintArray type)
+{
+	if (hNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hNode' is null for cuGraphNodeGetType");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (type == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'type' is null for cuGraphNodeGetType");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphNodeGetType\n");
+
+	CUgraphNode nativeHNode = (CUgraphNode)getNativePointerValue(env, hNode);
+	CUgraphNodeType nativeType;
+
+	int result = cuGraphNodeGetType(nativeHNode, &nativeType);
+
+	if (!set(env, type, 0, (jint)nativeType)) return JCUDA_INTERNAL_ERROR;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphGetNodesNative
+* Signature: (Ljcuda/driver/CUgraph;[Ljcuda/driver/CUgraphNode;[J)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphGetNodesNative(JNIEnv *env, jclass cls, jobject hGraph, jobjectArray nodes, jlongArray numNodes)
+{
+	if (hGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraph' is null for cuGraphGetNodes");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	// nodes may be null
+	if (numNodes == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'numNodes' is null for cuGraphGetNodes");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphGetNodes\n");
+
+	CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
+
+	size_t nativeNumNodes;
+	CUgraphNode* nativeNodes = NULL;
+	if (nodes != NULL)
+	{
+		jsize len = env->GetArrayLength(nodes);
+		nativeNodes = new CUgraphNode[len];
+	}
+
+	int result = cuGraphGetNodes(nativeHGraph, nativeNodes, &nativeNumNodes);
+
+	if (nodes != NULL)
+	{
+		jsize len = env->GetArrayLength(nodes);
+		for (jsize i = 0; i < len; i++) 
+		{
+			if (i < nativeNumNodes)
+			{
+				jobject node = env->NewObject(CUgraphNode_class, CUgraphNode_constructor);
+				setNativePointerValue(env, node, (jlong)nativeNodes[i]);
+				env->SetObjectArrayElement(nodes, i, node);
+			}
+			else
+			{
+				env->SetObjectArrayElement(nodes, i, NULL);
+			}
+		}
+	}
+	delete[] nativeNodes;
+
+	if (!set(env, numNodes, 0, (jlong)nativeNumNodes)) return JCUDA_INTERNAL_ERROR;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphGetRootNodesNative
+* Signature: (Ljcuda/driver/CUgraph;[Ljcuda/driver/CUgraphNode;[J)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphGetRootNodesNative(JNIEnv *env, jclass cls, jobject hGraph, jobjectArray rootNodes, jlongArray numRootNodes)
+{
+	if (hGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraph' is null for cuGraphGetRootNodes");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	// rootNodes may be null
+	if (numRootNodes == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'numRootNodes' is null for cuGraphGetRootNodes");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphGetRootNodes\n");
+
+	CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
+
+	size_t nativeNumRootNodes;
+	CUgraphNode* nativeRootNodes = NULL;
+	if (rootNodes != NULL)
+	{
+		jsize len = env->GetArrayLength(rootNodes);
+		nativeRootNodes = new CUgraphNode[len];
+	}
+
+	int result = cuGraphGetRootNodes(nativeHGraph, nativeRootNodes, &nativeNumRootNodes);
+
+	if (rootNodes != NULL)
+	{
+		jsize len = env->GetArrayLength(rootNodes);
+		for (jsize i = 0; i < len; i++)
+		{
+			if (i < nativeNumRootNodes)
+			{
+				jobject node = env->NewObject(CUgraphNode_class, CUgraphNode_constructor);
+				setNativePointerValue(env, node, (jlong)nativeRootNodes[i]);
+				env->SetObjectArrayElement(rootNodes, i, node);
+			}
+			else
+			{
+				env->SetObjectArrayElement(rootNodes, i, NULL);
+			}
+		}
+	}
+	delete[] nativeRootNodes;
+
+	if (!set(env, numRootNodes, 0, (jlong)nativeNumRootNodes)) return JCUDA_INTERNAL_ERROR;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphGetEdgesNative
+* Signature: (Ljcuda/driver/CUgraph;[Ljcuda/driver/CUgraphNode;[Ljcuda/driver/CUgraphNode;[J)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphGetEdgesNative(JNIEnv *env, jclass cls, jobject hGraph, jobjectArray from, jobjectArray to, jlongArray numEdges)
+{
+	if (hGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraph' is null for cuGraphGetEdges");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	// from may be null
+	// to may be null
+	if (numEdges == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'numEdges' is null for cuGraphGetEdges");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphGetEdges\n");
+
+	CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
+
+	size_t nativeNumEdges;
+	CUgraphNode* nativeFrom = NULL;
+	if (from != NULL)
+	{
+		jsize len = env->GetArrayLength(from);
+		nativeFrom = new CUgraphNode[len];
+	}
+	CUgraphNode* nativeTo = NULL;
+	if (to != NULL)
+	{
+		jsize len = env->GetArrayLength(to);
+		nativeTo = new CUgraphNode[len];
+	}
+
+	int result = cuGraphGetEdges(nativeHGraph, nativeFrom, nativeTo, &nativeNumEdges);
+
+	if (from != NULL)
+	{
+		jsize len = env->GetArrayLength(from);
+		for (jsize i = 0; i < len; i++)
+		{
+			if (i < nativeNumEdges)
+			{
+				jobject node = env->NewObject(CUgraphNode_class, CUgraphNode_constructor);
+				setNativePointerValue(env, node, (jlong)nativeFrom[i]);
+				env->SetObjectArrayElement(from, i, node);
+			}
+			else
+			{
+				env->SetObjectArrayElement(from, i, NULL);
+			}
+		}
+	}
+	if (to != NULL)
+	{
+		jsize len = env->GetArrayLength(to);
+		for (jsize i = 0; i < len; i++)
+		{
+			if (i < nativeNumEdges)
+			{
+				jobject node = env->NewObject(CUgraphNode_class, CUgraphNode_constructor);
+				setNativePointerValue(env, node, (jlong)nativeTo[i]);
+				env->SetObjectArrayElement(to, i, node);
+			}
+			else
+			{
+				env->SetObjectArrayElement(to, i, NULL);
+			}
+		}
+	}
+	delete[] nativeFrom;
+	delete[] nativeTo;
+
+	if (!set(env, numEdges, 0, (jlong)nativeNumEdges)) return JCUDA_INTERNAL_ERROR;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphNodeGetDependenciesNative
+* Signature: (Ljcuda/driver/CUgraphNode;[Ljcuda/driver/CUgraphNode;[J)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphNodeGetDependenciesNative(JNIEnv *env, jclass cls, jobject hNode, jobjectArray dependencies, jlongArray numDependencies)
+{
+	if (hNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hNode' is null for cuGraphNodeGetDependencies");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	// dependencies may be null
+	if (numDependencies == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'numDependencies' is null for cuGraphNodeGetDependencies");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphNodeGetDependencies\n");
+
+	CUgraphNode nativeHGraphNode = (CUgraphNode)getNativePointerValue(env, hNode);
+
+	size_t nativeNumDependencies;
+	CUgraphNode* nativeDependencies = NULL;
+	if (dependencies != NULL)
+	{
+		jsize len = env->GetArrayLength(dependencies);
+		nativeDependencies = new CUgraphNode[len];
+	}
+
+	int result = cuGraphNodeGetDependencies(nativeHGraphNode, nativeDependencies, &nativeNumDependencies);
+
+	if (dependencies != NULL)
+	{
+		jsize len = env->GetArrayLength(dependencies);
+		for (jsize i = 0; i < len; i++)
+		{
+			if (i < nativeNumDependencies)
+			{
+				jobject node = env->NewObject(CUgraphNode_class, CUgraphNode_constructor);
+				setNativePointerValue(env, node, (jlong)nativeDependencies[i]);
+				env->SetObjectArrayElement(dependencies, i, node);
+			}
+			else
+			{
+				env->SetObjectArrayElement(dependencies, i, NULL);
+			}
+		}
+	}
+	delete[] nativeDependencies;
+
+	if (!set(env, numDependencies, 0, (jlong)nativeNumDependencies)) return JCUDA_INTERNAL_ERROR;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphNodeGetDependentNodesNative
+* Signature: (Ljcuda/driver/CUgraphNode;[Ljcuda/driver/CUgraphNode;[J)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphNodeGetDependentNodesNative(JNIEnv *env, jclass cls, jobject hNode, jobjectArray dependentNodes, jlongArray numDependentNodes)
+{
+	if (hNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hNode' is null for cuGraphNodeGetDependentNodes");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	// dependentNodes may be null
+	if (numDependentNodes == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'numDependentNodes' is null for cuGraphNodeGetDependentNodes");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphNodeGetDependentNodes\n");
+
+	CUgraphNode nativeHGraphNode = (CUgraphNode)getNativePointerValue(env, hNode);
+
+	size_t nativeNumDependentNodes;
+	CUgraphNode* nativeDependentNodes = NULL;
+	if (dependentNodes != NULL)
+	{
+		jsize len = env->GetArrayLength(dependentNodes);
+		nativeDependentNodes = new CUgraphNode[len];
+	}
+
+	int result = cuGraphNodeGetDependentNodes(nativeHGraphNode, nativeDependentNodes, &nativeNumDependentNodes);
+
+	if (dependentNodes != NULL)
+	{
+		jsize len = env->GetArrayLength(dependentNodes);
+		for (jsize i = 0; i < len; i++)
+		{
+			if (i < nativeNumDependentNodes)
+			{
+				jobject node = env->NewObject(CUgraphNode_class, CUgraphNode_constructor);
+				setNativePointerValue(env, node, (jlong)nativeDependentNodes[i]);
+				env->SetObjectArrayElement(dependentNodes, i, node);
+			}
+			else
+			{
+				env->SetObjectArrayElement(dependentNodes, i, NULL);
+			}
+		}
+	}
+	delete[] nativeDependentNodes;
+
+	if (!set(env, numDependentNodes, 0, (jlong)nativeNumDependentNodes)) return JCUDA_INTERNAL_ERROR;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphAddDependenciesNative
+* Signature: (Ljcuda/driver/CUgraph;[Ljcuda/driver/CUgraphNode;[Ljcuda/driver/CUgraphNode;J)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphAddDependenciesNative(JNIEnv *env, jclass cls, jobject hGraph, jobjectArray from, jobjectArray to, jlong numDependencies)
+{
+	if (hGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraph' is null for cuGraphAddDependencies");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (from == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'from' is null for cuGraphAddDependencies");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (to == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'to' is null for cuGraphAddDependencies");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphAddDependencies\n");
+
+	CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
+
+	size_t nativeNumDependencies = (size_t)numDependencies;
+	jsize lenFrom = env->GetArrayLength(from);
+	CUgraphNode* nativeFrom = new CUgraphNode[lenFrom];
+	jsize lenTo = env->GetArrayLength(to);
+	CUgraphNode* nativeTo = new CUgraphNode[lenTo];
+
+	for (jsize i = 0; i < nativeNumDependencies; i++)
+	{
+		jobject fromNode = env->GetObjectArrayElement(from, i);
+		nativeFrom[i] = (CUgraphNode)getNativePointerValue(env, fromNode);
+		jobject toNode = env->GetObjectArrayElement(to, i);
+		nativeTo[i] = (CUgraphNode)getNativePointerValue(env, toNode);
+	}
+
+	int result = cuGraphAddDependencies(nativeHGraph, nativeFrom, nativeTo, nativeNumDependencies);
+
+	delete[] nativeFrom;
+	delete[] nativeTo;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphRemoveDependenciesNative
+* Signature: (Ljcuda/driver/CUgraph;[Ljcuda/driver/CUgraphNode;[Ljcuda/driver/CUgraphNode;J)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphRemoveDependenciesNative(JNIEnv *env, jclass cls, jobject hGraph, jobjectArray from, jobjectArray to, jlong numDependencies)
+{
+	if (hGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraph' is null for cuGraphRemoveDependencies");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (from == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'from' is null for cuGraphRemoveDependencies");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (to == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'to' is null for cuGraphRemoveDependencies");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphRemoveDependencies\n");
+
+	CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
+
+	size_t nativeNumDependencies = (size_t)numDependencies;
+	jsize lenFrom = env->GetArrayLength(from);
+	CUgraphNode* nativeFrom = new CUgraphNode[lenFrom];
+	jsize lenTo = env->GetArrayLength(to);
+	CUgraphNode* nativeTo = new CUgraphNode[lenTo];
+
+	for (jsize i = 0; i < nativeNumDependencies; i++)
+	{
+		jobject fromNode = env->GetObjectArrayElement(from, i);
+		nativeFrom[i] = (CUgraphNode)getNativePointerValue(env, fromNode);
+		jobject toNode = env->GetObjectArrayElement(to, i);
+		nativeTo[i] = (CUgraphNode)getNativePointerValue(env, toNode);
+	}
+
+	int result = cuGraphRemoveDependencies(nativeHGraph, nativeFrom, nativeTo, nativeNumDependencies);
+
+	delete[] nativeFrom;
+	delete[] nativeTo;
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphDestroyNodeNative
+* Signature: (Ljcuda/driver/CUgraphNode;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphDestroyNodeNative(JNIEnv *env, jclass cls, jobject hNode)
+{
+	if (hNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hNode' is null for cuGraphDestroyNode");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphDestroyNode\n");
+
+	CUgraphNode nativeHNode = (CUgraphNode)getNativePointerValue(env, hNode);
+
+	int result = cuGraphDestroyNode(nativeHNode);
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphInstantiateNative
+* Signature: (Ljcuda/driver/CUgraphExec;Ljcuda/driver/CUgraph;Ljcuda/driver/CUgraphNode;[BJ)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphInstantiateNative(JNIEnv *env, jclass cls, jobject phGraphExec, jobject hGraph, jobject phErrorNode, jbyteArray logBuffer, jlong bufferSize)
+{
+	if (phGraphExec == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'phGraphExec' is null for cuGraphInstantiate");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (hGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraph' is null for cuGraphInstantiate");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (phErrorNode == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'phErrorNode' is null for cuGraphInstantiate");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (logBuffer == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'logBuffer' is null for cuGraphInstantiate");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphInstantiate\n");
+
+	CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
+	jsize logBufferLen = env->GetArrayLength(logBuffer);
+	char* nativeLogBuffer = new char[logBufferLen];
+
+	CUgraphExec nativePhGraphExec = NULL;
+	CUgraphNode nativePhErrorNode = NULL;
+	size_t nativeBufferSize = (size_t)bufferSize;
+
+	int result = cuGraphInstantiate(&nativePhGraphExec, nativeHGraph, &nativePhErrorNode, nativeLogBuffer, nativeBufferSize);
+
+	setNativePointerValue(env, phGraphExec, (jlong)nativePhGraphExec);
+	setNativePointerValue(env, phErrorNode, (jlong)nativePhErrorNode);
+	jbyte* logBufferElements = env->GetByteArrayElements(logBuffer, NULL);
+	for (int i = 0; i < logBufferLen; i++)
+	{
+		logBufferElements[i] = (jbyte)nativeLogBuffer[i];
+	}
+	env->ReleaseByteArrayElements(logBuffer, logBufferElements, 0);
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphLaunchNative
+* Signature: (Ljcuda/driver/CUgraphExec;Ljcuda/driver/CUstream;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphLaunchNative(JNIEnv *env, jclass cls, jobject hGraphExec, jobject hStream)
+{
+	if (hGraphExec == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraphExec' is null for cuGraphLaunch");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (hStream == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hStream' is null for cuGraphLaunch");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphLaunch\n");
+
+	CUgraphExec nativeHGraphExec = (CUgraphExec)getNativePointerValue(env, hGraphExec);
+	CUstream nativeHStream = (CUstream)getNativePointerValue(env, hStream);
+
+	int result = cuGraphLaunch(nativeHGraphExec, nativeHStream);
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphExecDestroyNative
+* Signature: (Ljcuda/driver/CUgraphExec;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphExecDestroyNative(JNIEnv *env, jclass cls, jobject hGraphExec)
+{
+	if (hGraphExec == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraphExec' is null for cuGraphExecDestroy");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphExecDestroy\n");
+
+	CUgraphExec nativeHGraphExec = (CUgraphExec)getNativePointerValue(env, hGraphExec);
+
+	int result = cuGraphExecDestroy(nativeHGraphExec);
+
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphDestroyNative
+* Signature: (Ljcuda/driver/CUgraph;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphDestroyNative(JNIEnv *env, jclass cls, jobject hGraph)
+{
+	if (hGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraph' is null for cuGraphDestroy");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuGraphDestroy\n");
+
+	CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
+
+	int result = cuGraphDestroy(nativeHGraph);
+
+	return result;
+}
+
+
+
+
 /*
  * Class:     jcuda_driver_JCudaDriver
  * Method:    cuOccupancyMaxActiveBlocksPerMultiprocessorNative
@@ -7439,6 +9187,83 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamAddCallbackNative
 
     int result = cuStreamAddCallback(nativeHStream, cuStreamAddCallback_NativeCallback, nativeUserData, (unsigned int)flags);
     return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuStreamBeginCaptureNative
+* Signature: (Ljcuda/driver/CUstream;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamBeginCaptureNative
+    (JNIEnv *env, jclass cls, jobject hStream)
+{
+	if (hStream == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hStream' is null for cuStreamBeginCapture");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuStreamBeginCapture\n");
+
+	CUstream nativeHStream = (CUstream)getNativePointerValue(env, hStream);
+	int result = cuStreamBeginCapture(nativeHStream);
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuStreamEndCaptureNative
+* Signature: (Ljcuda/driver/CUstream;Ljcuda/driver/CUgraph;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamEndCaptureNative
+	(JNIEnv *env, jclass cls, jobject hStream, jobject phGraph)
+{
+	if (hStream == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hStream' is null for cuStreamEndCapture");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (phGraph == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'phGraph' is null for cuStreamEndCapture");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuStreamEndCapture\n");
+
+	CUstream nativeHStream = (CUstream)getNativePointerValue(env, hStream);
+	CUgraph nativePhGraph = NULL;
+	int result = cuStreamEndCapture(nativeHStream, &nativePhGraph);
+	setNativePointerValue(env, phGraph, (jlong)nativePhGraph);
+	return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuStreamIsCapturingNative
+* Signature: (Ljcuda/driver/CUstream;[I)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamIsCapturingNative
+    (JNIEnv *env, jclass cls, jobject hStream, jintArray captureStatus)
+{
+	if (hStream == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hStream' is null for cuStreamIsCapturing");
+		return JCUDA_INTERNAL_ERROR;
+	}
+	if (captureStatus == NULL)
+	{
+		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'captureStatus' is null for cuStreamIsCapturing");
+		return JCUDA_INTERNAL_ERROR;
+	}
+
+	Logger::log(LOG_TRACE, "Executing cuStreamIsCapturing\n");
+
+	CUstream nativeHStream = (CUstream)getNativePointerValue(env, hStream);
+	CUstreamCaptureStatus nativeCaptureStatus;
+	int result = cuStreamIsCapturing(nativeHStream, &nativeCaptureStatus);
+	if (!set(env, captureStatus, 0, (jint)nativeCaptureStatus)) return JCUDA_INTERNAL_ERROR;
+	return result;
 }
 
 

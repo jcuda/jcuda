@@ -646,10 +646,70 @@ public class cudaError
     public static final int cudaErrorCooperativeLaunchTooLarge    =     82;
     
     /**
+     * This error indicates that the system is not yet ready to start any CUDA
+     * work.  To continue using CUDA, verify the system configuration is in a
+     * valid state and all required driver daemons are actively running.
+     */
+    public static final int cudaErrorSystemNotReady               =     83;
+
+    /**
+     * This indicates that a resource required by the API call is not in a
+     * valid state to perform the requested operation.
+     */
+    public static final int cudaErrorIllegalState                 =     84;
+    
+    /**
      * This indicates an internal startup failure in the CUDA runtime.
      */
-    public static final int cudaErrorStartupFailure               =   0x7f;
+    public static final int cudaErrorStartupFailure               =   127;
 
+    /**
+     * The operation is not permitted when the stream is capturing.
+     */
+    public static final int cudaErrorStreamCaptureUnsupported     =    900;
+
+    /**
+     * The current capture sequence on the stream has been invalidated due to
+     * a previous error.
+     */
+    public static final int cudaErrorStreamCaptureInvalidated     =    901;
+
+    /**
+     * The operation would have resulted in a merge of two independent capture
+     * sequences.
+     */
+    public static final int cudaErrorStreamCaptureMerge           =    902;
+
+    /**
+     * The capture was not initiated in this stream.
+     */
+    public static final int cudaErrorStreamCaptureUnmatched       =    903;
+
+    /**
+     * The capture sequence contains a fork that was not joined to the primary
+     * stream.
+     */
+    public static final int cudaErrorStreamCaptureUnjoined        =    904;
+
+    /**
+     * A dependency would have been created which crosses the capture sequence
+     * boundary. Only implicit in-stream ordering dependencies are allowed to
+     * cross the boundary.
+     */
+    public static final int cudaErrorStreamCaptureIsolation       =    905;
+
+    /**
+     * The operation would have resulted in a disallowed implicit dependency on
+     * a current capture sequence from cudaStreamLegacy.
+     */
+    public static final int cudaErrorStreamCaptureImplicit        =    906;
+
+    /**
+     * The operation is not permitted on an event which was last recorded in a
+     * capturing stream.
+     */
+    public static final int cudaErrorCapturedEvent                =    907;
+    
     /**
      * Any unhandled CUDA driver error is added to this value and returned via
      * the runtime. Production releases of CUDA should not return such errors.
@@ -753,7 +813,17 @@ public class cudaError
             case cudaErrorNvlinkUncorrectable          : return "cudaErrorNvlinkUncorrectable";
             case cudaErrorJitCompilerNotFound          : return "cudaErrorJitCompilerNotFound";
             case cudaErrorCooperativeLaunchTooLarge    : return "cudaErrorCooperativeLaunchTooLarge";
+            case cudaErrorSystemNotReady               : return "cudaErrorSystemNotReady";
+            case cudaErrorIllegalState                 : return "cudaErrorIllegalState";
             case cudaErrorStartupFailure               : return "cudaErrorStartupFailure";
+            case cudaErrorStreamCaptureUnsupported     : return "cudaErrorStreamCaptureUnsupported";
+            case cudaErrorStreamCaptureInvalidated     : return "cudaErrorStreamCaptureInvalidated";
+            case cudaErrorStreamCaptureMerge           : return "cudaErrorStreamCaptureMerge";
+            case cudaErrorStreamCaptureUnmatched       : return "cudaErrorStreamCaptureUnmatched";
+            case cudaErrorStreamCaptureUnjoined        : return "cudaErrorStreamCaptureUnjoined";
+            case cudaErrorStreamCaptureIsolation       : return "cudaErrorStreamCaptureIsolation";
+            case cudaErrorStreamCaptureImplicit        : return "cudaErrorStreamCaptureImplicit";
+            case cudaErrorCapturedEvent                : return "cudaErrorCapturedEvent";
             case jcudaInternalError                    : return "jcudaInternalError";
         }
         if (error >= cudaErrorApiFailureBase)
