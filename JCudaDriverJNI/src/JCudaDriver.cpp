@@ -2011,7 +2011,7 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDeviceGetLuidNative
 	return result;
 #else  
     Logger::log(LOG_WARNING, "cuDeviceGetLuid is not supported on this platform");
-    return CUDA_SUCCESS
+    return CUDA_SUCCESS;
 #endif  
 
 }
