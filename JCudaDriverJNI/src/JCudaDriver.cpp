@@ -1971,6 +1971,7 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDeviceGetUuidNative
 JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDeviceGetLuidNative
     (JNIEnv *env, jclass cls, jbyteArray luid, jintArray deviceNodeMask, jobject dev)
 {
+#if defined(_WIN32)
 	if (luid == NULL)
 	{
 		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'luid' is null for cuDeviceGetLuid");
@@ -2008,6 +2009,11 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDeviceGetLuidNative
 	env->ReleaseByteArrayElements(luid, luidElements, 0);
 	if (!set(env, deviceNodeMask, 0, nativeDeviceNodeMask)) return JCUDA_INTERNAL_ERROR;
 	return result;
+#else  
+    Logger::log(LOG_WARNING, "cuDeviceGetLuid is not supported on this platform");
+    return CUDA_SUCCESS
+#endif  
+
 }
 
 
