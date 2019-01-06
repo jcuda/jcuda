@@ -59,7 +59,7 @@ public class JCudaMemcpy3DTest
         ByteBuffer hostOutputData = 
             ByteBuffer.allocate(sizeFloats * Sizeof.FLOAT);
         FloatBuffer hostOutputBuffer = 
-            hostInputData.order(ByteOrder.nativeOrder()).asFloatBuffer();
+            hostOutputData.order(ByteOrder.nativeOrder()).asFloatBuffer();
         
         // Run the 3D memory copy
         copy(extentFloats, 
@@ -114,7 +114,7 @@ public class JCudaMemcpy3DTest
         dtoh.dstPtr.pitch  = extentFloats.width * Sizeof.FLOAT;
         dtoh.dstPtr.xsize  = extentFloats.width;
         dtoh.dstPtr.ysize  = extentFloats.height;
-        htod.extent.width  = extentFloats.width * Sizeof.FLOAT;
+        dtoh.extent.width  = extentFloats.width * Sizeof.FLOAT;
         dtoh.extent.height = extentFloats.height;
         dtoh.extent.depth  = extentFloats.depth;
         dtoh.kind          = cudaMemcpyDeviceToHost;
