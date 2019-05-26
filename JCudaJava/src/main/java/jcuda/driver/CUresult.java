@@ -482,6 +482,23 @@ public class CUresult
     public static final int CUDA_ERROR_SYSTEM_NOT_READY               = 802;
 
     /**
+     * This error indicates that there is a mismatch between the versions of
+     * the display driver and the CUDA driver. Refer to the compatibility 
+     * documentation for supported versions.
+     */
+    public static final int CUDA_ERROR_SYSTEM_DRIVER_MISMATCH         = 803;
+
+    /**
+     * This error indicates that the system was upgraded to run with forward 
+     * compatibility but the visible hardware detected by CUDA does not support 
+     * this configuration. Refer to the compatibility documentation for the 
+     * supported hardware matrix or ensure that only supported hardware is 
+     * visible during initialization via the CUDA_VISIBLE_DEVICES 
+     * environment variable.
+     */
+    public static final int CUDA_ERROR_COMPAT_NOT_SUPPORTED_ON_DEVICE = 804;    
+    
+    /**
      * This error indicates that the operation is not permitted when
      * the stream is capturing.
      */
@@ -529,6 +546,13 @@ public class CUresult
      */
     public static final int CUDA_ERROR_CAPTURED_EVENT                 = 907;
     
+    /**
+     * A stream capture sequence not initiated with the 
+     * ::CU_STREAM_CAPTURE_MODE_RELAXED
+     * argument to ::cuStreamBeginCapture was passed to ::cuStreamEndCapture 
+     * in a different thread.
+     */
+    public static final int CUDA_ERROR_STREAM_CAPTURE_WRONG_THREAD    = 908;
     
     /**
      * This indicates that an unknown internal error has occurred.
@@ -610,6 +634,8 @@ public class CUresult
             case CUDA_ERROR_NOT_PERMITTED                  : return "CUDA_ERROR_NOT_PERMITTED";
             case CUDA_ERROR_NOT_SUPPORTED                  : return "CUDA_ERROR_NOT_SUPPORTED";
             case CUDA_ERROR_SYSTEM_NOT_READY               : return "CUDA_ERROR_SYSTEM_NOT_READY";
+            case CUDA_ERROR_SYSTEM_DRIVER_MISMATCH         : return "CUDA_ERROR_SYSTEM_DRIVER_MISMATCH";
+            case CUDA_ERROR_COMPAT_NOT_SUPPORTED_ON_DEVICE : return "CUDA_ERROR_COMPAT_NOT_SUPPORTED_ON_DEVICE";
             case CUDA_ERROR_STREAM_CAPTURE_UNSUPPORTED     : return "CUDA_ERROR_STREAM_CAPTURE_UNSUPPORTED";
             case CUDA_ERROR_STREAM_CAPTURE_INVALIDATED     : return "CUDA_ERROR_STREAM_CAPTURE_INVALIDATED";
             case CUDA_ERROR_STREAM_CAPTURE_MERGE           : return "CUDA_ERROR_STREAM_CAPTURE_MERGE";
@@ -618,6 +644,7 @@ public class CUresult
             case CUDA_ERROR_STREAM_CAPTURE_ISOLATION       : return "CUDA_ERROR_STREAM_CAPTURE_ISOLATION";
             case CUDA_ERROR_STREAM_CAPTURE_IMPLICIT        : return "CUDA_ERROR_STREAM_CAPTURE_IMPLICIT";
             case CUDA_ERROR_CAPTURED_EVENT                 : return "CUDA_ERROR_CAPTURED_EVENT";
+            case CUDA_ERROR_STREAM_CAPTURE_WRONG_THREAD    : return "CUDA_ERROR_STREAM_CAPTURE_WRONG_THREAD";
             case CUDA_ERROR_UNKNOWN                        : return "CUDA_ERROR_UNKNOWN";
         }
         return "INVALID CUresult: "+result;

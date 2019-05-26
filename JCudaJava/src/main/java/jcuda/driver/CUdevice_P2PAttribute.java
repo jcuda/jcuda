@@ -52,7 +52,7 @@ public class CUdevice_P2PAttribute
     /**
      * @deprecated use CU_DEVICE_P2P_ATTRIBUTE_CUDA_ARRAY_ACCESS_SUPPORTED instead 
      */
-    public static final int CU_DEVICE_P2P_ATTRIBUTE_ARRAY_ACCESS_ACCESS_SUPPORTED = 0x04;
+    public static final int CU_DEVICE_P2P_ATTRIBUTE_ACCESS_ACCESS_SUPPORTED = 0x04;
     
     /**
      * Accessing CUDA arrays over the link supported 

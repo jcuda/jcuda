@@ -40,7 +40,7 @@ public class JCuda
     /**
      * CUDA runtime version
      */
-    public static final int CUDART_VERSION = 10000;
+    public static final int CUDART_VERSION = 10010;
 
     /**
      * Returns an unspecified string that will be appended to native 
@@ -50,7 +50,7 @@ public class JCuda
      */
     public static String getJCudaVersion()
     {
-        return "10.0.0";
+        return "10.1.0";
     }
     
     /**
@@ -1683,7 +1683,15 @@ public class JCuda
      *     <li>cudaDevAttrSingleToDoublePrecisionPerfRatio: Ratio of single precision performance (in floating-point operations per second) to double precision performance;</li>
      *     <li>cudaDevAttrPageableMemoryAccess: 1 if the device supports coherently accessing pageable memory without calling cudaHostRegister on it, and 0 otherwise.</li>
      *     <li>cudaDevAttrConcurrentManagedAccess: 1 if the device can coherently access managed memory concurrently with the CPU, and 0 otherwise.</li>
-     *   </ul>
+     *     <li>cudaDevAttrComputePreemptionSupported: 1 if the device supports Compute Preemption, 0 if not.</li>
+     *     <li>cudaDevAttrCanUseHostPointerForRegisteredMem: 1 if the device can access host registered memory at the same virtual address as the CPU, and 0 otherwise.</li>
+     *     <li>cudaDevAttrCooperativeLaunch: 1 if the device supports launching cooperative kernels via ::cudaLaunchCooperativeKernel, and 0 otherwise.</li>
+     *     <li>cudaDevAttrCooperativeMultiDeviceLaunch: 1 if the device supports launching cooperative kernels via ::cudaLaunchCooperativeKernelMultiDevice, and 0 otherwise.</li>
+     *     <li>cudaDevAttrCanFlushRemoteWrites: 1 if the device supports flushing of outstanding  remote writes, and 0 otherwise.</li>
+     *     <li>cudaDevAttrHostRegisterSupported: 1 if the device supports host memory registration via ::cudaHostRegister, and 0 otherwise.</li>
+     *     <li>cudaDevAttrPageableMemoryAccessUsesHostPageTables: 1 if the device accesses pageable memory via the host's page tables, and 0 otherwise.</li>
+     *     <li>cudaDevAttrDirectManagedMemAccessFromHost: 1 if the host can directly access managed memory on the device without migration, and 0 otherwise.</li>
+     *     <li>cudaDevAttrMaxSharedMemoryPerBlockOptin: Maximum per block shared memory size on the device. This value can be opted into when using ::cudaFuncSetAttribute</li>     *   </ul>
      *   </p>
      *   <div>
      *     <span>Note:</span>
@@ -4743,6 +4751,8 @@ public class JCuda
      * @see JCuda#cudaMemcpy2DFromArrayAsync
      * @see JCuda#cudaMemcpyToSymbolAsync
      * @see JCuda#cudaMemcpyFromSymbolAsync
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cudaMemcpyToArray(cudaArray dst, long wOffset, long hOffset, Pointer src, long count, int cudaMemcpyKind_kind)
     {
@@ -4816,6 +4826,8 @@ public class JCuda
      * @see JCuda#cudaMemcpy2DFromArrayAsync
      * @see JCuda#cudaMemcpyToSymbolAsync
      * @see JCuda#cudaMemcpyFromSymbolAsync
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cudaMemcpyFromArray(Pointer dst, cudaArray src, long wOffset, long hOffset, long count, int cudaMemcpyKind_kind)
     {
@@ -4885,6 +4897,8 @@ public class JCuda
      * @see JCuda#cudaMemcpy2DFromArrayAsync
      * @see JCuda#cudaMemcpyToSymbolAsync
      * @see JCuda#cudaMemcpyFromSymbolAsync
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cudaMemcpyArrayToArray(cudaArray dst, long wOffsetDst, long hOffsetDst, cudaArray src, long wOffsetSrc, long hOffsetSrc, long count, int cudaMemcpyKind_kind)
     {
@@ -5599,6 +5613,8 @@ public class JCuda
      * @see JCuda#cudaMemcpy2DFromArrayAsync
      * @see JCuda#cudaMemcpyToSymbolAsync
      * @see JCuda#cudaMemcpyFromSymbolAsync
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cudaMemcpyToArrayAsync(cudaArray dst, long wOffset, long hOffset, Pointer src, long count, int cudaMemcpyKind_kind, cudaStream_t stream)
     {
@@ -5682,6 +5698,8 @@ public class JCuda
      * @see JCuda#cudaMemcpy2DFromArrayAsync
      * @see JCuda#cudaMemcpyToSymbolAsync
      * @see JCuda#cudaMemcpyFromSymbolAsync
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cudaMemcpyFromArrayAsync(Pointer dst, cudaArray src, long wOffset, long hOffset, long count, int cudaMemcpyKind_kind, cudaStream_t stream)
     {
@@ -6348,12 +6366,8 @@ public class JCuda
      * @see JCuda#cudaGetChannelDesc
      * @see JCuda#cudaGetTextureReference
      * @see JCuda#cudaBindTexture
-     * @see JCuda#cudaBindTexture
-     *
      * @see JCuda#cudaBindTexture2D
      * @see JCuda#cudaBindTextureToArray
-     * @see JCuda#cudaBindTextureToArray
-     *
      * @see JCuda#cudaUnbindTexture
      * @see JCuda#cudaGetTextureAlignmentOffset
      */
@@ -7503,6 +7517,13 @@ public class JCuda
      *         cudaErrorUnsupportedLimit being returned.
      *       </p>
      *     </li>
+     *     <li>
+     *       <p>cudaLimitMaxL2FetchGranularity
+     *         controls the L2 cache fetch granularity.
+     *         Values can range from 0B to 128B. This is purely a performance hint and
+     *         it can be ignored or clamped depending on the platform.
+     *       </p>
+     *     </li>     
      *   </ul>
      *   </p>
      *   <div>
@@ -7567,6 +7588,11 @@ public class JCuda
      *     <li>
      *       <p>cudaLimitDevRuntimePendingLaunchCount:
      *         maximum number of outstanding device runtime launches.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>cudaLimitMaxL2FetchGranularity:
+     *         L2 cache fetch granularity
      *       </p>
      *     </li>
      *   </ul>
@@ -9039,16 +9065,12 @@ public class JCuda
      * @see JCuda#cudaGetChannelDesc
      * @see JCuda#cudaGetTextureReference
      * @see JCuda#cudaBindTexture
-     * @see JCuda#cudaBindTexture
-     *
      * @see JCuda#cudaBindTexture2D
-     * @see JCuda#cudaBindTexture2D
-     *
      * @see JCuda#cudaBindTextureToArray
-     * @see JCuda#cudaBindTextureToArray
-     *
      * @see JCuda#cudaUnbindTexture
      * @see JCuda#cudaGetTextureAlignmentOffset
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cudaBindTexture(long offset[], textureReference texref, Pointer devPtr, cudaChannelFormatDesc desc, long size)
     {
@@ -9132,16 +9154,12 @@ public class JCuda
      * @see JCuda#cudaGetChannelDesc
      * @see JCuda#cudaGetTextureReference
      * @see JCuda#cudaBindTexture
-     * @see JCuda#cudaBindTexture
-     *
      * @see JCuda#cudaBindTexture2D
-     * @see JCuda#cudaBindTexture2D
-     *
      * @see JCuda#cudaBindTextureToArray
-     * @see JCuda#cudaBindTextureToArray
-     *
      * @see JCuda#cudaUnbindTexture
      * @see JCuda#cudaGetTextureAlignmentOffset
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cudaBindTexture2D (long offset[], textureReference texref, Pointer devPtr, cudaChannelFormatDesc desc, long width, long height, long pitch)
     {
@@ -9195,16 +9213,12 @@ public class JCuda
      * @see JCuda#cudaGetChannelDesc
      * @see JCuda#cudaGetTextureReference
      * @see JCuda#cudaBindTexture
-     * @see JCuda#cudaBindTexture
-     *
      * @see JCuda#cudaBindTexture2D
-     * @see JCuda#cudaBindTexture2D
-     *
      * @see JCuda#cudaBindTextureToArray
-     * @see JCuda#cudaBindTextureToArray
-     *
      * @see JCuda#cudaUnbindTexture
      * @see JCuda#cudaGetTextureAlignmentOffset
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cudaBindTextureToArray(textureReference texref, cudaArray array, cudaChannelFormatDesc desc)
     {
@@ -9259,16 +9273,12 @@ public class JCuda
      * @see JCuda#cudaGetChannelDesc
      * @see JCuda#cudaGetTextureReference
      * @see JCuda#cudaBindTexture
-     * @see JCuda#cudaBindTexture
-     *
      * @see JCuda#cudaBindTexture2D
-     * @see JCuda#cudaBindTexture2D
-     *
      * @see JCuda#cudaBindTextureToArray
-     * @see JCuda#cudaBindTextureToArray
-     *
      * @see JCuda#cudaUnbindTexture
      * @see JCuda#cudaGetTextureAlignmentOffset
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cudaBindTextureToMipmappedArray(textureReference texref, cudaMipmappedArray mipmappedArray, cudaChannelFormatDesc desc)
     {
@@ -9309,16 +9319,12 @@ public class JCuda
      * @see JCuda#cudaGetChannelDesc
      * @see JCuda#cudaGetTextureReference
      * @see JCuda#cudaBindTexture
-     * @see JCuda#cudaBindTexture
-     *
      * @see JCuda#cudaBindTexture2D
-     * @see JCuda#cudaBindTexture2D
-     *
      * @see JCuda#cudaBindTextureToArray
-     * @see JCuda#cudaBindTextureToArray
-     *
      * @see JCuda#cudaUnbindTexture
      * @see JCuda#cudaGetTextureAlignmentOffset
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cudaUnbindTexture(textureReference texref)
     {
@@ -9364,16 +9370,12 @@ public class JCuda
      * @see JCuda#cudaGetChannelDesc
      * @see JCuda#cudaGetTextureReference
      * @see JCuda#cudaBindTexture
-     * @see JCuda#cudaBindTexture
-     *
      * @see JCuda#cudaBindTexture2D
-     * @see JCuda#cudaBindTexture2D
-     *
      * @see JCuda#cudaBindTextureToArray
-     * @see JCuda#cudaBindTextureToArray
-     *
      * @see JCuda#cudaUnbindTexture
      * @see JCuda#cudaGetTextureAlignmentOffset
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cudaGetTextureAlignmentOffset(long offset[], textureReference texref)
     {
@@ -9472,7 +9474,8 @@ public class JCuda
      *
      * @see JCuda#cudaBindSurfaceToArray
      * @see JCuda#cudaBindSurfaceToArray
-     *
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cudaBindSurfaceToArray(surfaceReference surfref, cudaArray array, cudaChannelFormatDesc desc)
     {
@@ -10220,9 +10223,9 @@ public class JCuda
     @Deprecated
     public static int cudaConfigureCall(dim3 gridDim, dim3 blockDim, long sharedMem, cudaStream_t stream)
     {
-        return checkResult(cudaConfigureCallNative(gridDim, blockDim, sharedMem, stream));
+        throw new UnsupportedOperationException(
+            "This function is no longer supported as of CUDA 10.1");
     }
-    private static native int cudaConfigureCallNative(dim3 gridDim, dim3 blockDim, long sharedMem, cudaStream_t stream);
 
     /**
      * [C++ API] Configure a device launch
@@ -10270,9 +10273,9 @@ public class JCuda
     @Deprecated
     public static int cudaSetupArgument(Pointer arg, long size, long offset)
     {
-        return checkResult(cudaSetupArgumentNative(arg, size, offset));
+        throw new UnsupportedOperationException(
+            "This function is no longer supported as of CUDA 10.1");
     }
-    private static native int cudaSetupArgumentNative(Pointer arg, long size, long offset);
 
 
     /**

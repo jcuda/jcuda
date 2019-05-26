@@ -123,12 +123,17 @@ public class CUjit_target
     public static final int CU_TARGET_COMPUTE_70 = 70;
 
     /**
+     * Compute device class 7.2.
+     */
+    public static final int CU_TARGET_COMPUTE_72 = 72;
+
+    /**
      * Compute device class 7.3.
      * 
      * @deprecated Removed as of CUDA 10
      */
     public static final int CU_TARGET_COMPUTE_73 = 73;
-
+    
     /**
      * Compute device class 7.5.
      */
@@ -161,6 +166,7 @@ public class CUjit_target
             case CU_TARGET_COMPUTE_61: return "CU_TARGET_COMPUTE_61";
             case CU_TARGET_COMPUTE_62: return "CU_TARGET_COMPUTE_62";
             case CU_TARGET_COMPUTE_70: return "CU_TARGET_COMPUTE_70";
+            case CU_TARGET_COMPUTE_72: return "CU_TARGET_COMPUTE_72";
             case CU_TARGET_COMPUTE_73: return "CU_TARGET_COMPUTE_73";
             case CU_TARGET_COMPUTE_75: return "CU_TARGET_COMPUTE_75";
         }

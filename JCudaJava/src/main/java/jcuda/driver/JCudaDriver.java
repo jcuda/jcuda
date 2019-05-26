@@ -43,7 +43,7 @@ import jcuda.runtime.JCuda;
 public class JCudaDriver
 {
     /** The CUDA version */
-    public static final int CUDA_VERSION = 10000;
+    public static final int CUDA_VERSION = 10010;
 
     /**
      * If set, host memory is portable between CUDA contexts.
@@ -9714,6 +9714,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefSetArray(CUtexref hTexRef, CUarray hArray, int Flags)
     {
@@ -9760,6 +9762,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefSetMipmappedArray(CUtexref hTexRef, CUmipmappedArray hMipmappedArray, int Flags)
     {
@@ -9827,6 +9831,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefSetAddress(long ByteOffset[], CUtexref hTexRef, CUdeviceptr dptr, long bytes)
     {
@@ -9874,6 +9880,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefSetFormat(CUtexref hTexRef, int fmt, int NumPackedComponents)
     {
@@ -9951,6 +9959,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefSetAddress2D(CUtexref hTexRef, CUDA_ARRAY_DESCRIPTOR desc, CUdeviceptr dptr, long PitchInBytes)
     {
@@ -10008,6 +10018,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefSetAddressMode(CUtexref hTexRef, int dim, int am)
     {
@@ -10059,6 +10071,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefSetFilterMode(CUtexref hTexRef, int fm)
     {
@@ -10109,6 +10123,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefSetMipmapFilterMode(CUtexref hTexRef, int fm)
     {
@@ -10154,6 +10170,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefSetMipmapLevelBias(CUtexref hTexRef, float bias)
     {
@@ -10202,6 +10220,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefSetMipmapLevelClamp(CUtexref hTexRef, float minMipmapLevelClamp, float maxMipmapLevelClamp)
     {
@@ -10246,6 +10266,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefSetMaxAnisotropy(CUtexref hTexRef, int maxAniso)
     {
@@ -10277,6 +10299,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefSetAddressMode
      * @see JCudaDriver#cuTexRefGetAddressMode
      * @see JCudaDriver#cuTexRefGetBorderColor
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefSetBorderColor(CUtexref hTexRef, float pBorderColor[])
     {
@@ -10340,6 +10364,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefSetFlags(CUtexref hTexRef, int Flags)
     {
@@ -10384,6 +10410,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefGetAddress(CUdeviceptr pdptr, CUtexref hTexRef)
     {
@@ -10427,6 +10455,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefGetArray(CUarray phArray, CUtexref hTexRef)
     {
@@ -10471,6 +10501,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefGetMipmappedArray(CUmipmappedArray phMipmappedArray, CUtexref hTexRef)
     {
@@ -10515,6 +10547,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefGetAddressMode(int pam[], CUtexref hTexRef, int dim)
     {
@@ -10557,6 +10591,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetArray
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefGetFilterMode(int pfm[], CUtexref hTexRef)
     {
@@ -10602,6 +10638,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetArray
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefGetFormat(int pFormat[], int pNumChannels[], CUtexref hTexRef)
     {
@@ -10644,6 +10682,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefGetMipmapFilterMode(int pfm[], CUtexref hTexRef)
     {
@@ -10685,6 +10725,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefGetMipmapLevelBias(float pbias[], CUtexref hTexRef)
     {
@@ -10727,6 +10769,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefGetMipmapLevelClamp(float pminMipmapLevelClamp[], float pmaxMipmapLevelClamp[], CUtexref hTexRef)
     {
@@ -10767,6 +10811,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFlags
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefGetMaxAnisotropy(int pmaxAniso[], CUtexref hTexRef)
     {
@@ -10794,6 +10840,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefSetAddressMode
      * @see JCudaDriver#cuTexRefSetAddressMode
      * @see JCudaDriver#cuTexRefSetBorderColor
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefGetBorderColor(float pBorderColor[], CUtexref hTexRef)
     {
@@ -10834,6 +10882,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuTexRefGetArray
      * @see JCudaDriver#cuTexRefGetFilterMode
      * @see JCudaDriver#cuTexRefGetFormat
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuTexRefGetFlags(int pFlags[], CUtexref hTexRef)
     {
@@ -10872,6 +10922,8 @@ public class JCudaDriver
      *
      * @see JCudaDriver#cuModuleGetSurfRef
      * @see JCudaDriver#cuSurfRefGetArray
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuSurfRefSetArray(CUsurfref hSurfRef, CUarray hArray, int Flags )
     {
@@ -10904,6 +10956,8 @@ public class JCudaDriver
      *
      * @see JCudaDriver#cuModuleGetSurfRef
      * @see JCudaDriver#cuSurfRefSetArray
+     * 
+     * @deprecated Deprecated as of CUDA 10.1
      */
     public static int cuSurfRefGetArray( CUarray phArray, CUsurfref hSurfRef )
     {
@@ -12948,6 +13002,40 @@ public class JCudaDriver
         return checkResult(cuGraphInstantiateNative(phGraphExec, hGraph, phErrorNode, logBuffer, bufferSize));
     }
     private static native int cuGraphInstantiateNative(CUgraphExec phGraphExec, CUgraph hGraph, CUgraphNode phErrorNode, byte logBuffer[], long bufferSize);
+
+    
+    /**
+     * Sets the parameters for a kernel node in the given graphExec.<br>
+     * <br>
+     * Sets the parameters of a kernel node in an executable graph \p hGraphExec. 
+     * The node is identified by the corresponding node \p hNode in the 
+     * non-executable graph, from which the executable graph was instantiated.<br> 
+     * <br>
+     * \p hNode must not have been removed from the original graph. The \p func field 
+     * of \p nodeParams cannot be modified and must match the original value.
+     * All other values can be modified.<br>
+     * <br>
+     * The modifications take effect at the next launch of \p hGraphExec. Already 
+     * enqueued or running launches of \p hGraphExec are not affected by this call. 
+     * \p hNode is also not modified by this call.<br>
+     * <br>
+     * @param hGraphExec  - The executable graph in which to set the specified node
+     * @param hNode       - kernel node from the graph from which graphExec was instantiated
+     * @param nodeParams  - Updated Parameters to set
+     * 
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_INVALID_VALUE,
+     *
+     * @see JCudaDriver#cuGraphAddKernelNode,
+     * @see JCudaDriver#cuGraphKernelNodeSetParams,
+     * @see JCudaDriver#cuGraphInstantiate
+     */
+     public static int cuGraphExecKernelNodeSetParams(CUgraphExec hGraphExec, CUgraphNode hNode, CUDA_KERNEL_NODE_PARAMS nodeParams)
+     {
+         return checkResult(cuGraphExecKernelNodeSetParamsNative(hGraphExec, hNode, nodeParams));
+     }
+     private static native int cuGraphExecKernelNodeSetParamsNative(CUgraphExec hGraphExec, CUgraphNode hNode, CUDA_KERNEL_NODE_PARAMS nodeParams);
     
 
     /**
@@ -14712,12 +14800,75 @@ public class JCudaDriver
      * JCudaDriver#cuStreamIsCapturing
      * JCudaDriver#cuStreamEndCapture
      */
-    public static int cuStreamBeginCapture(CUstream hStream)
+    public static int cuStreamBeginCapture(CUstream hStream, int mode)
     {
-        return checkResult(cuStreamBeginCaptureNative(hStream));
+        return checkResult(cuStreamBeginCaptureNative(hStream, mode));
     }
-    private static native int cuStreamBeginCaptureNative(CUstream hStream);
+    private static native int cuStreamBeginCaptureNative(CUstream hStream, int mode);
 
+    /**
+     * Swaps the stream capture interaction mode for a thread.
+     *
+     * Sets the calling thread's stream capture interaction mode to the value contained
+     * in \p *mode, and overwrites \p *mode with the previous mode for the thread. To
+     * facilitate deterministic behavior across function or module boundaries, callers
+     * are encouraged to use this API in a push-pop fashion:<br>
+     * <pre><code> 
+     * CUstreamCaptureMode mode = desiredMode;
+     * cuThreadExchangeStreamCaptureMode(&mode);
+     * ...
+     * cuThreadExchangeStreamCaptureMode(&mode); // restore previous mode
+     * </code></pre><br>
+     * <br>
+     *
+     * During stream capture (see ::cuStreamBeginCapture), some actions, such as a call
+     * to ::cudaMalloc, may be unsafe. In the case of ::cudaMalloc, the operation is
+     * not enqueued asynchronously to a stream, and is not observed by stream capture.
+     * Therefore, if the sequence of operations captured via ::cuStreamBeginCapture
+     * depended on the allocation being replayed whenever the graph is launched, the
+     * captured graph would be invalid.<br>
+     * <br>
+     * Therefore, stream capture places restrictions on API calls that can be made within
+     * or concurrently to a ::cuStreamBeginCapture-::cuStreamEndCapture sequence. This
+     * behavior can be controlled via this API and flags to ::cuStreamBeginCapture.
+     * <br>
+     * A thread's mode is one of the following:
+     * <ul>
+     *   <li>CU_STREAM_CAPTURE_MODE_GLOBAL: This is the default mode. If the local thread has
+     *   an ongoing capture sequence that was not initiated with
+     *   \p CU_STREAM_CAPTURE_MODE_RELAXED at \p cuStreamBeginCapture, or if any other thread
+     *   has a concurrent capture sequence initiated with \p CU_STREAM_CAPTURE_MODE_GLOBAL,
+     *   this thread is prohibited from potentially unsafe API calls.
+     *   </li>
+     *   <li>CU_STREAM_CAPTURE_MODE_THREAD_LOCAL: If the local thread has an ongoing capture
+     *   sequence not initiated with \p CU_STREAM_CAPTURE_MODE_RELAXED, it is prohibited
+     *   from potentially unsafe API calls. Concurrent capture sequences in other threads
+     *   are ignored.
+     *   </li>
+     *   <li>CU_STREAM_CAPTURE_MODE_RELAXED: The local thread is not prohibited from potentially
+     *   unsafe API calls. Note that the thread is still prohibited from API calls which
+     *   necessarily conflict with stream capture, for example, attempting ::cuEventQuery
+     *   on an event that was last recorded inside a capture sequence.
+     *   </li>
+     * </ul>
+     *
+     * @param mode - Pointer to mode value to swap with the current mode
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see JCudaDriver#cuStreamBeginCapture
+     */
+    public static int cuThreadExchangeStreamCaptureMode(int mode[])
+    {
+        return checkResult(cuThreadExchangeStreamCaptureModeNative(mode));
+    }
+    private static native int cuThreadExchangeStreamCaptureModeNative(int mode[]);
+    
+    
     /**
      * Ends capture on a stream, returning the captured graph.
      *
@@ -14725,6 +14876,10 @@ public class JCudaDriver
      * Capture must have been initiated on \p hStream via a call to ::cuStreamBeginCapture.
      * If capture was invalidated, due to a violation of the rules of stream capture, then
      * a NULL graph will be returned.
+     * 
+     * If the \p mode argument to ::cuStreamBeginCapture was not
+     * ::CU_STREAM_CAPTURE_MODE_RELAXED, this call must be from the same thread as
+     * ::cuStreamBeginCapture.
      *
      * @param hStream - Stream to query
      * @param phGraph - The captured graph
@@ -14734,6 +14889,7 @@ public class JCudaDriver
      * CUDA_ERROR_DEINITIALIZED,
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE
+     * CUDA_ERROR_STREAM_CAPTURE_WRONG_THREAD
      *
      * @see
      * JCudaDriver#cuStreamCreate
@@ -14790,6 +14946,31 @@ public class JCudaDriver
     }
     private static native int cuStreamIsCapturingNative(CUstream hStream, int captureStatus[]);
     
+    /**
+     * Query capture status of a stream
+     *
+     * Query the capture status of a stream and and get an id for 
+     * the capture sequence, which is unique over the lifetime of the process.
+     *
+     * If called on ::CU_STREAM_LEGACY (the "null stream") while a stream not created 
+     * with ::CU_STREAM_NON_BLOCKING is capturing, returns ::CUDA_ERROR_STREAM_CAPTURE_IMPLICIT.
+     *
+     * A valid id is returned only if both of the following are true:
+     * - the call returns CUDA_SUCCESS
+     * - captureStatus is set to ::CU_STREAM_CAPTURE_STATUS_ACTIVE
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_STREAM_CAPTURE_IMPLICIT
+     *
+     * @see JCudaDriver#cuStreamBeginCapture,
+     * @see JCudaDriver#cuStreamIsCapturing
+     */
+     public static int cuStreamGetCaptureInfo(CUstream hStream, int captureStatus[], long id[])
+     {
+         return checkResult(cuStreamGetCaptureInfoNative(hStream, captureStatus, id));
+     }
+     private static native int cuStreamGetCaptureInfoNative(CUstream hStream, int captureStatus[], long id[]);
     
     
     /**
@@ -16274,6 +16455,14 @@ public class JCudaDriver
      *       </p>
      *     </li>
      *   </ul>
+     *   <ul>
+     *     <li>
+     *       <p>CU_LIMIT_MAX_L2_FETCH_GRANULARITY controls the L2 cache fetch granularity.
+     *         Values can range from 0B to 128B. This is purely a performance hint and
+     *         it can be ignored or clamped depending on the platform.
+     *       </p>
+     *     </li>
+     *   </ul>
      *   </p>
      *   <div>
      *     <span>Note:</span>
@@ -17426,6 +17615,10 @@ public class JCudaDriver
      *       <p>CU_LIMIT_DEV_RUNTIME_PENDING_LAUNCH_COUNT: maximum number of
      *         outstanding device runtime launches that can be made from this
      *         context.
+     *       </p>
+     *     </li>
+     *     <li>
+     *       <p>CU_LIMIT_MAX_L2_FETCH_GRANULARITY: L2 cache fetch granularity
      *       </p>
      *     </li>
      *   </ul>
