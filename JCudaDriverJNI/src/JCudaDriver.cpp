@@ -537,7 +537,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, CUmemAllocationProp_type,                 "type",                 "I"                           )) return JNI_ERR;
     if (!init(env, cls, CUmemAllocationProp_requestedHandleTypes, "requestedHandleTypes", "I"                           )) return JNI_ERR;
     if (!init(env, cls, CUmemAllocationProp_location,             "location",             "Ljcuda/driver/CUmemLocation;")) return JNI_ERR;
-    if (!init(env, cls, CUmemAllocationProp_win32HandleMetaData,  "win32HandleMetaData",  "Ljcuda/driver/Pointer;"      )) return JNI_ERR;
+    if (!init(env, cls, CUmemAllocationProp_win32HandleMetaData,  "win32HandleMetaData",  "Ljcuda/Pointer;"             )) return JNI_ERR;
     if (!init(env, cls, CUmemAllocationProp_reserved,             "reserved",             "J"                           )) return JNI_ERR;
 
     // Initialize the field IDs for the CUmemAccessDesc class
