@@ -384,6 +384,11 @@ public class cudaError
      * mixes different API versions (i.e. 3010 context with 3020 API calls).
      * See ::cuCtxGetApiVersion() for more details.
      */
+    public static final int cudaErrorDeviceUninitialized = 201;    
+    
+    /**
+     * @deprecated As of CUDA 10.2, replaced by "cudaErrorDeviceUninitialized" 
+     */
     public static final int cudaErrorDeviceUninitilialized = 201;
     
     /**
@@ -787,6 +792,17 @@ public class cudaError
     public static final int cudaErrorStreamCaptureWrongThread = 908;
     
     /**
+     * This indicates that the wait operation has timed out.
+     */
+    public static final int cudaErrorTimeout                      =    909;
+
+    /**
+     * This error indicates that the graph update was not performed because it included 
+     * changes which violated constraints specific to instantiated graph update.
+     */
+    public static final int cudaErrorGraphExecUpdateFailure       =    910;
+    
+    /**
      * This indicates that an unknown internal error has occurred.
      */
     public static final int cudaErrorUnknown = 999;
@@ -859,7 +875,7 @@ public class cudaError
             case cudaErrorInvalidDevice: return "cudaErrorInvalidDevice";
             case cudaErrorStartupFailure: return "cudaErrorStartupFailure";
             case cudaErrorInvalidKernelImage: return "cudaErrorInvalidKernelImage";
-            case cudaErrorDeviceUninitilialized: return "cudaErrorDeviceUninitilialized";
+            case cudaErrorDeviceUninitialized: return "cudaErrorDeviceUninitialized";
             case cudaErrorMapBufferObjectFailed: return "cudaErrorMapBufferObjectFailed";
             case cudaErrorUnmapBufferObjectFailed: return "cudaErrorUnmapBufferObjectFailed";
             case cudaErrorArrayIsMapped: return "cudaErrorArrayIsMapped";
@@ -919,6 +935,8 @@ public class cudaError
             case cudaErrorStreamCaptureImplicit: return "cudaErrorStreamCaptureImplicit";
             case cudaErrorCapturedEvent: return "cudaErrorCapturedEvent";
             case cudaErrorStreamCaptureWrongThread: return "cudaErrorStreamCaptureWrongThread";
+            case cudaErrorTimeout: return "cudaErrorTimeout";
+            case cudaErrorGraphExecUpdateFailure: return "cudaErrorGraphExecUpdateFailure";
             case cudaErrorUnknown: return "cudaErrorUnknown";
             case cudaErrorApiFailureBase: return "cudaErrorApiFailureBase";
             case jcudaInternalError: return "jcudaInternalError";

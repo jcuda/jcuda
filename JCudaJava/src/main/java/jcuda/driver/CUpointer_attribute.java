@@ -81,6 +81,33 @@ public class CUpointer_attribute
     public static final int CU_POINTER_ATTRIBUTE_DEVICE_ORDINAL = 9;
 
     /**
+     * 1 if this pointer maps to an allocation that is suitable for 
+     * ::cudaIpcGetMemHandle, 0 otherwise 
+     */
+    public static final int CU_POINTER_ATTRIBUTE_IS_LEGACY_CUDA_IPC_CAPABLE = 10;
+    
+    /**
+     * Starting address for this requested pointer
+     */
+    public static final int CU_POINTER_ATTRIBUTE_RANGE_START_ADDR = 11;
+    
+    /**
+     * Size of the address range for this requested pointer
+     */
+    public static final int CU_POINTER_ATTRIBUTE_RANGE_SIZE = 12;
+    
+    /**
+     * 1 if this pointer is in a valid address range that is mapped to a 
+     * backing allocation, 0 otherwise 
+     */
+    public static final int CU_POINTER_ATTRIBUTE_MAPPED = 13;
+    
+    /**
+    * Bitmask of allowed ::CUmemAllocationHandleType for this allocation 
+    */
+    public static final int CU_POINTER_ATTRIBUTE_ALLOWED_HANDLE_TYPES = 14;
+    
+    /**
      * Returns the String identifying the given CUpointer_attribute
      *
      * @param n The CUpointer_attribute
@@ -99,6 +126,11 @@ public class CUpointer_attribute
             case CU_POINTER_ATTRIBUTE_BUFFER_ID : return "CU_POINTER_ATTRIBUTE_BUFFER_ID";
             case CU_POINTER_ATTRIBUTE_IS_MANAGED : return "CU_POINTER_ATTRIBUTE_IS_MANAGED";
             case CU_POINTER_ATTRIBUTE_DEVICE_ORDINAL : return "CU_POINTER_ATTRIBUTE_DEVICE_ORDINAL";
+            case CU_POINTER_ATTRIBUTE_IS_LEGACY_CUDA_IPC_CAPABLE: return "CU_POINTER_ATTRIBUTE_IS_LEGACY_CUDA_IPC_CAPABLE";
+            case CU_POINTER_ATTRIBUTE_RANGE_START_ADDR: return "CU_POINTER_ATTRIBUTE_RANGE_START_ADDR";
+            case CU_POINTER_ATTRIBUTE_RANGE_SIZE: return "CU_POINTER_ATTRIBUTE_RANGE_SIZE";
+            case CU_POINTER_ATTRIBUTE_MAPPED: return "CU_POINTER_ATTRIBUTE_MAPPED";
+            case CU_POINTER_ATTRIBUTE_ALLOWED_HANDLE_TYPES: return "CU_POINTER_ATTRIBUTE_ALLOWED_HANDLE_TYPES";
         }
         return "INVALID CUpointer_attribute: "+n;
     }

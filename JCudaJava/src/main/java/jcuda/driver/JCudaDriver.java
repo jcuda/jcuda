@@ -43,7 +43,7 @@ import jcuda.runtime.JCuda;
 public class JCudaDriver
 {
     /** The CUDA version */
-    public static final int CUDA_VERSION = 10010;
+    public static final int CUDA_VERSION = 10020;
 
     /**
      * If set, host memory is portable between CUDA contexts.
@@ -9608,6 +9608,335 @@ public class JCudaDriver
     }
     private static native int cuMipmappedArrayDestroyNative(CUmipmappedArray hMipmappedArray);
 
+    
+    /**
+    * Allocate an address range reservation.<br> 
+    * <br>
+    * Reserves a virtual address range based on the given parameters, giving
+    * the starting address of the range in \p ptr.  This API requires a system that
+    * supports UVA.  The size and address parameters must be a multiple of the
+    * host page size and the alignment must be a power of two or zero for default
+    * alignment.
+    *
+    * @param ptr Resulting pointer to start of virtual address range allocated
+    * @param size Size of the reserved virtual address range requested
+    * @param alignment - Alignment of the reserved virtual address range requested
+    * @param addr Fixed starting address range requested
+    * @param flags Currently unused, must be zero
+    * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_OUT_OF_MEMORY,
+    * CUDA_ERROR_NOT_INITIALIZED, CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_PERMITTED,
+    * CUDA_ERROR_NOT_SUPPORTED
+    *
+    * @see JCudaDriver#cuMemAddressFree
+    */
+    public static int cuMemAddressReserve(CUdeviceptr ptr, long size, long alignment, CUdeviceptr addr, long flags)
+    {
+        return checkResult(cuMemAddressReserveNative(ptr, size, alignment, addr, flags));
+    }
+    private static native int cuMemAddressReserveNative(CUdeviceptr ptr, long size, long alignment, CUdeviceptr addr, long flags);
+
+    /**
+    * Free an address range reservation.<br>
+    * <br>
+    * Frees a virtual address range reserved by cuMemAddressReserve.  The size
+    * must match what was given to memAddressReserve and the ptr given must
+    * match what was returned from memAddressReserve.
+    *
+    * @param ptr Starting address of the virtual address range to free
+    * @param size Size of the virtual address region to free
+    * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_OUT_OF_MEMORY,
+    * CUDA_ERROR_NOT_INITIALIZED, CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_PERMITTED,
+    * CUDA_ERROR_NOT_SUPPORTED
+    *
+    * @see JCudaDriver#cuMemAddressReserve
+    */
+    public static int cuMemAddressFree(CUdeviceptr ptr, long size)
+    {
+        return checkResult(cuMemAddressFreeNative(ptr, size));
+    }
+    private static native int cuMemAddressFreeNative(CUdeviceptr ptr, long size);
+
+    /**
+    * Create a shareable memory handle representing a memory allocation of a 
+    * given size described by the given properties.<br>
+    * <br>
+    * This creates a memory allocation on the target device specified through the
+    * \p prop strcuture. The created allocation will not have any device or host
+    * mappings. The generic memory \p handle for the allocation can be
+    * mapped to the address space of calling process via ::cuMemMap. This handle
+    * cannot be transmitted directly to other processes (see
+    * ::cuMemExportToShareableHandle).  On Windows, the caller must also pass
+    * an LPSECURITYATTRIBUTE in \p prop to be associated with this handle which
+    * limits or allows access to this handle for a recepient process (see
+    * ::CUmemAllocationProp::win32HandleMetaData for more).  The \p size of this
+    * allocation must be a multiple of the the value given via
+    * ::cuMemGetAllocationGranularity with the ::CU_MEM_ALLOC_GRANULARITY_MINIMUM
+    * flag.
+    *
+    * @param handle Value of handle returned. All operations on this allocation are to be performed using this handle.
+    * @param size Size of the allocation requested
+    * @param prop Properties of the allocation to create.
+    * @param flags flags for future use, must be zero now.
+    * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_OUT_OF_MEMORY,
+    * CUDA_ERROR_INVALID_DEVICE, CUDA_ERROR_NOT_INITIALIZED, CUDA_ERROR_DEINITIALIZED, 
+    * CUDA_ERROR_NOT_PERMITTED, CUDA_ERROR_NOT_SUPPORTED
+    *
+    * @see JCudaDriver#cuMemRelease
+    * @see JCudaDriver#cuMemExportToShareableHandle
+    * @see JCudaDriver#cuMemImportFromShareableHandle
+    */
+    public static int cuMemCreate(CUmemGenericAllocationHandle handle, long size, CUmemAllocationProp prop, long flags)
+    {
+        return checkResult(cuMemCreateNative(handle, size, prop, flags));
+    }
+    private static native int cuMemCreateNative(CUmemGenericAllocationHandle handle, long size, CUmemAllocationProp prop, long flags);
+
+    /**
+    * Release a memory handle representing a memory allocation which was 
+    * previously allocated through cuMemCreate.<br>
+    * <br>
+    * Frees the memory that was allocated on a device through cuMemCreate.<br>
+    * <br>
+    * The memory allocation will be freed when all outstanding mappings to the memory
+    * are unmapped and when all outstanding references to the handle (including it's
+    * shareable counterparts) are also released. The generic memory handle can be
+    * freed when there are still outstanding mappings made with this handle. Each
+    * time a recepient process imports a shareable handle, it needs to pair it with
+    * ::cuMemRelease for the handle to be freed.  If \p handle is not a valid handle
+    * the behavior is undefined. 
+    * 
+    * @param handle Value of handle which was returned previously by cuMemCreate.
+    * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, 
+    * CUDA_ERROR_NOT_INITIALIZED, CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_PERMITTED,
+    * CUDA_ERROR_NOT_SUPPORTED
+    * 
+    * @see JCudaDriver cuMemCreate
+    */
+    public static int cuMemRelease(CUmemGenericAllocationHandle handle)
+    {
+        return checkResult(cuMemReleaseNative(handle));
+    }
+    private static native int cuMemReleaseNative(CUmemGenericAllocationHandle handle);
+
+    /**
+    * Maps an allocation handle to a reserved virtual address range.<br>
+    * <br>
+    * Maps bytes of memory represented by \p handle starting from byte \p offset to
+    * \p size to address range [\p addr, \p addr + \p size]. This range must be an
+    * address reservation previously reserved with ::cuMemAddressReserve, and
+    * \p offset + \p size must be less than the size of the memory allocation.
+    * Both \p ptr, \p size, and \p offset must be a multiple of the value given via
+    * ::cuMemGetAllocationGranularity with the ::CU_MEM_ALLOC_GRANULARITY_MINIMUM flag.<br>
+    * <br>
+    * Please note calling ::cuMemMap does not make the address accessible,
+    * the caller needs to update accessibility of a contiguous mapped VA
+    * range by calling ::cuMemSetAccess.<br>
+    * <br>
+    * Once a recipient process obtains a shareable memory handle
+    * from ::cuMemImportFromShareableHandle, the process must
+    * use ::cuMemMap to map the memory into its address ranges before
+    * setting accessibility with ::cuMemSetAccess.<br>
+    * <br>
+    * ::cuMemMap can only create mappings on VA range reservations 
+    * that are not currently mapped.
+    * 
+    * @param ptr Address where memory will be mapped. 
+    * @param size Size of the memory mapping. 
+    * @param offset Offset into the memory represented by 
+    *                   - \p handle from which to start mapping
+    *                   - Note: currently must be zero.
+    * @param handle Handle to a shareable memory 
+    * @param flags flags for future use, must be zero now. 
+    * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_OUT_OF_MEMORY,
+    * CUDA_ERROR_INVALID_DEVICE, CUDA_ERROR_NOT_INITIALIZED, CUDA_ERROR_DEINITIALIZED, 
+    * CUDA_ERROR_NOT_PERMITTED, CUDA_ERROR_NOT_SUPPORTED
+    *
+    * @see JCudaDriver#cuMemUnmap
+    * @see JCudaDriver#cuMemSetAccess
+    * @see JCudaDriver#cuMemCreate
+    * @see JCudaDriver#cuMemAddressReserve
+    * @see JCudaDriver#cuMemImportFromShareableHandle
+    */
+    public static int cuMemMap(CUdeviceptr ptr, long size, long offset, CUmemGenericAllocationHandle handle, long flags)
+    {
+        return checkResult(cuMemMapNative(ptr, size, offset, handle, flags));
+    }
+    private static native int cuMemMapNative(CUdeviceptr ptr, long size, long offset, CUmemGenericAllocationHandle handle, long flags);
+
+    /**
+    * Unmap the backing memory of a given address range.<br>
+    * <br>
+    * The range must be the entire contiguous address range that was mapped to.  In
+    * other words, ::cuMemUnmap cannot unmap a sub-range of an address range mapped
+    * by ::cuMemCreate / ::cuMemMap.  Any backing memory allocations will be freed
+    * if there are no existing mappings and there are no unreleased memory handles.<br>
+    * <br>
+    * When ::cuMemUnmap returns successfully the address range is converted to an
+    * address reservation and can be used for a future calls to ::cuMemMap.  Any new
+    * mapping to this virtual address will need to have access granted through
+    * ::cuMemSetAccess, as all mappings start with no accessibility setup.
+    *
+    * @param ptr Starting address for the virtual address range to unmap
+    * @param size Size of the virtual address range to unmap
+    * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, 
+    * CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_NOT_INITIALIZED, CUDA_ERROR_DEINITIALIZED, 
+    * CUDA_ERROR_NOT_PERMITTED, CUDA_ERROR_NOT_SUPPORTED
+    *
+    * @see JCudaDriver#cuMemCreate
+    * @see JCudaDriver#cuMemAddressReserve
+    */
+    public static int cuMemUnmap(CUdeviceptr ptr, long size)
+    {
+        return checkResult(cuMemUnmapNative(ptr, size));
+    }
+    private static native int cuMemUnmapNative(CUdeviceptr ptr, long size);
+
+    /**
+    * Set the access flags for each location specified in \p desc for the given virtual address range.<br>
+    * <br>
+    * Given the virtual address range via \p ptr and \p size, and the locations
+    * in the array given by \p desc and \p count, set the access flags for the
+    * target locations.  The range must be a fully mapped address range
+    * containing all allocations created by ::cuMemMap / ::cuMemCreate.<br>
+    *
+    * @param ptr Starting address for the virtual address range
+    * @param size Length of the virtual address range
+    * @param desc Array of ::CUmemAccessDesc that describe how to change the
+    *                 mapping for each location specified
+    * @param count Number of ::CUmemAccessDesc in \p desc
+    * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_INVALID_DEVICE,
+    * CUDA_ERROR_NOT_SUPPORTED
+    *
+    * @see JCudaDriver#cuMemSetAccess
+    * @see JCudaDriver#cuMemCreate
+    * @see JCudaDriver#cuMemMap
+    */
+    public static int cuMemSetAccess(CUdeviceptr ptr, long size, CUmemAccessDesc desc[], long count)
+    {
+        return checkResult(cuMemSetAccessNative(ptr, size, desc, count));
+    }
+    private static native int cuMemSetAccessNative(CUdeviceptr ptr, long size, CUmemAccessDesc desc[], long count);
+    
+
+    /**
+    * Get the access \p flags set for the given \p location and \p ptr<br>
+    * <br>
+    * @param flags Flags set for this location
+    * @param location Location in which to check the flags for
+    * @param ptr Address in which to check the access flags for
+    * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_INVALID_DEVICE,
+    * CUDA_ERROR_NOT_INITIALIZED, CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_PERMITTED,
+    * CUDA_ERROR_NOT_SUPPORTED
+    *
+    * @see JCudaDriver#cuMemSetAccess
+    */
+    public static int cuMemGetAccess(long flags[], CUmemLocation location, CUdeviceptr ptr)
+    {
+        return checkResult(cuMemGetAccessNative(flags, location, ptr));
+    }
+    private static native int cuMemGetAccessNative(long flags[], CUmemLocation location, CUdeviceptr ptr);
+
+    /**
+    * Exports an allocation to a requested shareable handle type.<br>
+    * <br>
+    * Given a CUDA memory handle, create a shareable memory
+    * allocation handle that can be used to share the memory with other
+    * processes. The recipient process can convert the shareable handle back into a
+    * CUDA memory handle using ::cuMemImportFromShareableHandle and map
+    * it with ::cuMemMap. The implementation of what this handle is and how it
+    * can be transferred is defined by the requested handle type in \p handleType<br>
+    * <br>
+    * Once all shareable handles are closed and the allocation is released, the allocated
+    * memory referenced will be released back to the OS and uses of the CUDA handle afterward
+    * will lead to undefined behavior.<br>
+    * <br>
+    * This API can also be used in conjunction with other APIs (e.g. Vulkan, OpenGL)
+    * that support importing memory from the shareable type<br>
+    * <br>
+    * @param shareableHandle Pointer to the location in which to store the requested handle type
+    * @param handle CUDA handle for the memory allocation
+    * @param handleType Type of shareable handle requested (defines type and size of the \p shareableHandle output parameter)
+    * @param flags Reserved, must be zero
+    * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_NOT_INITIALIZED,
+    * CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_PERMITTED, CUDA_ERROR_NOT_SUPPORTED
+    *
+    * @see JCudaDriver#cuMemImportFromShareableHandle
+    */
+    public static int cuMemExportToShareableHandle(Pointer shareableHandle, CUmemGenericAllocationHandle handle, int handleType, long flags)
+    {
+        return checkResult(cuMemExportToShareableHandleNative(shareableHandle, handle, handleType, flags));
+    }
+    private static native int cuMemExportToShareableHandleNative(Pointer shareableHandle, CUmemGenericAllocationHandle handle, int handleType, long flags);
+
+    /**
+    * Imports an allocation from a requested shareable handle type.<br>
+    * <br>
+    * If the current process cannot support the memory described by this shareable
+    * handle, this API will error as CUDA_ERROR_NOT_SUPPORTED.<br>
+    * <br>
+    * \note Importing shareable handles exported from some graphics APIs(Vulkan, OpenGL, etc)
+    * created on devices under an SLI group may not be supported, and thus this API will
+    * return CUDA_ERROR_NOT_SUPPORTED.
+    * There is no guarantee that the contents of \p handle will be the same CUDA memory handle
+    * for the same given OS shareable handle, or the same underlying allocation.<br>
+    *
+    * @param handle CUDA Memory handle for the memory allocation.
+    * @param osHandle Shareable Handle representing the memory allocation that is to be imported. 
+    * @param shHandleType handle type of the exported handle ::CUmemAllocationHandleType.
+    * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_NOT_INITIALIZED,
+    * CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_PERMITTED, CUDA_ERROR_NOT_SUPPORTED
+    *
+    * @see JCudaDriver#cuMemExportToShareableHandle
+    * @see JCudaDriver#cuMemMap
+    * @see JCudaDriver#cuMemRelease
+    */
+    public static int cuMemImportFromShareableHandle(CUmemGenericAllocationHandle handle, Pointer osHandle, int shHandleType)
+    {
+        return checkResult(cuMemImportFromShareableHandleNative(handle, osHandle, shHandleType));
+    }
+    private static native int cuMemImportFromShareableHandleNative(CUmemGenericAllocationHandle handle, Pointer osHandle, int shHandleType);
+
+    /**
+    * Calculates either the minimal or recommended granularity<br> 
+    *<br>
+    * Calculates either the minimal or recommended granularity
+    * for a given allocation specification and returns it in granularity.  This
+    * granularity can be used as a multiple for alignment, size, or address mapping.
+    *
+    * @param granularity Returned granularity.
+    * @param prop Property for which to determine the granularity for
+    * @param option Determines which granularity to return
+    * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_NOT_INITIALIZED,
+    * CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_PERMITTED, CUDA_ERROR_NOT_SUPPORTED
+    *
+    * @see JCudaDriver#cuMemCreate
+    * @see JCudaDriver#cuMemMap
+    */
+    public static int cuMemGetAllocationGranularity(long granularity[], CUmemAllocationProp prop, int option)
+    {
+        return checkResult(cuMemGetAllocationGranularityNative(granularity, prop, option));
+    }
+    private static native int cuMemGetAllocationGranularityNative(long granularity[], CUmemAllocationProp prop, int option);
+
+    /**
+    * Retrieve the contents of the property structure defining properties for this handle
+    *
+    * @param prop Pointer to a properties structure which will hold the information about this handle
+    * @param handle Handle which to perform the query on
+    * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_NOT_INITIALIZED,
+    * CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_PERMITTED, CUDA_ERROR_NOT_SUPPORTED
+    *
+    * @see JCudaDriver#cuMemCreate
+    * @see JCudaDriver#cuMemImportFromShareableHandle
+    */
+    public static int cuMemGetAllocationPropertiesFromHandle(CUmemAllocationProp prop, CUmemGenericAllocationHandle handle)
+    {
+        return checkResult(cuMemGetAllocationPropertiesFromHandleNative(prop, handle));
+    }
+    private static native int cuMemGetAllocationPropertiesFromHandleNative(CUmemAllocationProp prop, CUmemGenericAllocationHandle handle);
+    
+    
+    
     /**
      * Creates a texture reference.
      *
@@ -13037,6 +13366,109 @@ public class JCudaDriver
      }
      private static native int cuGraphExecKernelNodeSetParamsNative(CUgraphExec hGraphExec, CUgraphNode hNode, CUDA_KERNEL_NODE_PARAMS nodeParams);
     
+     
+     /**
+      * Sets the parameters for a memcpy node in the given graphExec.<br>
+      * <br>
+      * Updates the work represented by \p hNode in \p hGraphExec as though \p hNode had 
+      * contained \p copyParams at instantiation.  hNode must remain in the graph which was 
+      * used to instantiate \p hGraphExec.  Changed edges to and from hNode are ignored.<br>
+      * <br>
+      * The source and destination memory in \p copyParams must be allocated from the same 
+      * contexts as the original source and destination memory.  Both the instantiation-time 
+      * memory operands and the memory operands in \p copyParams must be 1-dimensional.
+      * Zero-length operations are not supported.<br>
+      * <br>
+      * The modifications only affect future launches of \p hGraphExec.  Already enqueued 
+      * or running launches of \p hGraphExec are not affected by this call.  hNode is also 
+      * not modified by this call.<br>
+      * <br>
+      * Returns CUDA_ERROR_INVALID_VALUE if the memory operands’ mappings changed or
+      * either the original or new memory operands are multidimensional.
+      * <br>
+      * @param hGraphExec The executable graph in which to set the specified node
+      * @param hNode Memcpy node from the graph which was used to instantiate graphExec
+      * @param copyParams The updated parameters to set
+      * @param ctx Context on which to run the node
+      *
+      * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE
+      * 
+      * @see JCudaDriver#cuGraphInstantiate, 
+      * @see JCudaDriver#cuGraphExecKernelNodeSetParams 
+      * @see JCudaDriver#cuGraphExecMemsetNodeSetParams
+      * @see JCudaDriver#cuGraphExecHostNodeSetParams
+      */
+     public static int cuGraphExecMemcpyNodeSetParams(CUgraphExec hGraphExec, CUgraphNode hNode, CUDA_MEMCPY3D copyParams, CUcontext ctx)
+     {
+         return checkResult(cuGraphExecMemcpyNodeSetParamsNative(hGraphExec, hNode, copyParams, ctx));
+     }
+     private static native int cuGraphExecMemcpyNodeSetParamsNative(CUgraphExec hGraphExec, CUgraphNode hNode, CUDA_MEMCPY3D copyParams, CUcontext ctx);
+
+     /**
+      * Sets the parameters for a memset node in the given graphExec.<br>
+      * <br>
+      * Updates the work represented by \p hNode in \p hGraphExec as though \p hNode had 
+      * contained \p memsetParams at instantiation.  hNode must remain in the graph which was 
+      * used to instantiate \p hGraphExec.  Changed edges to and from hNode are ignored.<br>
+      * <br>
+      * The destination memory in \p memsetParams must be allocated from the same 
+      * contexts as the original destination memory.  Both the instantiation-time 
+      * memory operand and the memory operand in \p memsetParams must be 1-dimensional.
+      * Zero-length operations are not supported.<br>
+      * <br>
+      * The modifications only affect future launches of \p hGraphExec.  Already enqueued 
+      * or running launches of \p hGraphExec are not affected by this call.  hNode is also 
+      * not modified by this call.<br>
+      * <br>
+      * Returns CUDA_ERROR_INVALID_VALUE if the memory operand’s mappings changed or
+      * either the original or new memory operand are multidimensional.
+      *
+      * @param hGraphExec The executable graph in which to set the specified node
+      * @param hNode Memset node from the graph which was used to instantiate graphExec
+      * @param memsetParams The updated parameters to set
+      * @param ctx  Context on which to run the node
+      *
+      * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE
+      *
+      * @see JCudaDriver#cuGraphInstantiate 
+      * @see JCudaDriver#cuGraphExecKernelNodeSetParams 
+      * @see JCudaDriver#cuGraphExecMemcpyNodeSetParams 
+      * @see JCudaDriver#cuGraphExecHostNodeSetParams
+      */
+     public static int cuGraphExecMemsetNodeSetParams(CUgraphExec hGraphExec, CUgraphNode hNode, CUDA_MEMSET_NODE_PARAMS memsetParams, CUcontext ctx)
+     {
+         return checkResult(cuGraphExecMemsetNodeSetParamsNative(hGraphExec, hNode, memsetParams, ctx));
+     }
+     private static native int cuGraphExecMemsetNodeSetParamsNative(CUgraphExec hGraphExec, CUgraphNode hNode, CUDA_MEMSET_NODE_PARAMS memsetParams, CUcontext ctx);
+
+     /**
+      * Sets the parameters for a host node in the given graphExec.<br>
+      * <br>
+      * Updates the work represented by \p hNode in \p hGraphExec as though \p hNode had 
+      * contained \p nodeParams at instantiation.  hNode must remain in the graph which was 
+      * used to instantiate \p hGraphExec.  Changed edges to and from hNode are ignored.<br>
+      * <br>
+      * The modifications only affect future launches of \p hGraphExec.  Already enqueued 
+      * or running launches of \p hGraphExec are not affected by this call.  hNode is also 
+      * not modified by this call.<br>
+      *
+      * @param hGraphExec The executable graph in which to set the specified node
+      * @param hNode Host node from the graph which was used to instantiate graphExec
+      * @param nodeParams The updated parameters to set
+      *
+      * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE
+      * 
+      * @see JCudaDriver#cuGraphInstantiate
+      * @see JCudaDriver#cuGraphExecKernelNodeSetParams 
+      * @see JCudaDriver#cuGraphExecMemcpyNodeSetParams 
+      * @see JCudaDriver#cuGraphExecMemsetNodeSetParams 
+      */
+     public static int cuGraphExecHostNodeSetParams(CUgraphExec hGraphExec, CUgraphNode hNode, CUDA_HOST_NODE_PARAMS nodeParams)
+     {
+         return checkResult(cuGraphExecHostNodeSetParamsNative(hGraphExec, hNode, nodeParams));
+     }
+     private static native int cuGraphExecHostNodeSetParamsNative(CUgraphExec hGraphExec, CUgraphNode hNode, CUDA_HOST_NODE_PARAMS nodeParams);
+     
 
     /**
      * Launches an executable graph in a stream.<br>
@@ -13115,6 +13547,79 @@ public class JCudaDriver
     }
     private static native int cuGraphDestroyNative(CUgraph hGraph);
     
+    
+    /**
+     * Check whether an executable graph can be updated with a graph and perform the update if possible.<br>
+     * <br>
+     * Updates the node parameters in the instantiated graph specified by \p hGraphExec with the
+     * node parameters in a topologically identical graph specified by \p hGraph.<br>
+     *
+     * Limitations:
+     * <pre>
+     * - Kernel nodes:
+     *   - The function must not change (same restriction as cuGraphExecKernelNodeSetParams())
+     * - Memset and memcpy nodes:
+     *   - The CUDA device(s) to which the operand(s) was allocated/mapped cannot change.
+     *   - The source/destination memory must be allocated from the same contexts as the original
+     *     source/destination memory.
+     *   - Only 1D memsets can be changed.
+     * - Additional memcpy node restrictions:
+     *   - Changing either the source or destination memory type(i.e. CU_MEMORYTYPE_DEVICE,
+     *     CU_MEMORYTYPE_ARRAY, etc.) is not supported.
+     * </pre>
+     * Note:  The API may add further restrictions in future releases.  The return code should always be checked.
+     * <pre> 
+     * Some node types are not currently supported:
+     * - Empty graph nodes(CU_GRAPH_NODE_TYPE_EMPTY)
+     * - Child graphs(CU_GRAPH_NODE_TYPE_GRAPH).
+     * </pre>
+     * cuGraphExecUpdate sets \p updateResult_out to CU_GRAPH_EXEC_UPDATE_ERROR_TOPOLOGY_CHANGED under
+     * the following conditions:
+     * <pre>
+     * - The count of nodes directly in \p hGraphExec and \p hGraph differ, in which case \p hErrorNode_out
+     *   is NULL.
+     * - A node is deleted in \p hGraph but not not its pair from \p hGraphExec, in which case \p hErrorNode_out
+     *   is NULL.
+     * - A node is deleted in \p hGraphExec but not its pair from \p hGraph, in which case \p hErrorNode_out is
+     *   the pairless node from \p hGraph.
+     * - The dependent nodes of a pair differ, in which case \p hErrorNode_out is the node from \p hGraph.
+     * </pre>
+     * cuGraphExecUpdate sets \p updateResult_out to:
+     * <pre>
+     * - CU_GRAPH_EXEC_UPDATE_ERROR if passed an invalid value.
+     * - CU_GRAPH_EXEC_UPDATE_ERROR_TOPOLOGY_CHANGED if the graph topology changed
+     * - CU_GRAPH_EXEC_UPDATE_ERROR_NODE_TYPE_CHANGED if the type of a node changed, in which case
+     *   \p hErrorNode_out is set to the node from \p hGraph.
+     * - CU_GRAPH_EXEC_UPDATE_ERROR_FUNCTION_CHANGED if the func field of a kernel changed, in which
+     *   case \p hErrorNode_out is set to the node from \p hGraph
+     * - CU_GRAPH_EXEC_UPDATE_ERROR_PARAMETERS_CHANGED if any parameters to a node changed in a way 
+     *   that is not supported, in which case \p hErrorNode_out is set to the node from \p hGraph.
+     * - CU_GRAPH_EXEC_UPDATE_ERROR_NOT_SUPPORTED if something about a node is unsupported, like 
+     *   the node’s type or configuration, in which case \p hErrorNode_out is set to the node from \p hGraph
+     * </pre>
+     * If \p updateResult_out isn’t set in one of the situations described above, the update check passes
+     * and cuGraphExecUpdate updates \p hGraphExec to match the contents of \p hGraph.  If an error happens
+     * during the update, \p updateResult_out will be set to CU_GRAPH_EXEC_UPDATE_ERROR; otherwise,
+     * \p updateResult_out is set to CU_GRAPH_EXEC_UPDATE_SUCCESS.<br>
+     * <br>
+     * cuGraphExecUpdate returns CUDA_SUCCESS when the updated was performed successfully.  It returns
+     * CUDA_ERROR_GRAPH_EXEC_UPDATE_FAILURE if the graph update was not performed because it included 
+     * changes which violated constraints specific to instantiated graph update.<br>
+     * 
+     * @param hGraphExec The instantiated graph to be updated
+     * @param hGraph The graph containing the updated parameters
+     * @param hErrorNode_out The node which caused the permissibility check to forbid the update, if any
+     * @param updateResult_out Whether the graph update was permitted.  If was forbidden, the reason why
+     *
+     * @return CUDA_SUCCESS, CUDA_ERROR_GRAPH_EXEC_UPDATE_FAILURE
+     *
+     * @see JCudaDriver#cuGraphInstantiate
+     */
+    public static int cuGraphExecUpdate(CUgraphExec hGraphExec, CUgraph hGraph, CUgraphNode hErrorNode_out, int updateResult_out[])
+    {
+        return checkResult(cuGraphExecUpdateNative(hGraphExec, hGraph, hErrorNode_out, updateResult_out));
+    }
+    private static native int cuGraphExecUpdateNative(CUgraphExec hGraphExec, CUgraph hGraph, CUgraphNode hErrorNode_out, int updateResult_out[]);
     
     
     

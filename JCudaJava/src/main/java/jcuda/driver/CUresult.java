@@ -555,6 +555,17 @@ public class CUresult
     public static final int CUDA_ERROR_STREAM_CAPTURE_WRONG_THREAD    = 908;
     
     /**
+     * This error indicates that the timeout specified for the wait operation has lapsed.
+     */
+    public static final int CUDA_ERROR_TIMEOUT                        = 909;
+
+    /**
+     * This error indicates that the graph update was not performed because it included 
+     * changes which violated constraints specific to instantiated graph update.
+     */
+    public static final int CUDA_ERROR_GRAPH_EXEC_UPDATE_FAILURE      = 910;
+    
+    /**
      * This indicates that an unknown internal error has occurred.
      */
     public static final int CUDA_ERROR_UNKNOWN                        = 999;
@@ -645,6 +656,8 @@ public class CUresult
             case CUDA_ERROR_STREAM_CAPTURE_IMPLICIT        : return "CUDA_ERROR_STREAM_CAPTURE_IMPLICIT";
             case CUDA_ERROR_CAPTURED_EVENT                 : return "CUDA_ERROR_CAPTURED_EVENT";
             case CUDA_ERROR_STREAM_CAPTURE_WRONG_THREAD    : return "CUDA_ERROR_STREAM_CAPTURE_WRONG_THREAD";
+            case CUDA_ERROR_TIMEOUT                        : return "CUDA_ERROR_TIMEOUT";
+            case CUDA_ERROR_GRAPH_EXEC_UPDATE_FAILURE      : return "CUDA_ERROR_GRAPH_EXEC_UPDATE_FAILURE";
             case CUDA_ERROR_UNKNOWN                        : return "CUDA_ERROR_UNKNOWN";
         }
         return "INVALID CUresult: "+result;

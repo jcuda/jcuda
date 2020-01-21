@@ -226,6 +226,20 @@ jfieldID CUDA_MEMSET_NODE_PARAMS_height; // size_t
 jfieldID CUDA_HOST_NODE_PARAMS_fn; // CUhostFn
 jfieldID CUDA_HOST_NODE_PARAMS_userData; // void *
 
+jfieldID CUmemLocation_type; // CUmemLocationType
+jfieldID CUmemLocation_id; // int
+
+jfieldID CUmemAllocationProp_type; // CUmemAllocationType
+jfieldID CUmemAllocationProp_requestedHandleTypes; // CUmemAllocationHandleType
+jfieldID CUmemAllocationProp_location; // CUmemLocation
+jfieldID CUmemAllocationProp_win32HandleMetaData; // void *
+jfieldID CUmemAllocationProp_reserved; // unsigned long long
+
+jfieldID CUmemAccessDesc_location; // CUmemLocation
+jfieldID CUmemAccessDesc_flags; // CUmemAccess_flags
+
+jclass CUmemLocation_class;
+jmethodID CUmemLocation_constructor;
 
 /**
  * Called when the library is loaded. Will initialize all
@@ -513,6 +527,33 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
 	if (!init(env, cls, CUDA_HOST_NODE_PARAMS_fn       , "fn"      , "Ljcuda/driver/CUhostFn;")) return JNI_ERR;
 	if (!init(env, cls, CUDA_HOST_NODE_PARAMS_userData , "userData", "Ljava/lang/Object;"     )) return JNI_ERR;
 
+    // Initialize the field IDs for the CUmemLocation class
+    if (!init(env, cls, "jcuda/driver/CUmemLocation")) return JNI_ERR;
+    if (!init(env, cls, CUmemLocation_type, "type", "I")) return JNI_ERR;
+    if (!init(env, cls, CUmemLocation_id,   "id",   "I")) return JNI_ERR;
+
+    // Initialize the field IDs for the CUmemAllocationProp class
+    if (!init(env, cls, "jcuda/driver/CUmemAllocationProp")) return JNI_ERR;
+    if (!init(env, cls, CUmemAllocationProp_type,                 "type",                 "I"                           )) return JNI_ERR;
+    if (!init(env, cls, CUmemAllocationProp_requestedHandleTypes, "requestedHandleTypes", "I"                           )) return JNI_ERR;
+    if (!init(env, cls, CUmemAllocationProp_location,             "location",             "Ljcuda/driver/CUmemLocation;")) return JNI_ERR;
+    if (!init(env, cls, CUmemAllocationProp_win32HandleMetaData,  "win32HandleMetaData",  "Ljcuda/driver/Pointer;"      )) return JNI_ERR;
+    if (!init(env, cls, CUmemAllocationProp_reserved,             "reserved",             "J"                           )) return JNI_ERR;
+
+    // Initialize the field IDs for the CUmemAccessDesc class
+    if (!init(env, cls, "jcuda/driver/CUmemAccessDesc")) return JNI_ERR;
+    if (!init(env, cls, CUmemAccessDesc_location, "location", "Ljcuda/driver/CUmemLocation;")) return JNI_ERR;
+    if (!init(env, cls, CUmemAccessDesc_flags,    "flags",    "I"                           )) return JNI_ERR;
+
+    // Obtain the constructor of the CUmemLocation class
+    if (!init(env, cls, "jcuda/driver/CUmemLocation")) return JNI_ERR;
+    CUmemLocation_class = (jclass)env->NewGlobalRef(cls);
+    if (CUmemLocation_class == NULL)
+    {
+        Logger::log(LOG_ERROR, "Failed to create reference to class CUmemLocation_class\n");
+        return JNI_ERR;
+    }
+    if (!init(env, cls, CUmemLocation_constructor, "<init>", "()V")) return JNI_ERR;
 
     return JNI_VERSION_1_4;
 }
@@ -731,15 +772,6 @@ void setCUDA_ARRAY3D_DESCRIPTOR(JNIEnv *env, jobject pArrayDescriptor, CUDA_ARRA
     env->SetIntField( pArrayDescriptor, CUDA_ARRAY3D_DESCRIPTOR_NumChannels, (jint) nativePArrayDescriptor.NumChannels);
     env->SetIntField( pArrayDescriptor, CUDA_ARRAY3D_DESCRIPTOR_Flags,       (jint) nativePArrayDescriptor.Flags);
 }
-
-
-
-
-
-
-
-
-
 
 
 /**
@@ -1727,10 +1759,90 @@ bool writeCUDA_MEMSET_NODE_PARAMS(JNIEnv *env, CUDA_MEMSET_NODE_PARAMS &nativeOb
 }
 
 
+/**
+* Returns the native representation of the given Java object
+*/
+CUmemLocation getCUmemLocation(JNIEnv *env, jobject javaObject)
+{
+    CUmemLocation nativeObject;
+    nativeObject.id = (int)env->GetIntField(javaObject, CUmemLocation_id);
+    nativeObject.type = (CUmemLocationType)env->GetIntField(javaObject, CUmemLocation_type);
+    return nativeObject;
+}
+
+/**
+* Assigns the properties of the given native structure to the given
+* Java Object
+*/
+void setCUmemLocation(JNIEnv *env, jobject javaObject, CUmemLocation nativeObject)
+{
+    env->SetIntField(javaObject, CUmemLocation_id, (jint)nativeObject.id);
+    env->SetIntField(javaObject, CUmemLocation_type, (jint)nativeObject.type);
+}
 
 
+/**
+* Returns the native representation of the given Java object
+*/
+CUmemAllocationProp getCUmemAllocationProp(JNIEnv *env, jobject javaObject)
+{
+    CUmemAllocationProp nativeObject;
+
+    jobject javaLocation = env->GetObjectField(javaObject, CUmemAllocationProp_location);
+    nativeObject.location = getCUmemLocation(env, javaLocation);
+
+    nativeObject.requestedHandleTypes = (CUmemAllocationHandleType)env->GetIntField(javaObject, CUmemAllocationProp_requestedHandleTypes);
+    nativeObject.reserved = (unsigned long long)env->GetLongField(javaObject, CUmemAllocationProp_reserved);
+    nativeObject.type = (CUmemAllocationType)env->GetIntField(javaObject, CUmemAllocationProp_type);
+
+    jobject javaWin32HandleMetaData = env->GetObjectField(javaObject, CUmemAllocationProp_win32HandleMetaData);
+    nativeObject.win32HandleMetaData = getPointer(env, javaWin32HandleMetaData);
+    return nativeObject;
+}
+
+/**
+* Assigns the properties of the given native structure to the given
+* Java Object
+*/
+void setCUmemAllocationProp(JNIEnv *env, jobject javaObject, CUmemAllocationProp nativeObject)
+{
+    jobject javaLocation = env->NewObject(CUmemLocation_class, CUmemLocation_constructor);
+    env->SetObjectField(javaObject, CUmemAllocationProp_location, javaLocation);
+
+    env->SetIntField(javaObject, CUmemAllocationProp_requestedHandleTypes, (jint)nativeObject.requestedHandleTypes);
+    env->SetLongField(javaObject, CUmemAllocationProp_reserved, (jlong)nativeObject.reserved);
+    env->SetIntField(javaObject, CUmemAllocationProp_type, (jint)nativeObject.type);
+
+    jobject javaWin32HandleMetaData = env->NewObject(CUdeviceptr_class, CUdeviceptr_constructor);
+    setNativePointerValue(env, javaWin32HandleMetaData, (jlong)nativeObject.win32HandleMetaData);
+    env->SetObjectField(javaObject, CUmemAllocationProp_win32HandleMetaData, javaWin32HandleMetaData);
+}
 
 
+/**
+* Returns the native representation of the given Java objects.
+* The caller is responsible to delete[] the returned data.
+*/
+CUmemAccessDesc* getCUmemAccessDescs(JNIEnv *env, jobjectArray javaObjects)
+{
+    jsize size = env->GetArrayLength(javaObjects);
+    CUmemAccessDesc *nativeObjects = new CUmemAccessDesc[size];
+    for (int i = 0; i < size; i++)
+    {
+        jobject javaObject = env->GetObjectArrayElement(javaObjects, i);
+        if (javaObject != NULL)
+        {
+            jobject javaLocation = env->GetObjectField(javaObject, CUmemAccessDesc_location);
+            if (javaLocation != NULL)
+            {
+                nativeObjects[i].location.id = (int)env->GetIntField(javaObject, CUmemLocation_id);
+                nativeObjects[i].location.type = (CUmemLocationType)env->GetIntField(javaObject, CUmemLocation_type);
+            }
+        }
+        nativeObjects[i].flags = (CUmemAccess_flags)env->GetIntField(javaObject, CUmemAccessDesc_flags);
+    }
+    return nativeObjects;
+}
 
 
 
@@ -5450,6 +5562,325 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMipmappedArrayDestroyNati
     return result;
 }
 
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuMemAddressReserveNative
+* Signature: (Ljcuda/driver/CUdeviceptr;JJLjcuda/driver/CUdeviceptr;J)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemAddressReserveNative
+    (JNIEnv *env, jclass cls, jobject ptr, jlong size, jlong alignment, jobject addr, jlong flags)
+{
+    if (ptr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'ptr' is null for cuMemAddressReserve");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (addr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'addr' is null for cuMemAddressReserve");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuMemAddressReserve\n");
+
+    CUdeviceptr nativePtr;
+    CUdeviceptr nativeAddr = (CUdeviceptr)getPointer(env, addr);
+
+    int result = cuMemAddressReserve(&nativePtr, (size_t)size, (size_t)alignment, nativeAddr, (unsigned long long)flags);
+    setPointer(env, ptr, (jlong)nativePtr);
+
+    return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuMemAddressFreeNative
+* Signature: (Ljcuda/driver/CUdeviceptr;J)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemAddressFreeNative
+    (JNIEnv *env, jclass cls, jobject ptr, jlong size)
+{
+    if (ptr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'ptr' is null for cuMemAddressFree");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuMemAddressFree\n");
+
+    CUdeviceptr nativePtr = (CUdeviceptr)getPointer(env, ptr);
+    int result = cuMemAddressFree(nativePtr, (size_t)size);
+
+    return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuMemCreateNative
+* Signature: (Ljcuda/driver/CUmemGenericAllocationHandle;JLjcuda/driver/CUmemAllocationProp;J)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemCreateNative
+    (JNIEnv *env, jclass cls, jobject handle, jlong size, jobject prop, jlong flags)
+{
+    if (handle == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'handle' is null for cuMemCreate");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuMemCreate\n");
+
+
+    CUmemGenericAllocationHandle nativeHandle;
+    CUmemAllocationProp nativeProp = getCUmemAllocationProp(env, prop);
+
+    int result = cuMemCreate(&nativeHandle, (size_t)size, &nativeProp, (unsigned long long)flags);
+    setPointer(env, handle, (jlong)nativeHandle);
+
+    return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuMemReleaseNative
+* Signature: (Ljcuda/driver/CUmemGenericAllocationHandle;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemReleaseNative
+    (JNIEnv *env, jclass cls, jobject handle)
+{
+    if (handle == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'handle' is null for cuMemRelease");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuMemRelease\n");
+
+    CUmemGenericAllocationHandle nativeHandle = (CUmemGenericAllocationHandle)getNativePointerValue(env, handle);
+    int result = cuMemRelease(nativeHandle);
+
+    return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuMemMapNative
+* Signature: (Ljcuda/driver/CUdeviceptr;JJLjcuda/driver/CUmemGenericAllocationHandle;J)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemMapNative
+    (JNIEnv *env, jclass cls, jobject ptr, jlong size, jlong offset, jobject handle, jlong flags)
+{
+    if (ptr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'ptr' is null for cuMemMap");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (handle == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'handle' is null for cuMemMap");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuMemMap\n");
+
+    CUdeviceptr nativePtr = (CUdeviceptr)getPointer(env, ptr);
+    CUmemGenericAllocationHandle nativeHandle = (CUmemGenericAllocationHandle)getNativePointerValue(env, handle);
+    int result = cuMemMap(nativePtr, (size_t)size, (size_t)offset, nativeHandle, (unsigned long long)flags);
+
+    return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuMemUnmapNative
+* Signature: (Ljcuda/driver/CUdeviceptr;J)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemUnmapNative
+    (JNIEnv *env, jclass cls, jobject ptr, jlong size)
+{
+    if (ptr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'ptr' is null for cuMemUnmap");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuMemUnmap\n");
+
+    CUdeviceptr nativePtr = (CUdeviceptr)getPointer(env, ptr);
+    int result = cuMemUnmap(nativePtr, (size_t)size);
+
+    return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuMemSetAccessNative
+* Signature: (Ljcuda/driver/CUdeviceptr;J[Ljcuda/driver/CUmemAccessDesc;J)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemSetAccessNative
+    (JNIEnv *env, jclass cls, jobject ptr, jlong size, jobjectArray desc, jlong count)
+{
+    if (ptr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'ptr' is null for cuMemSetAccess");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuMemSetAccess\n");
+
+    CUdeviceptr nativePtr = (CUdeviceptr)getPointer(env, ptr);
+    CUmemAccessDesc *nativeDesc = getCUmemAccessDescs(env, desc);
+    int result = cuMemSetAccess(nativePtr, (size_t)size, nativeDesc, (size_t)count);
+    delete[] nativeDesc;
+    return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuMemGetAccessNative
+* Signature: ([JLjcuda/driver/CUmemLocation;Ljcuda/driver/CUdeviceptr;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemGetAccessNative
+    (JNIEnv *env, jclass cls, jlongArray flags, jobject location, jobject ptr)
+{
+    if (flags == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'flags' is null for cuMemGetAccess");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (location == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'location' is null for cuMemGetAccess");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (ptr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'ptr' is null for cuMemGetAccess");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuMemGetAccess\n");
+
+    CUdeviceptr nativePtr = (CUdeviceptr)getPointer(env, ptr);
+    CUmemLocation nativeLocation = getCUmemLocation(env, location);
+    unsigned long long nativeFlags = 0;
+    
+    int result = cuMemGetAccess(&nativeFlags, &nativeLocation, nativePtr);
+    
+    if (!set(env, flags, 0, nativeFlags)) return JCUDA_INTERNAL_ERROR;
+    return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuMemExportToShareableHandleNative
+* Signature: (Ljcuda/Pointer;Ljcuda/driver/CUmemGenericAllocationHandle;IJ)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemExportToShareableHandleNative
+    (JNIEnv *env, jclass cls, jobject shareableHandle, jobject handle, jint handleType, jlong flags)
+{
+    if (shareableHandle == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'shareableHandle' is null for cuMemExportToShareableHandle");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (handle == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'handle' is null for cuMemExportToShareableHandle");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuMemExportToShareableHandle\n");
+
+    void* nativeShareableHandle = NULL;
+    CUmemGenericAllocationHandle nativeHandle = (CUmemGenericAllocationHandle)getNativePointerValue(env, handle);
+     
+    int result = cuMemExportToShareableHandle(nativeShareableHandle, nativeHandle, (CUmemAllocationHandleType)handleType, (unsigned long long)flags);
+
+    setNativePointerValue(env, shareableHandle, (jlong)nativeShareableHandle);
+
+    return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuMemImportFromShareableHandleNative
+* Signature: (Ljcuda/driver/CUmemGenericAllocationHandle;Ljcuda/Pointer;I)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemImportFromShareableHandleNative
+(JNIEnv *env, jclass cls, jobject handle, jobject osHandle, jint shHandleType)
+{
+    if (handle == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'handle' is null for cuMemImportFromShareableHandle");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (osHandle == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'osHandle' is null for cuMemImportFromShareableHandle");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuMemImportFromShareableHandle\n");
+
+    CUmemGenericAllocationHandle nativeHandle = (CUmemGenericAllocationHandle)getNativePointerValue(env, handle);
+    void* nativeOsHandle = getPointer(env, osHandle);
+
+    int result = cuMemImportFromShareableHandle(&nativeHandle, nativeOsHandle, (CUmemAllocationHandleType)shHandleType);
+
+    setNativePointerValue(env, handle, (jlong)nativeHandle);
+
+    return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuMemGetAllocationGranularityNative
+* Signature: ([JLjcuda/driver/CUmemAllocationProp;I)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemGetAllocationGranularityNative
+    (JNIEnv *env, jclass cls, jlongArray granularity, jobject prop, jint option)
+{
+    if (granularity == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'granularity' is null for cuMemGetAllocationGranularity");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (prop == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'prop' is null for cuMemGetAllocationGranularity");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuMemImportFromShareableHandle\n");
+
+    size_t nativeGranularity = 0;
+    CUmemAllocationProp nativeProp = getCUmemAllocationProp(env, prop);
+
+    int result = cuMemGetAllocationGranularity(&nativeGranularity, &nativeProp, (CUmemAllocationGranularity_flags)option);
+
+    if (!set(env, granularity, 0, nativeGranularity)) return JCUDA_INTERNAL_ERROR;
+
+    return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuMemGetAllocationPropertiesFromHandleNative
+* Signature: (Ljcuda/driver/CUmemAllocationProp;Ljcuda/driver/CUmemGenericAllocationHandle;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemGetAllocationPropertiesFromHandleNative
+    (JNIEnv *env, jclass cls, jobject prop, jobject handle)
+{
+    if (prop == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'prop' is null for cuMemGetAllocationPropertiesFromHandle");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (prop == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'prop' is null for cuMemGetAllocationPropertiesFromHandle");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuMemGetAllocationPropertiesFromHandle\n");
+
+    CUmemAllocationProp nativeProp;
+    CUmemGenericAllocationHandle nativeHandle = (CUmemGenericAllocationHandle)getNativePointerValue(env, handle);
+    int result = cuMemGetAllocationPropertiesFromHandle(&nativeProp, nativeHandle);
+
+    setCUmemAllocationProp(env, prop, nativeProp);
+
+    return result;
+}
 
 
 /*
@@ -8161,9 +8592,153 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphExecKernelNodeSetPar
 
     if (!releaseCUDA_KERNEL_NODE_PARAMSData(env, nativeNodeParamsData)) return JCUDA_INTERNAL_ERROR;
     return result;
+}
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphExecMemcpyNodeSetParamsNative
+* Signature: (Ljcuda/driver/CUgraphExec;Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUDA_MEMCPY3D;Ljcuda/driver/CUcontext;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphExecMemcpyNodeSetParamsNative
+    (JNIEnv *env, jclass cls, jobject hGraphExec, jobject hNode, jobject copyParams, jobject ctx)
+{
+    if (hGraphExec == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraphExec' is null for cuGraphExecMemcpyNodeSetParams");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (hNode == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hNode' is null for cuGraphExecMemcpyNodeSetParams");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (copyParams == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'nodeParams' is null for cuGraphExecMemcpyNodeSetParams");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing cuGraphExecMemcpyNodeSetParams\n");
+
+    CUgraphExec nativeHGraphExec = (CUgraphExec)getNativePointerValue(env, hGraphExec);
+    CUgraphNode nativeHNode = (CUgraphNode)getNativePointerValue(env, hNode);
+
+    Memcpy3DData *copyParamsData = initMemcpy3DData(env, copyParams);
+    if (copyParamsData == NULL)
+    {
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    CUcontext nativeCtx = (CUcontext)getNativePointerValue(env, ctx);
+
+    int result = cuGraphExecMemcpyNodeSetParams(nativeHGraphExec, nativeHNode, &copyParamsData->memcpy3d, nativeCtx);
+
+    if (!releaseMemcpy3DData(env, copyParamsData)) return JCUDA_INTERNAL_ERROR;
+
+    return result;
 
 }
 
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphExecMemsetNodeSetParamsNative
+* Signature: (Ljcuda/driver/CUgraphExec;Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUDA_MEMSET_NODE_PARAMS;Ljcuda/driver/CUcontext;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphExecMemsetNodeSetParamsNative
+    (JNIEnv *env, jclass cls, jobject hGraphExec, jobject hNode, jobject memsetParams, jobject ctx)
+{
+    if (hGraphExec == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraphExec' is null for cuGraphExecMemsetNodeSetParams");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (hNode == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hNode' is null for cuGraphExecMemsetNodeSetParams");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (memsetParams == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'memsetParams' is null for cuGraphExecMemsetNodeSetParams");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (ctx == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'ctx' is null for cuGraphExecMemsetNodeSetParams");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing cuGraphExecMemsetNodeSetParams\n");
+
+    CUgraphExec nativeHGraphExec = (CUgraphExec)getNativePointerValue(env, hGraphExec);
+    CUgraphNode nativeHNode = (CUgraphNode)getNativePointerValue(env, hNode);
+
+    CUDA_MEMSET_NODE_PARAMS nativeMemsetParams;
+    if (!readCUDA_MEMSET_NODE_PARAMS(env, memsetParams, nativeMemsetParams)) return JCUDA_INTERNAL_ERROR;
+
+    CUcontext nativeCtx = (CUcontext)getNativePointerValue(env, ctx);
+
+    int result = cuGraphExecMemsetNodeSetParams(nativeHGraphExec, nativeHNode, &nativeMemsetParams, nativeCtx);
+
+    return result;
+
+}
+
+
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphExecHostNodeSetParamsNative
+* Signature: (Ljcuda/driver/CUgraphExec;Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUDA_HOST_NODE_PARAMS;)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphExecHostNodeSetParamsNative
+    (JNIEnv *env, jclass cls, jobject hGraphExec, jobject hNode, jobject nodeParams)
+{
+    if (hGraphExec == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraphExec' is null for cuGraphExecHostNodeSetParams");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (hNode == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hNode' is null for cuGraphExecHostNodeSetParams");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (nodeParams == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'memsetParams' is null for cuGraphExecHostNodeSetParams");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing cuGraphExecHostNodeSetParams\n");
+
+    // XXX This should actually be disallowed: The callback that
+    // has been assigned initially is never executed and never
+    // deleted...
+    Logger::log(LOG_WARNING, "The initial host function may not be changed");
+
+    CUgraphExec nativeHGraphExec = (CUgraphExec)getNativePointerValue(env, hGraphExec);
+    CUgraphNode nativeHNode = (CUgraphNode)getNativePointerValue(env, hNode);
+
+    CallbackInfo *callbackInfo = NULL;
+    void* nativeUserData = NULL;
+
+    jobject fn = env->GetObjectField(nodeParams, CUDA_HOST_NODE_PARAMS_fn);
+    jobject userData = env->GetObjectField(nodeParams, CUDA_HOST_NODE_PARAMS_userData);
+    callbackInfo = initCallbackInfo(env, NULL, fn, userData);
+    if (callbackInfo == NULL)
+    {
+        return JCUDA_INTERNAL_ERROR;
+    }
+    nativeUserData = (void*)callbackInfo;
+
+    CUDA_HOST_NODE_PARAMS nativeNodeParams;
+    nativeNodeParams.fn = cuLaunchHostFunc_NativeCallback;
+    nativeNodeParams.userData = nativeUserData;
+
+    int result = cuGraphExecHostNodeSetParams(nativeHGraphExec, nativeHNode, &nativeNodeParams);
+
+    return result;
+}
 
 /*
 * Class:     jcuda_driver_JCudaDriver
@@ -8238,6 +8813,50 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphDestroyNative(JNIEnv
 }
 
 
+/*
+* Class:     jcuda_driver_JCudaDriver
+* Method:    cuGraphExecUpdateNative
+* Signature: (Ljcuda/driver/CUgraphExec;Ljcuda/driver/CUgraph;Ljcuda/driver/CUgraphNode;[I)I
+*/
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphExecUpdateNative
+    (JNIEnv *env, jclass cls, jobject hGraphExec, jobject hGraph, jobject hErrorNode_out, jintArray updateResult_out)
+{
+    if (hGraphExec == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraphExec' is null for cuGraphExecUpdate");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (hGraph == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraph' is null for cuGraphExecUpdate");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (hErrorNode_out == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hErrorNode_out' is null for cuGraphExecUpdate");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (hErrorNode_out == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'updateResult_out' is null for cuGraphExecUpdate");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing cuGraphExecUpdate\n");
+
+    CUgraphExec nativeHGraphExec = (CUgraphExec)getNativePointerValue(env, hGraphExec);
+    CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
+    CUgraphNode nativeHErrorNode_out = NULL;
+    CUgraphExecUpdateResult nativeUpdateResult_out;
+
+    int result = cuGraphExecUpdate(nativeHGraphExec, nativeHGraph, &nativeHErrorNode_out, &nativeUpdateResult_out);
+
+    setNativePointerValue(env, hErrorNode_out, (jlong)nativeHErrorNode_out);
+    if (!set(env, updateResult_out, 0, (jint)nativeUpdateResult_out)) return JCUDA_INTERNAL_ERROR;
+
+    return result;
+
+}
 
 
 /*

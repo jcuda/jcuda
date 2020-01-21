@@ -584,6 +584,31 @@ public class CUdevice_attribute
     public static final int CU_DEVICE_ATTRIBUTE_DIRECT_MANAGED_MEM_ACCESS_FROM_HOST = 101;    
     
     /**
+     * Device supports virtual address management APIs like ::cuMemAddressReserve, 
+     * ::cuMemCreate, ::cuMemMap and related APIs 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_VIRTUAL_ADDRESS_MANAGEMENT_SUPPORTED = 102;
+
+    /**
+     * Device supports exporting memory to a posix file descriptor with 
+     * ::cuMemExportToShareableHandle, if requested via ::cuMemCreate 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR_SUPPORTED = 103;
+
+    /**
+     * Device supports exporting memory to a Win32 NT handle with 
+     * ::cuMemExportToShareableHandle, if requested via ::cuMemCreate 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_HANDLE_SUPPORTED = 104;
+
+    /**
+     * Device supports exporting memory to a Win32 KMT handle with
+     *  ::cuMemExportToShareableHandle, if requested ::cuMemCreate 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_KMT_HANDLE_SUPPORTED = 105;
+
+    
+    /**
      * Returns the String identifying the given CUdevice_attribute
      *
      * @param n The CUdevice_attribute
@@ -694,6 +719,10 @@ public class CUdevice_attribute
             case CU_DEVICE_ATTRIBUTE_HOST_REGISTER_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_HOST_REGISTER_SUPPORTED";
             case CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES: return "CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES";
             case CU_DEVICE_ATTRIBUTE_DIRECT_MANAGED_MEM_ACCESS_FROM_HOST: return "CU_DEVICE_ATTRIBUTE_DIRECT_MANAGED_MEM_ACCESS_FROM_HOST";
+            case CU_DEVICE_ATTRIBUTE_VIRTUAL_ADDRESS_MANAGEMENT_SUPPORTED : return "CU_DEVICE_ATTRIBUTE_VIRTUAL_ADDRESS_MANAGEMENT_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR_SUPPORTED : return "CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_HANDLE_SUPPORTED : return "CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_HANDLE_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_KMT_HANDLE_SUPPORTED : return "CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_KMT_HANDLE_SUPPORTED";
         }
         return "INVALID CUdevice_attribute: "+n;
     }
