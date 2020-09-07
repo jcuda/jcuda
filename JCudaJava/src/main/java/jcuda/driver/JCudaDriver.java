@@ -43,7 +43,7 @@ import jcuda.runtime.JCuda;
 public class JCudaDriver
 {
     /** The CUDA version */
-    public static final int CUDA_VERSION = 10020;
+    public static final int CUDA_VERSION = 11000;
 
     /**
      * If set, host memory is portable between CUDA contexts.
@@ -218,6 +218,12 @@ public class JCudaDriver
     @Deprecated
     public static final int CU_STREAM_CALLBACK_BLOCKING     = 0x01;
 
+    /**
+     * Disable any trilinear filtering optimizations.
+     * Flag for ::cuTexRefSetFlags() and ::cuTexObjectCreate()
+     */
+    public static final int CU_TRSF_DISABLE_TRILINEAR_OPTIMIZATION = 0x20;
+    
     /**
      * Private inner class for the constant pointer values
      * CU_LAUNCH_PARAM_END, CU_LAUNCH_PARAM_BUFFER_POINTER,
@@ -9936,6 +9942,31 @@ public class JCudaDriver
     private static native int cuMemGetAllocationPropertiesFromHandleNative(CUmemAllocationProp prop, CUmemGenericAllocationHandle handle);
     
     
+    /**
+    * Given an address addr, returns the allocation handle of the backing memory allocation.
+    *
+    * The handle is guaranteed to be the same handle value used to map the memory. If the address
+    * requested is not mapped, the function will fail. The returned handle must be released with
+    * corresponding number of calls to ::cuMemRelease.
+    *
+    * The address addr, can be any address in a range previously mapped
+    * by ::cuMemMap, and not necessarily the start address.
+    *
+    * @param handle CUDA Memory handle for the backing memory allocation.
+    * @param addr Memory address to query, that has been mapped previously.
+    * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_NOT_INITIALIZED,
+    * CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_PERMITTED, CUDA_ERROR_NOT_SUPPORTED
+    *
+    * @see JCudaDriver#cuMemCreate
+    * @see JCudaDriver#cuMemRelease
+    * @see JCudaDriver#cuMemMap
+    */
+    public static int cuMemRetainAllocationHandle(CUmemGenericAllocationHandle handle, Pointer addr)
+    {
+        return checkResult(cuMemRetainAllocationHandleNative(handle, addr));
+    }
+    private static native int cuMemRetainAllocationHandleNative(CUmemGenericAllocationHandle handle, Pointer addr);
+    
     
     /**
      * Creates a texture reference.
@@ -13622,6 +13653,69 @@ public class JCudaDriver
     private static native int cuGraphExecUpdateNative(CUgraphExec hGraphExec, CUgraph hGraph, CUgraphNode hErrorNode_out, int updateResult_out[]);
     
     
+    /**
+     * Copies attributes from source node to destination node.
+     *
+     * Copies attributes from source node src to destination node dst.
+     * Both node must have the same context.
+     *
+     * @param dst Destination node
+     * @param src Source node
+     * For list of attributes see ::CUkernelNodeAttrID
+     *
+     * @return CUDA_SUCCESS, UDA_ERROR_INVALID_VALUE
+     *  
+     * @see CUaccessPolicyWindow
+     */
+    public static int cuGraphKernelNodeCopyAttributes(CUgraphNode dst, CUgraphNode src)
+    {
+        return checkResult(cuGraphKernelNodeCopyAttributesNative(dst, src));
+    }
+    private static native int  cuGraphKernelNodeCopyAttributesNative(CUgraphNode dst, CUgraphNode src);
+
+    /**
+     * Queries node attribute.
+     * 
+     * Queries attribute attr from node hNode and stores it in corresponding
+     * member of value_out.
+     *
+     * @param hNode
+     * @param attr
+     * @param value_out 
+     *
+     * @return CUDA_SUCCESS, UDA_ERROR_INVALID_VALUE, CUDA_ERROR_INVALID_HANDLE
+     *  
+     * @see CUaccessPolicyWindow
+     */
+    public static int cuGraphKernelNodeGetAttribute(CUgraphNode hNode, int attr,
+        CUkernelNodeAttrValue value_out)
+    {
+        return checkResult(cuGraphKernelNodeGetAttributeNative(hNode, attr, value_out));
+    }
+    private static native int cuGraphKernelNodeGetAttributeNative(CUgraphNode hNode, int attr,
+        CUkernelNodeAttrValue value_out);
+     
+    /**
+     * Sets node attribute.
+     * 
+     * Sets attribute attr on node hNode from corresponding attribute of
+     * value.
+     *
+     * @param hNode
+     * @param attr
+     * @param value 
+     *
+     * @return CUDA_SUCCESS, UDA_ERROR_INVALID_VALUE, CUDA_ERROR_INVALID_HANDLE
+     *  
+     * @see CUaccessPolicyWindow
+     */
+    public static int cuGraphKernelNodeSetAttribute(CUgraphNode hNode, int attr,
+        CUkernelNodeAttrValue value) 
+    {
+        return checkResult(cuGraphKernelNodeSetAttributeNative(hNode, attr, value));            
+    }
+    private static native int cuGraphKernelNodeSetAttributeNative(CUgraphNode hNode, int attr,
+        CUkernelNodeAttrValue value);
     
     /**
      * <code><pre>
@@ -13651,13 +13745,86 @@ public class JCudaDriver
     }
     private static native int cuOccupancyMaxActiveBlocksPerMultiprocessorNative(int numBlocks[], CUfunction func, int blockSize, long dynamicSMemSize);
 
-
+    /**
+     * <code><pre>
+     * \brief Suggest a launch configuration with reasonable occupancy
+     *
+     * An extended version of ::cuOccupancyMaxPotentialBlockSize. In
+     * addition to arguments passed to ::cuOccupancyMaxPotentialBlockSize,
+     * ::cuOccupancyMaxPotentialBlockSizeWithFlags also takes a \p Flags
+     * parameter.
+     *
+     * The \p Flags parameter controls how special cases are handled. The
+     * valid flags are:
+     *
+     * - ::CU_OCCUPANCY_DEFAULT, which maintains the default behavior as
+     *   ::cuOccupancyMaxPotentialBlockSize;
+     *
+     * - ::CU_OCCUPANCY_DISABLE_CACHING_OVERRIDE, which suppresses the
+     *   default behavior on platform where global caching affects
+     *   occupancy. On such platforms, the launch configurations that
+     *   produces maximal occupancy might not support global
+     *   caching. Setting ::CU_OCCUPANCY_DISABLE_CACHING_OVERRIDE
+     *   guarantees that the the produced launch configuration is global
+     *   caching compatible at a potential cost of occupancy. More information
+     *   can be found about this feature in the "Unified L1/Texture Cache"
+     *   section of the Maxwell tuning guide.
+     *
+     * \param minGridSize - Returned minimum grid size needed to achieve the maximum occupancy
+     * \param blockSize   - Returned maximum block size that can achieve the maximum occupancy
+     * \param func        - Kernel for which launch configuration is calculated
+     * \param blockSizeToDynamicSMemSize - A function that calculates how much per-block dynamic shared memory \p func uses based on the block size
+     * \param dynamicSMemSize - Dynamic shared memory usage intended, in bytes
+     * \param blockSizeLimit  - The maximum block size \p func is designed to handle
+     * \param flags       - Options
+     *
+     * \return
+     * ::CUDA_SUCCESS,
+     * ::CUDA_ERROR_DEINITIALIZED,
+     * ::CUDA_ERROR_NOT_INITIALIZED,
+     * ::CUDA_ERROR_INVALID_CONTEXT,
+     * ::CUDA_ERROR_INVALID_VALUE,
+     * ::CUDA_ERROR_UNKNOWN
+     * \notefnerr
+     *
+     * \sa
+     * ::cudaOccupancyMaxPotentialBlockSizeWithFlags
+     * </pre></code>
+     */
     public static int cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(int numBlocks[], CUfunction func, int blockSize, long dynamicSMemSize, int flags)
     {
         return checkResult(cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlagsNative(numBlocks, func, blockSize, dynamicSMemSize, flags));
     }
     private static native int cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlagsNative(int numBlocks[], CUfunction func, int blockSize, long dynamicSMemSize, int flags);
 
+    /**
+     * <code><pre>
+     * \brief Returns dynamic shared memory available per block when launching \p numBlocks blocks on SM 
+     *
+     * Returns in \p *dynamicSmemSize the maximum size of dynamic shared memory to allow \p numBlocks blocks per SM. 
+     *
+     * \param dynamicSmemSize - Returned maximum dynamic shared memory 
+     * \param func            - Kernel function for which occupancy is calculated
+     * \param numBlocks       - Number of blocks to fit on SM 
+     * \param blockSize       - Size of the blocks
+     *
+     * \return
+     * ::CUDA_SUCCESS,
+     * ::CUDA_ERROR_DEINITIALIZED,
+     * ::CUDA_ERROR_NOT_INITIALIZED,
+     * ::CUDA_ERROR_INVALID_CONTEXT,
+     * ::CUDA_ERROR_INVALID_VALUE,
+     * ::CUDA_ERROR_UNKNOWN
+     * \notefnerr
+     *
+     * \sa
+     * </pre></code>
+     */
+    public static int cuOccupancyAvailableDynamicSMemPerBlock(long dynamicSmemSize[], CUfunction func, int numBlocks, int blockSize)
+    {
+        return checkResult(cuOccupancyAvailableDynamicSMemPerBlockNative(dynamicSmemSize, func, numBlocks, blockSize));
+    }
+    private static native int cuOccupancyAvailableDynamicSMemPerBlockNative(long dynamicSmemSize[], CUfunction func, int numBlocks, int blockSize);
 
 
     /**
@@ -15700,6 +15867,67 @@ public class JCudaDriver
 
     private static native int cuStreamDestroyNative(CUstream hStream);
 
+    /**
+     * Copies attributes from source stream to destination stream
+     * 
+     * Copies attributes from source stream \p src to destination stream \p dst.
+     * Both streams must have the same context.
+     *
+     * @param dst Destination stream
+     * @param src Source stream
+     * 
+     * For list of attributes see ::CUstreamAttrID
+     *
+     * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE
+     *  
+     * @see CUaccessPolicyWindow
+     */
+    public static int cuStreamCopyAttributes(CUstream dst, CUstream src)
+    {
+        return checkResult(cuStreamCopyAttributesNative(dst, src));
+    }
+    private static native int cuStreamCopyAttributesNative(CUstream dst, CUstream src);
+
+    /**
+     * Queries stream attribute.
+     * 
+     * Queries attribute attr from hStream and stores it in corresponding
+     * member of value_out.
+     *
+     * @param hStream
+     * @param attr 
+     * @param value_out 
+     *
+     * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_INVALID_HANDLE
+     *  
+     * @see CUaccessPolicyWindow
+     */
+    public static int cuStreamGetAttribute(CUstream hStream, int attr, CUstreamAttrValue value_out)
+    {
+        return checkResult(cuStreamGetAttributeNative(hStream, attr, value_out));
+    }
+    private static native int cuStreamGetAttributeNative(CUstream hStream, int attr, CUstreamAttrValue value_out);
+
+    /**
+     * Sets stream attribute.
+     * 
+     * Sets attribute attr on hStream from corresponding attribute of
+     * value. The updated attribute will be applied to subsequent work
+     * submitted to the stream. It will not affect previously submitted work.
+     *
+     * @param hStream
+     * @param attr
+     * @param value
+     *
+     * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_INVALID_HANDLE
+     *  
+     * @see CUaccessPolicyWindow
+     */
+    public static int cuStreamSetAttribute(CUstream hStream, int attr,  CUstreamAttrValue value)
+    {
+        return checkResult(cuStreamSetAttributeNative(hStream, attr, value));            
+    }
+    private static native int cuStreamSetAttributeNative(CUstream hStream, int attr, CUstreamAttrValue value);
 
 
     /**
@@ -16837,6 +17065,28 @@ public class JCudaDriver
     private static native int cuGraphicsUnmapResourcesNative(int count, CUgraphicsResource resources[], CUstream hStream);
 
 
+    /**
+     * Returns a module handle
+     *
+     * Returns in *hmod the handle of the module that function hfunc
+     * is located in. The lifetime of the module corresponds to the lifetime of
+     * the context it was loaded in or until the module is explicitly unloaded.
+     *
+     * The CUDA runtime manages its own modules loaded into the primary context.
+     * If the handle returned by this API refers to a module loaded by the CUDA runtime,
+     * calling ::cuModuleUnload() on that module will result in undefined behavior.
+     *
+     * @param hmod - Returned module handle
+     * @param hfunc   - Function to retrieve module for
+     *
+     * @return CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_CONTEXT, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_NOT_FOUND
+     */
+    public static int cuFuncGetModule(CUmodule hmod, CUfunction hfunc)
+    {
+        return checkResult(cuFuncGetModuleNative(hmod, hfunc));
+    }
+    private static native int cuFuncGetModuleNative(CUmodule hmod, CUfunction hfunc);
 
     /**
      * Set resource limits.
@@ -17421,6 +17671,22 @@ public class JCudaDriver
     private static native int cuCtxGetStreamPriorityRangeNative(int leastPriority[], int greatestPriority[]);
 
 
+    /**
+     * Resets all persisting lines in cache to normal status.
+     *
+     * ::cuCtxResetPersistingL2Cache Resets all persisting lines in cache to normal
+     * status. Takes effect on function return. 
+     * 
+     * @return CUDA_SUCCESS, CUDA_ERROR_NOT_SUPPORTED
+     *
+     * @see CUaccessPolicyWindow
+     */
+    public static int cuCtxResetPersistingL2Cache() 
+    {
+        return checkResult(cuCtxResetPersistingL2CacheNative());
+    }
+    private static native int cuCtxResetPersistingL2CacheNative();
+    
     /**
      * Launches a CUDA function.
      *
@@ -18229,6 +18495,8 @@ public class JCudaDriver
      *
      * @see JCudaDriver#cuProfilerStart
      * @see JCudaDriver#cuProfilerStop
+     * 
+     * @deprecated Deprecated as of CUDA 11.0
      */
     public static int cuProfilerInitialize(String configFile, String outputFile, int outputMode)
     {

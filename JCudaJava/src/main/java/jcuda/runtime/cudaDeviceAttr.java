@@ -517,6 +517,36 @@ public class cudaDeviceAttr
     public static final int cudaDevAttrMaxSharedMemoryPerBlockOptin   = 97; 
     
     /**
+     * Device supports flushing of outstanding remote writes. 
+     */
+    public static final int cudaDevAttrCanFlushRemoteWrites           = 98;
+    
+    /**
+     * Device supports host memory registration via ::cudaHostRegister. 
+     */
+    public static final int cudaDevAttrHostRegisterSupported          = 99;
+    
+    /**
+     * Device accesses pageable memory via the host's page tables. 
+     */
+    public static final int cudaDevAttrPageableMemoryAccessUsesHostPageTables = 100;
+    
+    /**
+     * Host can directly access managed memory on the device without migration. 
+     */
+    public static final int cudaDevAttrDirectManagedMemAccessFromHost = 101;
+    
+    /**
+     * Maximum number of blocks per multiprocessor 
+     */
+    public static final int cudaDevAttrMaxBlocksPerMultiprocessor     = 106;
+    
+    /**
+     * Shared memory reserved by CUDA driver per block in bytes 
+     */
+    public static final int cudaDevAttrReservedSharedMemoryPerBlock   = 111;
+    
+    /**
      * Returns the String identifying the given cudaDeviceAttr
      *
      * @param n The cudaDeviceAttr
@@ -622,6 +652,14 @@ public class cudaDeviceAttr
             case cudaDevAttrCooperativeLaunch                : return "cudaDevAttrCooperativeLaunch";
             case cudaDevAttrCooperativeMultiDeviceLaunch     : return "cudaDevAttrCooperativeMultiDeviceLaunch";
             case cudaDevAttrMaxSharedMemoryPerBlockOptin     : return "cudaDevAttrMaxSharedMemoryPerBlockOptin";
+            case cudaDevAttrCanFlushRemoteWrites             : return "cudaDevAttrCanFlushRemoteWrites";
+            case cudaDevAttrHostRegisterSupported            : return "cudaDevAttrHostRegisterSupported";
+            // A few years ago, I would have adjusted the indentation here.
+            case cudaDevAttrPageableMemoryAccessUsesHostPageTables : return "cudaDevAttrPageableMemoryAccessUsesHostPageTables";
+            case cudaDevAttrDirectManagedMemAccessFromHost   : return "cudaDevAttrDirectManagedMemAccessFromHost";
+            case cudaDevAttrMaxBlocksPerMultiprocessor       : return "cudaDevAttrMaxBlocksPerMultiprocessor";
+            case cudaDevAttrReservedSharedMemoryPerBlock     : return "cudaDevAttrReservedSharedMemoryPerBlock";
+            
         }
         return "INVALID cudaDeviceAttr: "+n;
     }

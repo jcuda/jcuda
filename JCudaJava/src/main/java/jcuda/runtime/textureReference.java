@@ -117,6 +117,11 @@ public class textureReference extends NativePointerObject
     public float maxMipmapLevelClamp;
 
     /**
+     * Disable any trilinear filtering optimizations.
+     */
+    public int disableTrilinearOptimization;
+    
+    /**
      * Creates a new, uninitialized textureReference
      */
     public textureReference()
@@ -145,7 +150,8 @@ public class textureReference extends NativePointerObject
             "mipmapFilterMode="+cudaTextureFilterMode.stringFor(mipmapFilterMode)+","+
             "mipmapLevelBias="+mipmapLevelBias+","+
             "minMipmapLevelClamp="+minMipmapLevelClamp+","+
-            "maxMipmapLevelClamp="+maxMipmapLevelClamp+"]";
+            "maxMipmapLevelClamp="+maxMipmapLevelClamp+","+
+            "disableTrilinearOptimization="+disableTrilinearOptimization+"]";
     }
 
 }

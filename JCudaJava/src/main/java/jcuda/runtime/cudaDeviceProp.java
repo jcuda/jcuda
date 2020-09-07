@@ -340,6 +340,11 @@ public class cudaDeviceProp
     public int l2CacheSize;
 
     /**
+     * Device's maximum l2 persisting lines capacity setting in bytes
+     */
+    public int persistingL2CacheMaxSize;
+    
+    /**
      * The number of maximum resident threads per multiprocessor.
      */
     public int maxThreadsPerMultiProcessor;
@@ -434,6 +439,31 @@ public class cudaDeviceProp
      * Per device maximum shared memory per block usable by special opt in 
      */
     public long sharedMemPerBlockOptin;     
+    
+    /**
+     * Device accesses pageable memory via the host's page tables 
+     */    
+    public int pageableMemoryAccessUsesHostPageTables;
+    
+    /** 
+     * Host can directly access managed memory on the device without migration. 
+     */
+    public int directManagedMemAccessFromHost; 
+    
+    /**
+     * Maximum number of resident blocks per multiprocessor 
+     */
+    public int maxBlocksPerMultiProcessor; 
+    
+    /**
+     * The maximum value of ::cudaAccessPolicyWindow::num_bytes. 
+     */
+    public int accessPolicyMaxWindowSize;  
+    
+    /**
+     * Shared memory reserved by CUDA driver per block in bytes 
+     */
+    public long reservedSharedMemPerBlock;  
     
     /**
      * Returns the String describing the name of this cudaDeviceProp
@@ -545,6 +575,7 @@ public class cudaDeviceProp
             "memoryClockRate="+memoryClockRate+f+
             "memoryBusWidth="+memoryBusWidth+f+
             "l2CacheSize="+l2CacheSize+f+
+            "persistingL2CacheMaxSize="+persistingL2CacheMaxSize+f+
             "maxThreadsPerMultiProcessor="+maxThreadsPerMultiProcessor+f+
             "streamPrioritiesSupported="+streamPrioritiesSupported+f+
             "globalL1CacheSupported="+globalL1CacheSupported+f+
@@ -562,7 +593,12 @@ public class cudaDeviceProp
             "canUseHostPointerForRegisteredMem="+canUseHostPointerForRegisteredMem+f+
             "cooperativeLaunch="+cooperativeLaunch+f+
             "cooperativeMultiDeviceLaunch="+cooperativeMultiDeviceLaunch+f+
-            "sharedMemPerBlockOptin="+sharedMemPerBlockOptin+f;
+            "sharedMemPerBlockOptin="+sharedMemPerBlockOptin+f+
+            "pageableMemoryAccessUsesHostPageTables="+pageableMemoryAccessUsesHostPageTables+f+
+            "directManagedMemAccessFromHost="+directManagedMemAccessFromHost+f+
+            "maxBlocksPerMultiProcessor="+maxBlocksPerMultiProcessor+f+
+            "accessPolicyMaxWindowSize="+accessPolicyMaxWindowSize+f+
+            "reservedSharedMemPerBlock="+reservedSharedMemPerBlock+f;
     }
 
     /**

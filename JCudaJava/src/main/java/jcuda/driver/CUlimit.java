@@ -64,6 +64,11 @@ public class CUlimit
     public static final int CU_LIMIT_MAX_L2_FETCH_GRANULARITY         = 0x05;
     
     /**
+     * A size in bytes for L2 persisting lines cache size 
+     */
+    public static final int CU_LIMIT_PERSISTING_L2_CACHE_SIZE         = 0x06;
+    
+    /**
      * Returns the String identifying the given CUlimit
      *
      * @param n The CUlimit
@@ -79,6 +84,7 @@ public class CUlimit
             case CU_LIMIT_DEV_RUNTIME_SYNC_DEPTH : return "CU_LIMIT_DEV_RUNTIME_SYNC_DEPTH";
             case CU_LIMIT_DEV_RUNTIME_PENDING_LAUNCH_COUNT : return "CU_LIMIT_DEV_RUNTIME_PENDING_LAUNCH_COUNT";
             case CU_LIMIT_MAX_L2_FETCH_GRANULARITY : return "CU_LIMIT_MAX_L2_FETCH_GRANULARITY";
+            case CU_LIMIT_PERSISTING_L2_CACHE_SIZE : return "CU_LIMIT_PERSISTING_L2_CACHE_SIZE";
         }
         return "INVALID CUlimit: "+n;
     }

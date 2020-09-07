@@ -88,8 +88,6 @@ public class CUDA_TEXTURE_DESC
      */
     public float borderColor[] = new float[4];
     
-    // private int _reserved[] = new int[12];
-
     /**
      * Creates a new, uninitialized CUDA_TEXTURE_DESC
      */

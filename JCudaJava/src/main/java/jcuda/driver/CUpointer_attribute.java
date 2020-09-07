@@ -107,6 +107,11 @@ public class CUpointer_attribute
     */
     public static final int CU_POINTER_ATTRIBUTE_ALLOWED_HANDLE_TYPES = 14;
     
+    /** 
+     * 1 if the memory this pointer is referencing can be used with the GPUDirect RDMA API 
+     */
+    public static final int CU_POINTER_ATTRIBUTE_IS_GPU_DIRECT_RDMA_CAPABLE = 15;
+    
     /**
      * Returns the String identifying the given CUpointer_attribute
      *
@@ -131,6 +136,7 @@ public class CUpointer_attribute
             case CU_POINTER_ATTRIBUTE_RANGE_SIZE: return "CU_POINTER_ATTRIBUTE_RANGE_SIZE";
             case CU_POINTER_ATTRIBUTE_MAPPED: return "CU_POINTER_ATTRIBUTE_MAPPED";
             case CU_POINTER_ATTRIBUTE_ALLOWED_HANDLE_TYPES: return "CU_POINTER_ATTRIBUTE_ALLOWED_HANDLE_TYPES";
+            case CU_POINTER_ATTRIBUTE_IS_GPU_DIRECT_RDMA_CAPABLE: return "CU_POINTER_ATTRIBUTE_IS_GPU_DIRECT_RDMA_CAPABLE";
         }
         return "INVALID CUpointer_attribute: "+n;
     }

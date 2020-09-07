@@ -27,6 +27,8 @@
 
 #include "JCudaDriver.hpp"
 #include "JCudaDriver_common.hpp"
+#include "PointerUtils.hpp"
+
 #include <cstring>
 #include <string>
 
@@ -233,13 +235,28 @@ jfieldID CUmemAllocationProp_type; // CUmemAllocationType
 jfieldID CUmemAllocationProp_requestedHandleTypes; // CUmemAllocationHandleType
 jfieldID CUmemAllocationProp_location; // CUmemLocation
 jfieldID CUmemAllocationProp_win32HandleMetaData; // void *
-jfieldID CUmemAllocationProp_reserved; // unsigned long long
 
 jfieldID CUmemAccessDesc_location; // CUmemLocation
 jfieldID CUmemAccessDesc_flags; // CUmemAccess_flags
 
 jclass CUmemLocation_class;
 jmethodID CUmemLocation_constructor;
+
+jfieldID CUstreamAttrValue_accessPolicyWindow; // CUaccessPolicyWindow
+jfieldID CUstreamAttrValue_syncPolicy; // CUsynchronizationPolicy
+
+jfieldID CUkernelNodeAttrValue_accessPolicyWindow; // CUaccessPolicyWindow
+jfieldID CUkernelNodeAttrValue_cooperative; // int
+
+jclass CUaccessPolicyWindow_class;
+jmethodID CUaccessPolicyWindow_constructor;
+
+jfieldID CUaccessPolicyWindow_base_ptr; // void*
+jfieldID CUaccessPolicyWindow_num_bytes; // size_t
+jfieldID CUaccessPolicyWindow_hitRatio; // float
+jfieldID CUaccessPolicyWindow_hitProp; // CUaccessProperty
+jfieldID CUaccessPolicyWindow_missProp; // CUaccessProperty
+
 
 /**
  * Called when the library is loaded. Will initialize all
@@ -538,7 +555,6 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, CUmemAllocationProp_requestedHandleTypes, "requestedHandleTypes", "I"                           )) return JNI_ERR;
     if (!init(env, cls, CUmemAllocationProp_location,             "location",             "Ljcuda/driver/CUmemLocation;")) return JNI_ERR;
     if (!init(env, cls, CUmemAllocationProp_win32HandleMetaData,  "win32HandleMetaData",  "Ljcuda/Pointer;"             )) return JNI_ERR;
-    if (!init(env, cls, CUmemAllocationProp_reserved,             "reserved",             "J"                           )) return JNI_ERR;
 
     // Initialize the field IDs for the CUmemAccessDesc class
     if (!init(env, cls, "jcuda/driver/CUmemAccessDesc")) return JNI_ERR;
@@ -554,6 +570,35 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
         return JNI_ERR;
     }
     if (!init(env, cls, CUmemLocation_constructor, "<init>", "()V")) return JNI_ERR;
+
+    // Initialize the field IDs for the CUstreamAttrValue class
+    if (!init(env, cls, "jcuda/driver/CUstreamAttrValue")) return JNI_ERR;
+    if (!init(env, cls, CUstreamAttrValue_accessPolicyWindow, "accessPolicyWindow", "Ljcuda/driver/CUaccessPolicyWindow;")) return JNI_ERR;
+    if (!init(env, cls, CUstreamAttrValue_syncPolicy,         "syncPolicy",         "I"                                  )) return JNI_ERR;
+
+    // Initialize the field IDs for the CUkernelNodeAttrValue class
+    if (!init(env, cls, "jcuda/driver/CUkernelNodeAttrValue")) return JNI_ERR;
+    if (!init(env, cls, CUkernelNodeAttrValue_accessPolicyWindow, "accessPolicyWindow", "Ljcuda/driver/CUaccessPolicyWindow;")) return JNI_ERR;
+    if (!init(env, cls, CUkernelNodeAttrValue_cooperative,        "cooperative",        "I"                                  )) return JNI_ERR;
+
+    // Obtain the constructor of the CUaccessPolicyWindow class
+    if (!init(env, cls, "jcuda/driver/CUaccessPolicyWindow")) return JNI_ERR;
+    CUaccessPolicyWindow_class = (jclass)env->NewGlobalRef(cls);
+    if (CUaccessPolicyWindow_class == NULL)
+    {
+        Logger::log(LOG_ERROR, "Failed to create reference to class CUaccessPolicyWindow_class\n");
+        return JNI_ERR;
+    }
+    if (!init(env, cls, CUaccessPolicyWindow_constructor, "<init>", "()V")) return JNI_ERR;
+
+    // Initialize the field IDs for the CUaccessPolicyWindow class
+    if (!init(env, cls, "jcuda/driver/CUaccessPolicyWindow")) return JNI_ERR;
+    if (!init(env, cls, CUaccessPolicyWindow_base_ptr,  "base_ptr",  "Ljcuda/Pointer;")) return JNI_ERR;
+    if (!init(env, cls, CUaccessPolicyWindow_num_bytes, "num_bytes", "J"              )) return JNI_ERR;
+    if (!init(env, cls, CUaccessPolicyWindow_hitRatio,  "hitRatio",  "F"              )) return JNI_ERR;
+    if (!init(env, cls, CUaccessPolicyWindow_hitProp,   "hitProp",   "I"              )) return JNI_ERR;
+    if (!init(env, cls, CUaccessPolicyWindow_missProp,  "missProp",  "I"              )) return JNI_ERR;
+
 
     return JNI_VERSION_1_4;
 }
@@ -1389,6 +1434,79 @@ bool releaseCUDA_LAUNCH_PARAMSData(JNIEnv *env, CUDA_LAUNCH_PARAMSData* data)
     return true;
 }
 
+char* getOptionName(CUjit_option option)
+{
+    switch (option)
+    {
+    case CU_JIT_MAX_REGISTERS: return "CU_JIT_MAX_REGISTERS";
+    case CU_JIT_THREADS_PER_BLOCK: return "CU_JIT_THREADS_PER_BLOCK";
+    case CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES: return "CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES";
+    case CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES: return "CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES";
+    case CU_JIT_OPTIMIZATION_LEVEL: return "CU_JIT_OPTIMIZATION_LEVEL";
+    case CU_JIT_TARGET: return "CU_JIT_TARGET";
+    case CU_JIT_FALLBACK_STRATEGY: return "CU_JIT_FALLBACK_STRATEGY";
+    case CU_JIT_GENERATE_DEBUG_INFO: return "CU_JIT_GENERATE_DEBUG_INFO";
+    case CU_JIT_LOG_VERBOSE: return "CU_JIT_LOG_VERBOSE";
+    case CU_JIT_GENERATE_LINE_INFO: return "CU_JIT_GENERATE_LINE_INFO";
+    case CU_JIT_CACHE_MODE: return "CU_JIT_CACHE_MODE";
+    case CU_JIT_WALL_TIME: return "CU_JIT_WALL_TIME";
+    case CU_JIT_INFO_LOG_BUFFER: return "CU_JIT_INFO_LOG_BUFFER";
+    case CU_JIT_ERROR_LOG_BUFFER: return "CU_JIT_ERROR_LOG_BUFFER";
+    case CU_JIT_TARGET_FROM_CUCONTEXT: return "CU_JIT_TARGET_FROM_CUCONTEXT";
+    }
+    return "UNKNWON";
+}
+
+void logJitOption(CUjit_option option, void* &value)
+{
+    switch (option)
+    {
+    case CU_JIT_MAX_REGISTERS:
+    case CU_JIT_THREADS_PER_BLOCK:
+    case CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES:
+    case CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES:
+    case CU_JIT_OPTIMIZATION_LEVEL:
+    case CU_JIT_TARGET:
+    case CU_JIT_FALLBACK_STRATEGY:
+    case CU_JIT_GENERATE_DEBUG_INFO:
+    case CU_JIT_LOG_VERBOSE:
+    case CU_JIT_GENERATE_LINE_INFO:
+    case CU_JIT_CACHE_MODE:
+    {
+        Logger::log(LOG_INFO, "%s : %d\n", getOptionName(option), value);
+        return;
+    }
+
+    case CU_JIT_WALL_TIME:
+    {
+        Logger::log(LOG_INFO, "%s : %f\n", getOptionName(option), value);
+        return;
+    }
+
+    case CU_JIT_INFO_LOG_BUFFER:
+    case CU_JIT_ERROR_LOG_BUFFER:
+    {
+        Logger::log(LOG_INFO, "%s : %s\n", getOptionName(option), value);
+        return;
+    }
+
+    case CU_JIT_TARGET_FROM_CUCONTEXT:
+        Logger::log(LOG_INFO, "%s\n", getOptionName(option));
+        return;
+    }
+}
+
+void logJitOptionsData(JITOptionsData *jitOptionsData)
+{
+    for (int i = 0; i<jitOptionsData->numOptions; i++)
+    {
+        CUjit_option option = jitOptionsData->options[i];
+        void *value = jitOptionsData->optionValues[i];
+        logJitOption(option, value);
+    }
+}
+
+
 
 
 /**
@@ -1459,6 +1577,7 @@ bool getOptionValue(JNIEnv *env, jobject jitOptions, CUjit_option option, void* 
  */
 bool setOptionValue(JNIEnv *env, jobject jitOptions, CUjit_option option, void* value)
 {
+    //Logger::log(LOG_INFO, "Setting option %d with value %p\n", option, value);
     switch (option)
     {
         case CU_JIT_MAX_REGISTERS:
@@ -1505,7 +1624,11 @@ bool setOptionValue(JNIEnv *env, jobject jitOptions, CUjit_option option, void* 
             {
                 return NULL;
             }
+
             char *v = (char*)value;
+
+            //Logger::log(LOG_INFO, "Setting string %d with value %s\n", option, v);
+
             for (int i=0; i<length; i++)
             {
                 a[i] = (jbyte)v[i];
@@ -1535,6 +1658,9 @@ JITOptionsData* initJITOptionsData(JNIEnv *env, jobject jitOptions)
             "Out of memory during JITOptionsData creation");
         return NULL;
     }
+    jitOptionsData->numOptions = 0;
+    jitOptionsData->options = NULL;
+    jitOptionsData->optionValues = NULL;
 
 
     if (jitOptions != NULL)
@@ -1792,7 +1918,6 @@ CUmemAllocationProp getCUmemAllocationProp(JNIEnv *env, jobject javaObject)
     nativeObject.location = getCUmemLocation(env, javaLocation);
 
     nativeObject.requestedHandleTypes = (CUmemAllocationHandleType)env->GetIntField(javaObject, CUmemAllocationProp_requestedHandleTypes);
-    nativeObject.reserved = (unsigned long long)env->GetLongField(javaObject, CUmemAllocationProp_reserved);
     nativeObject.type = (CUmemAllocationType)env->GetIntField(javaObject, CUmemAllocationProp_type);
 
     jobject javaWin32HandleMetaData = env->GetObjectField(javaObject, CUmemAllocationProp_win32HandleMetaData);
@@ -1810,7 +1935,6 @@ void setCUmemAllocationProp(JNIEnv *env, jobject javaObject, CUmemAllocationProp
     env->SetObjectField(javaObject, CUmemAllocationProp_location, javaLocation);
 
     env->SetIntField(javaObject, CUmemAllocationProp_requestedHandleTypes, (jint)nativeObject.requestedHandleTypes);
-    env->SetLongField(javaObject, CUmemAllocationProp_reserved, (jlong)nativeObject.reserved);
     env->SetIntField(javaObject, CUmemAllocationProp_type, (jint)nativeObject.type);
 
     jobject javaWin32HandleMetaData = env->NewObject(CUdeviceptr_class, CUdeviceptr_constructor);
@@ -1847,9 +1971,140 @@ CUmemAccessDesc* getCUmemAccessDescs(JNIEnv *env, jobjectArray javaObjects)
 
 
 
+/**
+* Returns the native representation of the given Java object
+*/
+CUaccessPolicyWindow getCUaccessPolicyWindow(JNIEnv* env, jobject javaObject)
+{
+    CUaccessPolicyWindow nativeObject;
+
+    jobject javaBase_ptr = env->GetObjectField(javaObject, CUaccessPolicyWindow_base_ptr);
+    nativeObject.base_ptr = getPointer(env, javaBase_ptr);
+
+    nativeObject.num_bytes = (size_t)env->GetLongField(javaObject, CUaccessPolicyWindow_num_bytes);
+    nativeObject.hitRatio = (float)env->GetFloatField(javaObject, CUaccessPolicyWindow_hitRatio);
+    nativeObject.hitProp = (CUaccessProperty)env->GetIntField(javaObject, CUaccessPolicyWindow_hitProp);
+    nativeObject.missProp = (CUaccessProperty)env->GetIntField(javaObject, CUaccessPolicyWindow_missProp);
+
+    return nativeObject;
+}
+
+/**
+* Assigns the properties of the given native structure to the given
+* Java Object
+*/
+void setCUaccessPolicyWindow(JNIEnv* env, jobject javaObject, CUaccessPolicyWindow nativeObject)
+{
+    jobject javaBase_ptr = env->NewObject(Pointer_class, Pointer_constructor);
+    setNativePointerValue(env, javaBase_ptr, (jlong)nativeObject.base_ptr);
+    env->SetObjectField(javaObject, CUaccessPolicyWindow_base_ptr, javaBase_ptr);
+
+    env->SetLongField(javaObject, CUaccessPolicyWindow_num_bytes, (jint)nativeObject.num_bytes);
+    env->SetFloatField(javaObject, CUaccessPolicyWindow_hitRatio, (jint)nativeObject.hitRatio);
+    env->SetIntField(javaObject, CUaccessPolicyWindow_hitProp, (jint)nativeObject.hitProp);
+    env->SetIntField(javaObject, CUaccessPolicyWindow_hitProp, (jint)nativeObject.missProp);
+}
+
+bool writeStreamAttributeValueToJava(JNIEnv* env, CUstreamAttrID attr, jobject javaObject, CUstreamAttrValue& nativeObject)
+{
+    if (attr == CU_STREAM_ATTRIBUTE_SYNCHRONIZATION_POLICY)
+    {
+        env->SetIntField(javaObject, CUstreamAttrValue_syncPolicy, (jint)nativeObject.syncPolicy);
+        return true;
+    }
+    if (attr == CU_STREAM_ATTRIBUTE_ACCESS_POLICY_WINDOW)
+    {
+        jobject javaWindow = env->GetObjectField(javaObject, CUstreamAttrValue_accessPolicyWindow);
+        if (javaWindow == NULL)
+        {
+            javaWindow = env->NewObject(CUaccessPolicyWindow_class, CUaccessPolicyWindow_constructor);
+            if (javaWindow == NULL)
+            {
+                ThrowByName(env, "java/lang/OutOfMemoryError",
+                    "Out of memory during CUaccessPolicyWindow creation");
+                return false;
+            }
+            env->SetObjectField(javaObject, CUstreamAttrValue_accessPolicyWindow, javaWindow);
+        }
+        setCUaccessPolicyWindow(env, javaObject, nativeObject.accessPolicyWindow);
+        return true;
+    }
+    ThrowByName(env, "java/lang/IllegalArgumentException",
+        "Invalid CUstreamAttrID");
+    return false;
+}
+
+bool writeStreamAttributeValueToNative(JNIEnv* env, CUstreamAttrID attr, jobject javaObject, CUstreamAttrValue& nativeObject)
+{
+    if (attr == CU_STREAM_ATTRIBUTE_SYNCHRONIZATION_POLICY)
+    {
+        nativeObject.syncPolicy = (CUsynchronizationPolicy)env->GetIntField(javaObject, CUstreamAttrValue_syncPolicy);
+        return true;
+    }
+    if (attr == CU_STREAM_ATTRIBUTE_ACCESS_POLICY_WINDOW)
+    {
+        jobject javaWindow = env->GetObjectField(javaObject, CUstreamAttrValue_accessPolicyWindow);
+        if (javaWindow != NULL)
+        {
+            nativeObject.accessPolicyWindow = getCUaccessPolicyWindow(env, javaObject);
+        }
+        return true;
+    }
+    ThrowByName(env, "java/lang/IllegalArgumentException",
+        "Invalid CUstreamAttrID");
+    return false;
+}
 
 
+bool writeKernelNodeAttributeValueToJava(JNIEnv* env, CUkernelNodeAttrID attr, jobject javaObject, CUkernelNodeAttrValue& nativeObject)
+{
+    if (attr == CU_KERNEL_NODE_ATTRIBUTE_COOPERATIVE)
+    {
+        env->SetIntField(javaObject, CUkernelNodeAttrValue_cooperative, (jint)nativeObject.cooperative);
+        return true;
+    }
+    if (attr == CU_KERNEL_NODE_ATTRIBUTE_ACCESS_POLICY_WINDOW)
+    {
+        jobject javaWindow = env->GetObjectField(javaObject, CUkernelNodeAttrValue_accessPolicyWindow);
+        if (javaWindow == NULL)
+        {
+            javaWindow = env->NewObject(CUaccessPolicyWindow_class, CUaccessPolicyWindow_constructor);
+            if (javaWindow == NULL)
+            {
+                ThrowByName(env, "java/lang/OutOfMemoryError",
+                    "Out of memory during CUaccessPolicyWindow creation");
+                return false;
+            }
+            env->SetObjectField(javaObject, CUkernelNodeAttrValue_accessPolicyWindow, javaWindow);
+        }
+        setCUaccessPolicyWindow(env, javaObject, nativeObject.accessPolicyWindow);
+        return true;
+    }
+    ThrowByName(env, "java/lang/IllegalArgumentException",
+        "Invalid CUkernelNodeAttrID");
+    return false;
+}
 
+bool writeKernelNodeAttributeValueToNative(JNIEnv* env, CUkernelNodeAttrID attr, jobject javaObject, CUkernelNodeAttrValue& nativeObject)
+{
+    if (attr == CU_KERNEL_NODE_ATTRIBUTE_COOPERATIVE)
+    {
+        nativeObject.cooperative = (int)env->GetIntField(javaObject, CUkernelNodeAttrValue_cooperative);
+        return true;
+    }
+    if (attr == CU_KERNEL_NODE_ATTRIBUTE_ACCESS_POLICY_WINDOW)
+    {
+        jobject javaWindow = env->GetObjectField(javaObject, CUkernelNodeAttrValue_accessPolicyWindow);
+        if (javaWindow != NULL)
+        {
+            nativeObject.accessPolicyWindow = getCUaccessPolicyWindow(env, javaObject);
+        }
+        return true;
+    }
+    ThrowByName(env, "java/lang/IllegalArgumentException",
+        "Invalid CUkernelNodeAttrID");
+    return false;
+}
 
 //============================================================================
 
@@ -3041,11 +3296,20 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuLinkCreateNative
 
     CUlinkState nativeStateOut;
     JITOptionsData *jitOptionsData = initJITOptionsData(env, jitOptions);
+
+    // XXX
+    Logger::log(LOG_WARNING, "Initialized %d options\n", jitOptionsData->numOptions);
+    logJitOptionsData(jitOptionsData);
+
     if (jitOptionsData == NULL)
     {
         return JCUDA_INTERNAL_ERROR;
     }
     int result = cuLinkCreate((unsigned int)jitOptionsData->numOptions, jitOptionsData->options, jitOptionsData->optionValues, &nativeStateOut);
+
+    // XXX
+    Logger::log(LOG_WARNING, "Release %d options\n", jitOptionsData->numOptions);
+    logJitOptionsData(jitOptionsData);
 
     if (!releaseJITOptionsData(env, jitOptionsData, jitOptions)) return JCUDA_INTERNAL_ERROR;
     setNativePointerValue(env, stateOut, (jlong)nativeStateOut);
@@ -3078,17 +3342,44 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuLinkAddDataNative
     }
     char *nativeName = convertString(env, name);
 
+    // XXX
+    Logger::log(LOG_WARNING, "Initialzing options from %p\n", jitOptions);
     JITOptionsData *jitOptionsData = initJITOptionsData(env, jitOptions);
+
+    // XXX
+    Logger::log(LOG_WARNING, "Initializing options from %p DONE\n", jitOptions);
+
+    // XXX
+    Logger::log(LOG_WARNING, "Initialized %d options\n", jitOptionsData->numOptions);
+    logJitOptionsData(jitOptionsData);
+
     if (jitOptionsData == NULL)
     {
         return JCUDA_INTERNAL_ERROR;
     }
 
-    int result = cuLinkAddData(nativeState, (CUjitInputType)type, dataPointerData->getPointer(env), (size_t)size, nativeName,
-        (unsigned int)jitOptionsData->numOptions, jitOptionsData->options, jitOptionsData->optionValues);
+    // XXX
+    Logger::log(LOG_WARNING, "Calling cuLinkAddData\n");
+
+//    int result = cuLinkAddData(nativeState, (CUjitInputType)type, dataPointerData->getPointer(env), (size_t)size, nativeName,
+//        (unsigned int)jitOptionsData->numOptions, jitOptionsData->options, jitOptionsData->optionValues);
+
+    void *nativeData = dataPointerData->getPointer(env);
+
+    //Logger::log(LOG_WARNING, "Data is %s\n", nativeData);
+
+    int result = cuLinkAddData(nativeState, (CUjitInputType)type, nativeData, (size_t)size, 0, 0, 0, 0);
+
+    // XXX
+    Logger::log(LOG_WARNING, "Calling cuLinkAddData result %d\n", result);
 
     if (!releasePointerData(env, dataPointerData, JNI_ABORT)) return JCUDA_INTERNAL_ERROR;
     delete[] nativeName;
+
+    // XXX
+    Logger::log(LOG_WARNING, "Release %d options\n", jitOptionsData->numOptions);
+    logJitOptionsData(jitOptionsData);
+
     if (!releaseJITOptionsData(env, jitOptionsData, jitOptions)) return JCUDA_INTERNAL_ERROR;
     return result;
 }
@@ -5866,9 +6157,9 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemGetAllocationPropertie
         ThrowByName(env, "java/lang/NullPointerException", "Parameter 'prop' is null for cuMemGetAllocationPropertiesFromHandle");
         return JCUDA_INTERNAL_ERROR;
     }
-    if (prop == NULL)
+    if (handle == NULL)
     {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'prop' is null for cuMemGetAllocationPropertiesFromHandle");
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'handle' is null for cuMemGetAllocationPropertiesFromHandle");
         return JCUDA_INTERNAL_ERROR;
     }
     Logger::log(LOG_TRACE, "Executing cuMemGetAllocationPropertiesFromHandle\n");
@@ -5882,6 +6173,40 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemGetAllocationPropertie
     return result;
 }
 
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuMemRetainAllocationHandleNative
+ * Signature: (Ljcuda/driver/CUmemGenericAllocationHandle;Ljcuda/Pointer;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemRetainAllocationHandleNative
+    (JNIEnv* env, jclass cls, jobject handle, jobject addr)
+{
+    // XXX Not supported in 11.0.2_451.48
+    ThrowByName(env, "java/lang/UnsupportedOperationException", "cuMemRetainAllocationHandle is not supported in CUDA 11.0");
+    return JCUDA_INTERNAL_ERROR;
+    /*
+    if (handle == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'handle' is null for cuMemRetainAllocationHandle");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (addr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'addr' is null for cuMemRetainAllocationHandle");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuMemRetainAllocationHandle\n");
+
+    CUmemGenericAllocationHandle nativeHandle;
+    void* nativeAddr = (void*)getPointer(env, addr);
+
+    int result = cuMemRetainAllocationHandle(&nativeHandle, nativeAddr);
+
+    setNativePointerValue(env, handle, (jlong)nativeHandle);
+
+    return result;
+    */
+}
 
 /*
  * Class:     jcuda_driver_JCudaDriver
@@ -8858,6 +9183,96 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphExecUpdateNative
 
 }
 
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuGraphKernelNodeCopyAttributesNative
+ * Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUgraphNode;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphKernelNodeCopyAttributesNative
+  (JNIEnv* env, jclass cls, jobject dst, jobject src)
+{
+    if (dst == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'dst' is null for cuGraphKernelNodeCopyAttributes");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (src == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'src' is null for cuGraphKernelNodeCopyAttributes");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuGraphKernelNodeCopyAttributes\n");
+
+    CUgraphNode nativeDst = (CUgraphNode)getNativePointerValue(env, dst);
+    CUgraphNode nativeSrc = (CUgraphNode)getNativePointerValue(env, src);
+
+    int result = cuGraphKernelNodeCopyAttributes(nativeDst, nativeSrc);
+
+    return result;
+}
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuGraphKernelNodeGetAttributeNative
+ * Signature: (Ljcuda/driver/CUgraphNode;ILjcuda/driver/CUkernelNodeAttrValue;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphKernelNodeGetAttributeNative
+  (JNIEnv* env, jclass cls, jobject hNode, jint attr, jobject value_out)
+{
+    if (hNode == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hNode' is null for cuGraphKernelNodeGetAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (value_out == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'value_out' is null for cuGraphKernelNodeGetAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuGraphKernelNodeGetAttribute\n");
+
+    CUgraphNode nativeHnode = (CUgraphNode)getNativePointerValue(env, hNode);
+    CUkernelNodeAttrID nativeAttr = (CUkernelNodeAttrID)attr;
+    CUkernelNodeAttrValue nativeValue_out;
+
+    int result = cuGraphKernelNodeGetAttribute(nativeHnode, nativeAttr, &nativeValue_out);
+
+    if (!writeKernelNodeAttributeValueToJava(env, nativeAttr, value_out, nativeValue_out)) return JCUDA_INTERNAL_ERROR;
+
+    return result;
+}
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuGraphKernelNodeSetAttributeNative
+ * Signature: (Ljcuda/driver/CUgraphNode;ILjcuda/driver/CUkernelNodeAttrValue;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphKernelNodeSetAttributeNative
+  (JNIEnv* env, jclass cls, jobject hNode, jint attr, jobject value)
+{
+    if (hNode == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hNode' is null for cuGraphKernelNodeSetAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (value == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'value_out' is null for cuGraphKernelNodeSetAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuGraphKernelNodeSetAttribute\n");
+
+    CUgraphNode nativeHnode = (CUgraphNode)getNativePointerValue(env, hNode);
+    CUkernelNodeAttrID nativeAttr = (CUkernelNodeAttrID)attr;
+    CUkernelNodeAttrValue nativeValue;
+
+    if (!writeKernelNodeAttributeValueToNative(env, nativeAttr, value, nativeValue)) return JCUDA_INTERNAL_ERROR;
+
+    int result = cuGraphKernelNodeSetAttribute(nativeHnode, nativeAttr, &nativeValue);
+
+    return result;
+}
+
 
 /*
  * Class:     jcuda_driver_JCudaDriver
@@ -8915,6 +9330,33 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuOccupancyMaxActiveBlocksP
     return result;
 }
 
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuOccupancyAvailableDynamicSMemPerBlockNative
+ * Signature: ([JLjcuda/driver/CUfunction;II)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuOccupancyAvailableDynamicSMemPerBlockNative
+  (JNIEnv* env, jclass cls, jlongArray dynamicSmemSize, jobject func, jint numBlocks, jint blockSize)
+{
+    if (dynamicSmemSize == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'dynamicSmemSize' is null for cuOccupancyAvailableDynamicSMemPerBlock");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (func == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'func' is null for cuOccupancyAvailableDynamicSMemPerBlock");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuOccupancyAvailableDynamicSMemPerBlock\n");
+
+    CUfunction nativeFunc = (CUfunction)getNativePointerValue(env, func);
+
+    size_t nativeDynamicSmemSize;
+    int result = cuOccupancyAvailableDynamicSMemPerBlock(&nativeDynamicSmemSize, nativeFunc, (int)numBlocks, (int)blockSize);
+    if (!set(env, dynamicSmemSize, 0, nativeDynamicSmemSize)) return JCUDA_INTERNAL_ERROR;
+    return result;
+}
 
 
 /*
@@ -10102,7 +10544,91 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamDestroyNative
     return result;
 }
 
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuStreamCopyAttributesNative
+ * Signature: (Ljcuda/driver/CUstream;Ljcuda/driver/CUstream;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamCopyAttributesNative
+  (JNIEnv* env, jclass cls, jobject dst, jobject src)
+{
+    if (dst == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'dst' is null for cuStreamCopyAttributes");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (src == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'src' is null for cuStreamCopyAttributes");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuStreamCopyAttributes\n");
 
+    CUstream nativeDst = (CUstream)getNativePointerValue(env, dst);
+    CUstream nativeSrc = (CUstream)getNativePointerValue(env, src);
+    int result = cuStreamCopyAttributes(nativeDst, nativeSrc);
+    return result;
+}
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuStreamGetAttributeNative
+ * Signature: (Ljcuda/driver/CUstream;ILjcuda/driver/CUstreamAttrValue;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamGetAttributeNative
+  (JNIEnv* env, jclass cls, jobject hStream, jint attr, jobject value_out)
+{
+    if (hStream == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hStream' is null for cuStreamGetAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (value_out == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'value_out' is null for cuStreamGetAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuStreamGetAttribute\n");
+
+    CUstream nativeHStream = (CUstream)getNativePointerValue(env, hStream);
+    CUstreamAttrID nativeAttr = (CUstreamAttrID)attr;
+    CUstreamAttrValue nativeValue_out;
+    int result = cuStreamGetAttribute(nativeHStream, nativeAttr, &nativeValue_out);
+
+    if (!writeStreamAttributeValueToJava(env, nativeAttr, value_out, nativeValue_out)) return JCUDA_INTERNAL_ERROR;
+
+    return result;
+}
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuStreamSetAttributeNative
+ * Signature: (Ljcuda/driver/CUstream;ILjcuda/driver/CUstreamAttrValue;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamSetAttributeNative
+  (JNIEnv* env, jclass cls, jobject hStream, jint attr, jobject value)
+{
+    if (hStream == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hStream' is null for cuStreamSetAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (value == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'value' is null for cuStreamSetAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuStreamSetAttribute\n");
+
+    CUstream nativeHStream = (CUstream)getNativePointerValue(env, hStream);
+    CUstreamAttrID nativeAttr = (CUstreamAttrID)attr;
+    CUstreamAttrValue nativeValue;
+    if (!writeStreamAttributeValueToNative(env, nativeAttr, value, nativeValue)) return JCUDA_INTERNAL_ERROR;
+
+    int result = cuStreamSetAttribute(nativeHStream, nativeAttr, &nativeValue);
+
+    return result;
+}
 
 /*
  * Class:     jcuda_driver_JCudaDriver
@@ -10607,6 +11133,34 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphicsUnmapResourcesNat
     return result;
 }
 
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuFuncGetModuleNative
+ * Signature: (Ljcuda/driver/CUmodule;Ljcuda/driver/CUfunction;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuFuncGetModuleNative
+  (JNIEnv* env, jclass cls, jobject hmod, jobject hfunc)
+{
+    if (hmod == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hmod' is null for cuFuncGetModule");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (hfunc == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hfunc' is null for cuFuncGetModule");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuFuncGetModule\n");
+
+    CUmodule nativeHmod;
+    CUfunction nativeHfunc = (CUfunction)getNativePointerValue(env, hfunc);
+    int result = cuFuncGetModule(&nativeHmod, nativeHfunc);
+
+    setNativePointerValue(env, hmod, (jlong)nativeHmod);
+    return result;
+
+}
 
 
 /*
@@ -10767,6 +11321,18 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuCtxGetStreamPriorityRange
     return result;
 }
 
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuCtxResetPersistingL2CacheNative
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuCtxResetPersistingL2CacheNative
+  (JNIEnv* env, jclass cls)
+{
+    Logger::log(LOG_TRACE, "Executing cuCtxResetPersistingL2Cache\n");
+    int result = cudaCtxResetPersistingL2Cache();
+    return result;
+}
 
 
 /*

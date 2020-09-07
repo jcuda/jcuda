@@ -26,9 +26,10 @@
  */
 
 #include "JCudaRuntime.hpp"
+#include "JCudaRuntime_common.hpp"
+#include "PointerUtils.hpp"
 
 #include <cstring>
-#include "JCudaRuntime_common.hpp"
 
 jfieldID cudaDeviceProp_name; // byte[256]
 jfieldID cudaDeviceProp_uuid; // jcuda.runtime.cudaUUID
@@ -86,6 +87,7 @@ jfieldID cudaDeviceProp_unifiedAddressing; // int
 jfieldID cudaDeviceProp_memoryClockRate; // int
 jfieldID cudaDeviceProp_memoryBusWidth; // int
 jfieldID cudaDeviceProp_l2CacheSize; // int
+jfieldID cudaDeviceProp_persistingL2CacheMaxSize; // int
 jfieldID cudaDeviceProp_maxThreadsPerMultiProcessor; // int
 jfieldID cudaDeviceProp_globalL1CacheSupported; // int
 jfieldID cudaDeviceProp_localL1CacheSupported; // int
@@ -103,6 +105,12 @@ jfieldID cudaDeviceProp_canUseHostPointerForRegisteredMem; // int
 jfieldID cudaDeviceProp_cooperativeLaunch; // int
 jfieldID cudaDeviceProp_cooperativeMultiDeviceLaunch; // int
 jfieldID cudaDeviceProp_sharedMemPerBlockOptin; // size_t
+jfieldID cudaDeviceProp_pageableMemoryAccessUsesHostPageTables; // int
+jfieldID cudaDeviceProp_directManagedMemAccessFromHost; // int
+jfieldID cudaDeviceProp_maxBlocksPerMultiProcessor; // int
+jfieldID cudaDeviceProp_accessPolicyMaxWindowSize; // int
+jfieldID cudaDeviceProp_reservedSharedMemPerBlock; // size_t
+
 
 jfieldID cudaPitchedPtr_ptr; // jcuda.Pointer
 jfieldID cudaPitchedPtr_pitch; // size_t
@@ -155,6 +163,7 @@ jfieldID textureReference_mipmapFilterMode; // cudaTextureFilterMode
 jfieldID textureReference_mipmapLevelBias; // float
 jfieldID textureReference_minMipmapLevelClamp; // float
 jfieldID textureReference_maxMipmapLevelClamp; // float
+jfieldID textureReference_disableTrilinearOptimization; // int
 
 jfieldID surfaceReference_channelDesc; // cudaChannelFormatDesc
 
@@ -173,12 +182,10 @@ jfieldID cudaFuncAttributes_cacheModeCA; // int
 jfieldID cudaFuncAttributes_maxDynamicSharedSizeBytes; // int
 jfieldID cudaFuncAttributes_preferredShmemCarveout; // int
 
-jfieldID cudaPointerAttributes_memoryType; // cudaMemoryType
 jfieldID cudaPointerAttributes_type; // cudaMemoryType
 jfieldID cudaPointerAttributes_device; // int
 jfieldID cudaPointerAttributes_devicePointer; // void*
 jfieldID cudaPointerAttributes_hostPointer; // void*
-jfieldID cudaPointerAttributes_isManaged; // int
 
 jfieldID cudaIpcEventHandle_reserved; // byte[]
 jfieldID cudaIpcMemHandle_reserved; // byte[]
@@ -222,8 +229,20 @@ static jmethodID cudaStreamCallback_call; // (Ljcuda/runtime/cudaStream_t;ILjava
  // Static method ID for the cudaHostFn#call function
 static jmethodID cudaHostFn_call; // (Ljava/lang/Object;)V
 
-
 jfieldID cudaUUID_bytes; // char[16]
+
+jfieldID cudaStreamAttrValue_accessPolicyWindow; // CUaccessPolicyWindow
+jfieldID cudaStreamAttrValue_syncPolicy; // CUsynchronizationPolicy
+
+jclass cudaAccessPolicyWindow_class;
+jmethodID cudaAccessPolicyWindow_constructor;
+
+jfieldID cudaAccessPolicyWindow_base_ptr; // void*
+jfieldID cudaAccessPolicyWindow_num_bytes; // size_t
+jfieldID cudaAccessPolicyWindow_hitRatio; // float
+jfieldID cudaAccessPolicyWindow_hitProp; // cudaAccessProperty
+jfieldID cudaAccessPolicyWindow_missProp; // cudaAccessProperty
+
 
 /**
  * Called when the library is loaded. Will initialize all
@@ -306,6 +325,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, cudaDeviceProp_memoryClockRate,             "memoryClockRate",             "I" )) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_memoryBusWidth,              "memoryBusWidth",              "I" )) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_l2CacheSize,                 "l2CacheSize",                 "I" )) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_persistingL2CacheMaxSize,    "persistingL2CacheMaxSize",    "I" )) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_maxThreadsPerMultiProcessor, "maxThreadsPerMultiProcessor", "I" )) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_globalL1CacheSupported,      "globalL1CacheSupported",      "I" )) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_localL1CacheSupported,       "localL1CacheSupported",       "I" )) return JNI_ERR;
@@ -323,6 +343,11 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
 	if (!init(env, cls, cudaDeviceProp_cooperativeLaunch,                 "cooperativeLaunch",                 "I")) return JNI_ERR;
 	if (!init(env, cls, cudaDeviceProp_cooperativeMultiDeviceLaunch,      "cooperativeMultiDeviceLaunch",      "I")) return JNI_ERR;
 	if (!init(env, cls, cudaDeviceProp_sharedMemPerBlockOptin,            "sharedMemPerBlockOptin",            "J")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_pageableMemoryAccessUsesHostPageTables, "pageableMemoryAccessUsesHostPageTables", "I")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_directManagedMemAccessFromHost,         "directManagedMemAccessFromHost",         "I")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_maxBlocksPerMultiProcessor,             "maxBlocksPerMultiProcessor",             "I")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_accessPolicyMaxWindowSize,              "accessPolicyMaxWindowSize",              "I")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_reservedSharedMemPerBlock,              "reservedSharedMemPerBlock",              "J")) return JNI_ERR;
 
     // Obtain the fieldIDs of the cudaPitchedPtr class
     if (!init(env, cls, "jcuda/runtime/cudaPitchedPtr")) return JNI_ERR;
@@ -399,6 +424,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, textureReference_mipmapLevelBias,     "mipmapLevelBias",     "F")) return JNI_ERR;
     if (!init(env, cls, textureReference_minMipmapLevelClamp, "minMipmapLevelClamp", "F")) return JNI_ERR;
     if (!init(env, cls, textureReference_maxMipmapLevelClamp, "maxMipmapLevelClamp", "F")) return JNI_ERR;
+    if (!init(env, cls, textureReference_disableTrilinearOptimization, "disableTrilinearOptimization", "I")) return JNI_ERR;
 
     // Obtain the fieldIDs of the surfaceReference class
     if (!init(env, cls, "jcuda/runtime/surfaceReference")) return JNI_ERR;
@@ -427,12 +453,10 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
 
     // Obtain the fieldIDs of the cudaPointerAttributes class
     if (!init(env, cls, "jcuda/runtime/cudaPointerAttributes")) return JNI_ERR;
-    if (!init(env, cls, cudaPointerAttributes_memoryType,    "memoryType",    "I"              )) return JNI_ERR;
 	if (!init(env, cls, cudaPointerAttributes_type,          "type",          "I"              )) return JNI_ERR;
 	if (!init(env, cls, cudaPointerAttributes_device,        "device",        "I"              )) return JNI_ERR;
     if (!init(env, cls, cudaPointerAttributes_devicePointer, "devicePointer", "Ljcuda/Pointer;")) return JNI_ERR;
     if (!init(env, cls, cudaPointerAttributes_hostPointer,   "hostPointer",   "Ljcuda/Pointer;")) return JNI_ERR;
-    if (!init(env, cls, cudaPointerAttributes_isManaged,     "isManaged",     "I"              )) return JNI_ERR;
 
     // Obtain the fieldIDs of the cudaIpcEventHandle class
     if (!init(env, cls, "jcuda/runtime/cudaIpcEventHandle")) return JNI_ERR;
@@ -493,6 +517,29 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
 	// Obtain the fieldIDs of the cudaUUID class
 	if (!init(env, cls, "jcuda/runtime/cudaUUID")) return JNI_ERR;
 	if (!init(env, cls, cudaUUID_bytes, "bytes", "[B")) return JNI_ERR;
+
+    // Initialize the field IDs for the cudaStreamAttrValue class
+    if (!init(env, cls, "jcuda/runtime/cudaStreamAttrValue")) return JNI_ERR;
+    if (!init(env, cls, cudaStreamAttrValue_accessPolicyWindow, "accessPolicyWindow", "Ljcuda/runtime/cudaAccessPolicyWindow;")) return JNI_ERR;
+    if (!init(env, cls, cudaStreamAttrValue_syncPolicy,         "syncPolicy",         "I"                                  )) return JNI_ERR;
+
+    // Obtain the constructor of the cudaAccessPolicyWindow class
+    if (!init(env, cls, "jcuda/runtime/cudaAccessPolicyWindow")) return JNI_ERR;
+    cudaAccessPolicyWindow_class = (jclass)env->NewGlobalRef(cls);
+    if (cudaAccessPolicyWindow_class == NULL)
+    {
+        Logger::log(LOG_ERROR, "Failed to create reference to class cudaAccessPolicyWindow_class\n");
+        return JNI_ERR;
+    }
+    if (!init(env, cls, cudaAccessPolicyWindow_constructor, "<init>", "()V")) return JNI_ERR;
+
+    // Initialize the field IDs for the cudaAccessPolicyWindow class
+    if (!init(env, cls, "jcuda/runtime/cudaAccessPolicyWindow")) return JNI_ERR;
+    if (!init(env, cls, cudaAccessPolicyWindow_base_ptr,  "base_ptr",  "Ljcuda/Pointer;")) return JNI_ERR;
+    if (!init(env, cls, cudaAccessPolicyWindow_num_bytes, "num_bytes", "J"              )) return JNI_ERR;
+    if (!init(env, cls, cudaAccessPolicyWindow_hitRatio,  "hitRatio",  "F"              )) return JNI_ERR;
+    if (!init(env, cls, cudaAccessPolicyWindow_hitProp,   "hitProp",   "I"              )) return JNI_ERR;
+    if (!init(env, cls, cudaAccessPolicyWindow_missProp,  "missProp",  "I"              )) return JNI_ERR;
 
     return JNI_VERSION_1_4;
 }
@@ -710,6 +757,7 @@ cudaDeviceProp getCudaDeviceProp(JNIEnv *env, jobject prop)
     nativeProp.memoryClockRate             = (int)env->GetIntField( prop, cudaDeviceProp_memoryClockRate);
     nativeProp.memoryBusWidth              = (int)env->GetIntField( prop, cudaDeviceProp_memoryBusWidth);
     nativeProp.l2CacheSize                 = (int)env->GetIntField( prop, cudaDeviceProp_l2CacheSize);
+    nativeProp.persistingL2CacheMaxSize    = (int)env->GetIntField( prop, cudaDeviceProp_persistingL2CacheMaxSize);
     nativeProp.maxThreadsPerMultiProcessor = (int)env->GetIntField( prop, cudaDeviceProp_maxThreadsPerMultiProcessor);
     nativeProp.globalL1CacheSupported      = (int)env->GetIntField( prop, cudaDeviceProp_globalL1CacheSupported);
     nativeProp.localL1CacheSupported       = (int)env->GetIntField( prop, cudaDeviceProp_localL1CacheSupported);
@@ -727,6 +775,11 @@ cudaDeviceProp getCudaDeviceProp(JNIEnv *env, jobject prop)
 	nativeProp.cooperativeLaunch                 = (int)env->GetIntField(prop, cudaDeviceProp_cooperativeLaunch);
 	nativeProp.cooperativeMultiDeviceLaunch      = (int)env->GetIntField(prop, cudaDeviceProp_cooperativeMultiDeviceLaunch);
 	nativeProp.sharedMemPerBlockOptin = (size_t)env->GetLongField(prop, cudaDeviceProp_sharedMemPerBlockOptin);
+    nativeProp.pageableMemoryAccessUsesHostPageTables = (int)env->GetIntField(prop, cudaDeviceProp_pageableMemoryAccessUsesHostPageTables);
+    nativeProp.directManagedMemAccessFromHost         = (int)env->GetIntField(prop, cudaDeviceProp_directManagedMemAccessFromHost);
+    nativeProp.maxBlocksPerMultiProcessor             = (int)env->GetIntField(prop, cudaDeviceProp_maxBlocksPerMultiProcessor);
+    nativeProp.accessPolicyMaxWindowSize              = (int)env->GetIntField(prop, cudaDeviceProp_accessPolicyMaxWindowSize);
+    nativeProp.sharedMemPerBlockOptin                 = (size_t)env->GetLongField(prop, cudaDeviceProp_sharedMemPerBlockOptin);
 
     return nativeProp;
 }
@@ -857,6 +910,7 @@ void setCudaDeviceProp(JNIEnv *env, jobject prop, cudaDeviceProp nativeProp)
     env->SetIntField( prop, cudaDeviceProp_memoryClockRate            , (jint) nativeProp.memoryClockRate);
     env->SetIntField( prop, cudaDeviceProp_memoryBusWidth             , (jint) nativeProp.memoryBusWidth);
     env->SetIntField( prop, cudaDeviceProp_l2CacheSize                , (jint) nativeProp.l2CacheSize);
+    env->SetIntField(prop, cudaDeviceProp_persistingL2CacheMaxSize    , (jint)nativeProp.persistingL2CacheMaxSize);
     env->SetIntField( prop, cudaDeviceProp_maxThreadsPerMultiProcessor, (jint) nativeProp.maxThreadsPerMultiProcessor);
 
     env->SetIntField( prop, cudaDeviceProp_globalL1CacheSupported    , (jint) nativeProp.globalL1CacheSupported);
@@ -878,6 +932,12 @@ void setCudaDeviceProp(JNIEnv *env, jobject prop, cudaDeviceProp nativeProp)
 	env->SetIntField(prop, cudaDeviceProp_cooperativeMultiDeviceLaunch     , (jint)nativeProp.cooperativeMultiDeviceLaunch);
 
 	env->SetLongField(prop, cudaDeviceProp_sharedMemPerBlockOptin, (jlong)nativeProp.sharedMemPerBlockOptin);
+
+    env->SetIntField(prop,  cudaDeviceProp_pageableMemoryAccessUsesHostPageTables, (jint)nativeProp.pageableMemoryAccessUsesHostPageTables);
+    env->SetIntField(prop,  cudaDeviceProp_directManagedMemAccessFromHost,         (jint)nativeProp.directManagedMemAccessFromHost);
+    env->SetIntField(prop,  cudaDeviceProp_maxBlocksPerMultiProcessor,             (jint)nativeProp.maxBlocksPerMultiProcessor);
+    env->SetIntField(prop,  cudaDeviceProp_accessPolicyMaxWindowSize,              (jint)nativeProp.accessPolicyMaxWindowSize);
+    env->SetLongField(prop, cudaDeviceProp_reservedSharedMemPerBlock,              (jlong)nativeProp.reservedSharedMemPerBlock);
 
 }
 
@@ -1071,7 +1131,7 @@ textureReference getTextureReference(JNIEnv *env, jobject texref)
     nativeTexref.mipmapLevelBias     = (float)                 env->GetIntField(texref, textureReference_mipmapLevelBias);
     nativeTexref.minMipmapLevelClamp = (float)                 env->GetIntField(texref, textureReference_minMipmapLevelClamp);
     nativeTexref.maxMipmapLevelClamp = (float)                 env->GetIntField(texref, textureReference_maxMipmapLevelClamp);
-
+    nativeTexref.disableTrilinearOptimization = (int)env->GetIntField(texref, textureReference_disableTrilinearOptimization);
     return nativeTexref;
 }
 
@@ -1106,6 +1166,7 @@ void setTextureReference(JNIEnv *env, jobject texref, textureReference nativeTex
     env->SetFloatField(texref, textureReference_mipmapLevelBias,     (jfloat)nativeTexref.mipmapLevelBias);
     env->SetFloatField(texref, textureReference_minMipmapLevelClamp, (jfloat)nativeTexref.minMipmapLevelClamp);
     env->SetFloatField(texref, textureReference_maxMipmapLevelClamp, (jfloat)nativeTexref.maxMipmapLevelClamp);
+    env->SetIntField(texref,   textureReference_disableTrilinearOptimization, (jint)nativeTexref.disableTrilinearOptimization);
 
 }
 
@@ -1182,7 +1243,6 @@ void setCudaFuncAttributes(JNIEnv *env, jobject attr, cudaFuncAttributes nativeA
  */
 bool setCudaPointerAttributes(JNIEnv *env, jobject attributes, cudaPointerAttributes nativeAttributes)
 {
-	env->SetIntField(attributes, cudaPointerAttributes_memoryType, (jint)nativeAttributes.memoryType);
 	env->SetIntField(attributes, cudaPointerAttributes_type, (jint)nativeAttributes.type);
 	env->SetIntField(attributes, cudaPointerAttributes_device, (jint)nativeAttributes.device);
 
@@ -1202,7 +1262,6 @@ bool setCudaPointerAttributes(JNIEnv *env, jobject attributes, cudaPointerAttrib
     }
     setPointer(env, hostPointerObject, (jlong)nativeAttributes.hostPointer);
 
-    env->SetIntField(attributes, cudaPointerAttributes_isManaged, (jint)nativeAttributes.isManaged);
     return true;
 }
 
@@ -1543,6 +1602,89 @@ void setCudaTextureDesc(JNIEnv *env, jobject texDesc, cudaTextureDesc &nativeTex
 
 
 
+/**
+* Returns the native representation of the given Java object
+*/
+cudaAccessPolicyWindow getCudaAccessPolicyWindow(JNIEnv* env, jobject javaObject)
+{
+    cudaAccessPolicyWindow nativeObject;
+
+    jobject javaBase_ptr = env->GetObjectField(javaObject, cudaAccessPolicyWindow_base_ptr);
+    nativeObject.base_ptr = getPointer(env, javaBase_ptr);
+
+    nativeObject.num_bytes = (size_t)env->GetLongField(javaObject, cudaAccessPolicyWindow_num_bytes);
+    nativeObject.hitRatio = (float)env->GetFloatField(javaObject, cudaAccessPolicyWindow_hitRatio);
+    nativeObject.hitProp = (cudaAccessProperty)env->GetIntField(javaObject, cudaAccessPolicyWindow_hitProp);
+    nativeObject.missProp = (cudaAccessProperty)env->GetIntField(javaObject, cudaAccessPolicyWindow_missProp);
+
+    return nativeObject;
+}
+
+/**
+* Assigns the properties of the given native structure to the given
+* Java Object
+*/
+void setCudaAccessPolicyWindow(JNIEnv* env, jobject javaObject, cudaAccessPolicyWindow nativeObject)
+{
+    jobject javaBase_ptr = env->NewObject(Pointer_class, Pointer_constructor);
+    setNativePointerValue(env, javaBase_ptr, (jlong)nativeObject.base_ptr);
+    env->SetObjectField(javaObject, cudaAccessPolicyWindow_base_ptr, javaBase_ptr);
+
+    env->SetLongField(javaObject, cudaAccessPolicyWindow_num_bytes, (jint)nativeObject.num_bytes);
+    env->SetFloatField(javaObject, cudaAccessPolicyWindow_hitRatio, (jint)nativeObject.hitRatio);
+    env->SetIntField(javaObject, cudaAccessPolicyWindow_hitProp, (jint)nativeObject.hitProp);
+    env->SetIntField(javaObject, cudaAccessPolicyWindow_hitProp, (jint)nativeObject.missProp);
+}
+
+bool writeStreamAttributeValueToJava(JNIEnv* env, cudaStreamAttrID attr, jobject javaObject, cudaStreamAttrValue& nativeObject)
+{
+    if (attr == cudaStreamAttributeSynchronizationPolicy)
+    {
+        env->SetIntField(javaObject, cudaStreamAttrValue_syncPolicy, (jint)nativeObject.syncPolicy);
+        return true;
+    }
+    if (attr == cudaStreamAttributeAccessPolicyWindow)
+    {
+        jobject javaWindow = env->GetObjectField(javaObject, cudaStreamAttrValue_accessPolicyWindow);
+        if (javaWindow == NULL)
+        {
+            javaWindow = env->NewObject(cudaAccessPolicyWindow_class, cudaAccessPolicyWindow_constructor);
+            if (javaWindow == NULL)
+            {
+                ThrowByName(env, "java/lang/OutOfMemoryError",
+                    "Out of memory during cudaAccessPolicyWindow creation");
+                return false;
+            }
+            env->SetObjectField(javaObject, cudaStreamAttrValue_accessPolicyWindow, javaWindow);
+        }
+        setCudaAccessPolicyWindow(env, javaObject, nativeObject.accessPolicyWindow);
+        return true;
+    }
+    ThrowByName(env, "java/lang/IllegalArgumentException",
+        "Invalid cudaStreamAttrID");
+    return false;
+}
+
+bool writeStreamAttributeValueToNative(JNIEnv* env, cudaStreamAttrID attr, jobject javaObject, cudaStreamAttrValue& nativeObject)
+{
+    if (attr == cudaStreamAttributeSynchronizationPolicy)
+    {
+        nativeObject.syncPolicy = (cudaSynchronizationPolicy)env->GetIntField(javaObject, cudaStreamAttrValue_syncPolicy);
+        return true;
+    }
+    if (attr == cudaStreamAttributeAccessPolicyWindow)
+    {
+        jobject javaWindow = env->GetObjectField(javaObject, cudaStreamAttrValue_accessPolicyWindow);
+        if (javaWindow != NULL)
+        {
+            nativeObject.accessPolicyWindow = getCudaAccessPolicyWindow(env, javaObject);
+        }
+        return true;
+    }
+    ThrowByName(env, "java/lang/IllegalArgumentException",
+        "Invalid cudaStreamAttrID");
+    return false;
+}
 
 
 
@@ -4016,7 +4158,109 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaStreamGetFlagsNative
 }
 
 
+/*
+ * Class:     jcuda_runtime_JCuda
+ * Method:    cudaCtxResetPersistingL2CacheNative
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaCtxResetPersistingL2CacheNative
+   (JNIEnv* env, jclass cls) 
+{
+    Logger::log(LOG_TRACE, "Executing cudaCtxResetPersistingL2Cache\n");
+    int result = cudaCtxResetPersistingL2Cache();
+    return result;
+}
 
+/*
+ * Class:     jcuda_runtime_JCuda
+ * Method:    cudaStreamCopyAttributesNative
+ * Signature: (Ljcuda/runtime/cudaStream_t;Ljcuda/runtime/cudaStream_t;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaStreamCopyAttributesNative
+    (JNIEnv* env, jclass cls, jobject dst, jobject src)
+{
+    if (dst == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'dst' is null for cudaStreamCopyAttributes");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (src == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'src' is null for cudaStreamCopyAttributes");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cudaStreamCopyAttributes\n");
+
+    cudaStream_t nativeDst = (cudaStream_t)getNativePointerValue(env, dst);
+    cudaStream_t nativeSrc = (cudaStream_t)getNativePointerValue(env, src);
+
+    int result = cudaStreamCopyAttributes(nativeDst, nativeSrc);
+
+    return result;
+}
+
+/*
+ * Class:     jcuda_runtime_JCuda
+ * Method:    cudaStreamGetAttributeNative
+ * Signature: (Ljcuda/runtime/cudaStream_t;ILjcuda/runtime/cudaStreamAttrValue;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaStreamGetAttributeNative
+(JNIEnv* env, jclass cls, jobject hStream, jint attr, jobject value_out)
+{
+    if (hStream == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hStream' is null for cudaStreamGetAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (value_out == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'value_out' is null for cudaStreamGetAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cudaStreamGetAttribute\n");
+
+    cudaStream_t nativeHstream = (cudaStream_t)getNativePointerValue(env, hStream);
+    cudaStreamAttrID nativeAttr = (cudaStreamAttrID)attr;
+    cudaStreamAttrValue nativeValue_out;
+         
+    int result = cudaStreamGetAttribute(nativeHstream, nativeAttr, &nativeValue_out);
+
+    if (!writeStreamAttributeValueToJava(env, nativeAttr, value_out, nativeValue_out)) return JCUDA_INTERNAL_ERROR;
+
+    return result;
+}
+
+/*
+ * Class:     jcuda_runtime_JCuda
+ * Method:    cudaStreamSetAttributeNative
+ * Signature: (Ljcuda/runtime/cudaStream_t;ILjcuda/runtime/cudaStreamAttrValue;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaStreamSetAttributeNative
+(JNIEnv* env, jclass cls, jobject hStream, jint attr, jobject value)
+{
+    if (hStream == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hStream' is null for cudaStreamSetAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (value == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'value' is null for cudaStreamSetAttribute");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cudaStreamSetAttribute\n");
+
+    cudaStream_t nativeHstream = (cudaStream_t)getNativePointerValue(env, hStream);
+    cudaStreamAttrID nativeAttr = (cudaStreamAttrID)attr;
+    cudaStreamAttrValue nativeValue;
+
+    if (!writeStreamAttributeValueToNative(env, nativeAttr, value, nativeValue)) return JCUDA_INTERNAL_ERROR;
+
+    int result = cudaStreamSetAttribute(nativeHstream, nativeAttr, &nativeValue);
+
+    return result;
+
+}
 
 /*
  * Class:     jcuda_runtime_JCuda

@@ -40,7 +40,7 @@ public class JCuda
     /**
      * CUDA runtime version
      */
-    public static final int CUDART_VERSION = 10020;
+    public static final int CUDART_VERSION = 11000;
 
     /**
      * Returns an unspecified string that will be appended to native 
@@ -50,7 +50,7 @@ public class JCuda
      */
     public static String getJCudaVersion()
     {
-        return "10.2.0";
+        return "11.0.0";
     }
     
     /**
@@ -6646,6 +6646,115 @@ public class JCuda
     }
     private static native int cudaStreamGetFlagsNative(cudaStream_t hStream, int flags[]);
 
+    /**
+     * <pre><code>
+     * \brief Resets all persisting lines in cache to normal status.
+     *
+     * Resets all persisting lines in cache to normal status.
+     * Takes effect on function return.
+     *
+     * \return
+     * ::cudaSuccess,
+     * \notefnerr
+     *
+     * \sa
+     * ::cudaAccessPolicyWindow
+     * </code></pre>
+     */
+    public static int cudaCtxResetPersistingL2Cache() 
+    {
+        return checkResult(cudaCtxResetPersistingL2CacheNative());
+    }
+    private static native int cudaCtxResetPersistingL2CacheNative();
+
+    /**
+     * <pre><code>
+     * \brief Copies attributes from source stream to destination stream.
+     *
+     * Copies attributes from source stream \p src to destination stream \p dst.
+     * Both streams must have the same context.
+     *
+     * \param[out] dst Destination stream
+     * \param[in] src Source stream
+     * For attributes see ::cudaStreamAttrID
+     *
+     * \return
+     * ::cudaSuccess,
+     * ::cudaErrorNotSupported
+     * \notefnerr
+     *
+     * \sa
+     * ::cudaAccessPolicyWindow
+     * </code></pre>
+     */
+    public static int cudaStreamCopyAttributes(cudaStream_t dst, cudaStream_t src)
+    {
+        return checkResult(cudaStreamCopyAttributesNative(dst, src));
+    }
+    private static native int cudaStreamCopyAttributesNative(cudaStream_t dst, cudaStream_t src);
+
+     /**
+     * <pre><code>
+     * \brief Queries stream attribute.
+     *
+     * Queries attribute \p attr from \p hStream and stores it in corresponding
+     * member of \p value_out.
+     *
+     * \param[in] hStream
+     * \param[in] attr
+     * \param[out] value_out
+     *
+     * \return
+     * ::cudaSuccess,
+     * ::cudaErrorInvalidValue,
+     * ::cudaErrorInvalidResourceHandle
+     * \notefnerr
+     *
+     * \sa
+     * ::cudaAccessPolicyWindow
+     * </code></pre>
+     */
+    public static int cudaStreamGetAttribute(
+        cudaStream_t hStream, int attr,
+        cudaStreamAttrValue value_out) 
+    {
+        return checkResult(cudaStreamGetAttributeNative(hStream, attr, value_out));
+    }
+    private static native int cudaStreamGetAttributeNative(
+        cudaStream_t hStream, int attr,
+        cudaStreamAttrValue value_out);
+
+     /**
+     * <pre><code>
+     * \brief Sets stream attribute.
+     *
+     * Sets attribute \p attr on \p hStream from corresponding attribute of
+     * \p value. The updated attribute will be applied to subsequent work
+     * submitted to the stream. It will not affect previously submitted work.
+     *
+     * \param[out] hStream
+     * \param[in] attr
+     * \param[in] value
+     *
+     * \return
+     * ::cudaSuccess,
+     * ::cudaErrorInvalidValue,
+     * ::cudaErrorInvalidResourceHandle
+     * \notefnerr
+     *
+     * \sa
+     * ::cudaAccessPolicyWindow
+     * </code></pre>
+     */
+    public static int cudaStreamSetAttribute(
+            cudaStream_t hStream, int attr,
+            cudaStreamAttrValue value)
+    {
+        return checkResult(cudaStreamSetAttributeNative(hStream, attr, value));
+    }
+    private static native int cudaStreamSetAttributeNative(
+        cudaStream_t hStream, int attr,
+        cudaStreamAttrValue value);
 
     /**
      * Destroys and cleans up an asynchronous stream.
@@ -11775,6 +11884,8 @@ public class JCuda
      *
      * @see JCuda#cudaProfilerStart
      * @see JCuda#cudaProfilerStop
+     * 
+     * @deprecated As of CUDA 11.0
      */
     public static int cudaProfilerInitialize(String configFile, String outputFile, int outputMode)
     {

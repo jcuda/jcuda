@@ -64,6 +64,11 @@ public class cudaLimit
      * granularity of L2 (in Bytes). This is a hint 
      */
     public static final int cudaLimitMaxL2FetchGranularity        = 0x05;
+
+    /**
+     * A size in bytes for L2 persisting lines cache size 
+     */
+    public static final int cudaLimitPersistingL2CacheSize        = 0x06;
     
     /**
      * Returns the String identifying the given cudaLimit
@@ -81,6 +86,7 @@ public class cudaLimit
             case cudaLimitDevRuntimeSyncDepth: return "cudaLimitDevRuntimeSyncDepth";
             case cudaLimitDevRuntimePendingLaunchCount: return "cudaLimitDevRuntimePendingLaunchCount";
             case cudaLimitMaxL2FetchGranularity: return "cudaLimitMaxL2FetchGranularity";
+            case cudaLimitPersistingL2CacheSize: return "cudaLimitPersistingL2CacheSize";
         }
         return "INVALID cudaLimit: "+n;
     }

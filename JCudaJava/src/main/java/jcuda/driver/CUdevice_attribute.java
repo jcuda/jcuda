@@ -607,6 +607,35 @@ public class CUdevice_attribute
      */
     public static final int CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_KMT_HANDLE_SUPPORTED = 105;
 
+    /**
+     * Maximum number of blocks per multiprocessor 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_MAX_BLOCKS_PER_MULTIPROCESSOR = 106;
+
+    /**
+     * Device supports compression of memory 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_GENERIC_COMPRESSION_SUPPORTED = 107;
+    
+    /**
+     * Device's maximum L2 persisting lines capacity setting in bytes 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_MAX_PERSISTING_L2_CACHE_SIZE = 108;
+    
+    /**
+     * The maximum value of CUaccessPolicyWindow::num_bytes. 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_MAX_ACCESS_POLICY_WINDOW_SIZE = 109;
+    
+    /**
+     * Device supports specifying the GPUDirect RDMA flag with ::cuMemCreate 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_WITH_CUDA_VMM_SUPPORTED = 110;
+    
+    /**
+     * Shared memory reserved by CUDA driver per block in bytes 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_RESERVED_SHARED_MEMORY_PER_BLOCK = 111;
     
     /**
      * Returns the String identifying the given CUdevice_attribute
@@ -723,6 +752,12 @@ public class CUdevice_attribute
             case CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR_SUPPORTED : return "CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR_SUPPORTED";
             case CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_HANDLE_SUPPORTED : return "CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_HANDLE_SUPPORTED";
             case CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_KMT_HANDLE_SUPPORTED : return "CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_KMT_HANDLE_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_MAX_BLOCKS_PER_MULTIPROCESSOR: return "CU_DEVICE_ATTRIBUTE_MAX_BLOCKS_PER_MULTIPROCESSOR";
+            case CU_DEVICE_ATTRIBUTE_GENERIC_COMPRESSION_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_GENERIC_COMPRESSION_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_MAX_PERSISTING_L2_CACHE_SIZE: return "CU_DEVICE_ATTRIBUTE_MAX_PERSISTING_L2_CACHE_SIZE";
+            case CU_DEVICE_ATTRIBUTE_MAX_ACCESS_POLICY_WINDOW_SIZE: return "CU_DEVICE_ATTRIBUTE_MAX_ACCESS_POLICY_WINDOW_SIZE";
+            case CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_WITH_CUDA_VMM_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_WITH_CUDA_VMM_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_RESERVED_SHARED_MEMORY_PER_BLOCK: return "CU_DEVICE_ATTRIBUTE_RESERVED_SHARED_MEMORY_PER_BLOCK";
         }
         return "INVALID CUdevice_attribute: "+n;
     }

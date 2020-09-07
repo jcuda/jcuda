@@ -48,9 +48,9 @@ public class CUmemAllocationProp
      * </pre>
      */
     public Pointer win32HandleMetaData;
-    /** Reserved for future use, must be zero */
-    public long reserved;
 
+    public CUmemAllocationProp_allocFlags allocFlags; 
+    
     /**
      * Creates a new, uninitialized CUmemAllocationProp
      */
@@ -66,15 +66,15 @@ public class CUmemAllocationProp
      * @param requestedHandleTypes The requestedHandleTypes value
      * @param location The location value
      * @param win32HandleMetaData The win32HandleMetaData value
-     * @param reserved The reserved value
+     * @param allocFlags The allocFlags value
      */
-    public CUmemAllocationProp(int type, int requestedHandleTypes, CUmemLocation location, Pointer win32HandleMetaData, long reserved)
+    public CUmemAllocationProp(int type, int requestedHandleTypes, CUmemLocation location, Pointer win32HandleMetaData, CUmemAllocationProp_allocFlags allocFlags)
     {
         this.type = type;
         this.requestedHandleTypes = requestedHandleTypes;
         this.location = location;
         this.win32HandleMetaData = win32HandleMetaData;
-        this.reserved = reserved;
+        this.allocFlags = allocFlags;;
     }
 
     @Override
@@ -85,7 +85,7 @@ public class CUmemAllocationProp
             "requestedHandleTypes="+requestedHandleTypes+","+
             "location="+location+","+
             "win32HandleMetaData="+win32HandleMetaData+","+
-            "reserved="+reserved+"]";
+            "allocFlags="+allocFlags+"]";
     }
 }
 
