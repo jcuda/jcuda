@@ -27,51 +27,34 @@
 package jcuda.driver;
 
 /**
- * Graph kernel node attributes union, used with 
- * ::cuKernelNodeSetAttribute/::cuKernelNodeGetAttribute
-  * 
- * <b>Note:</b> In CUDA, this is a union. This cannot sensibly be emulated
- * with Java. Only one of the fields may be used at any time.
-*/
-public class CUkernelNodeAttrValue
+ * Sparse subresource types.
+ */
+public class CUarraySparseSubresourceType
 {
-    /**
-     * Attribute ::CUaccessPolicyWindow. 
-     */
-    public CUaccessPolicyWindow accessPolicyWindow;
-    
-    /**
-     * Nonzero indicates a cooperative kernel (see ::cuLaunchCooperativeKernel). 
-     */
-    public int cooperative;
+    public static final int CU_ARRAY_SPARSE_SUBRESOURCE_TYPE_SPARSE_LEVEL = 0;
+    public static final int CU_ARRAY_SPARSE_SUBRESOURCE_TYPE_MIPTAIL = 1;
 
     /**
-     * Creates a new, uninitialized CUkernelNodeAttrValue
+     * Private constructor to prevent instantiation
      */
-    public CUkernelNodeAttrValue()
+    private CUarraySparseSubresourceType()
     {
-        // Default constructor
+        // Private constructor to prevent instantiation
     }
 
     /**
-     * Creates a new CUkernelNodeAttrValue with the given values
+     * Returns a string representation of the given constant
      *
-     * @param accessPolicyWindow The accessPolicyWindow value
-     * @param cooperative The cooperative value
+     * @return A string representation of the given constant
      */
-    public CUkernelNodeAttrValue(CUaccessPolicyWindow accessPolicyWindow, int cooperative)
+    public static String stringFor(int n)
     {
-        this.accessPolicyWindow = accessPolicyWindow;
-        this.cooperative = cooperative;
-    }
-
-    @Override
-    public String toString()
-    {
-        return "CUkernelNodeAttrValue["+
-            "accessPolicyWindow="+accessPolicyWindow+","+
-            "cooperative="+cooperative+"]";
+        switch (n)
+        {
+            case CU_ARRAY_SPARSE_SUBRESOURCE_TYPE_SPARSE_LEVEL: return "CU_ARRAY_SPARSE_SUBRESOURCE_TYPE_SPARSE_LEVEL";
+            case CU_ARRAY_SPARSE_SUBRESOURCE_TYPE_MIPTAIL: return "CU_ARRAY_SPARSE_SUBRESOURCE_TYPE_MIPTAIL";
+        }
+        return "INVALID CUarraySparseSubresourceType: "+n;
     }
 }
-
 

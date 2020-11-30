@@ -638,6 +638,17 @@ public class CUdevice_attribute
     public static final int CU_DEVICE_ATTRIBUTE_RESERVED_SHARED_MEMORY_PER_BLOCK = 111;
     
     /**
+     * Device supports sparse CUDA arrays and sparse CUDA mipmapped arrays 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_SPARSE_CUDA_ARRAY_SUPPORTED = 112;                  
+    
+    /**
+     * Device supports using the ::cuMemHostRegister flag CU_MEMHOSTERGISTER_READ_ONLY 
+     * to register memory that must be mapped as read-only to the GPU 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_READ_ONLY_HOST_REGISTER_SUPPORTED = 113;            
+    
+    /**
      * Returns the String identifying the given CUdevice_attribute
      *
      * @param n The CUdevice_attribute
@@ -758,6 +769,8 @@ public class CUdevice_attribute
             case CU_DEVICE_ATTRIBUTE_MAX_ACCESS_POLICY_WINDOW_SIZE: return "CU_DEVICE_ATTRIBUTE_MAX_ACCESS_POLICY_WINDOW_SIZE";
             case CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_WITH_CUDA_VMM_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_WITH_CUDA_VMM_SUPPORTED";
             case CU_DEVICE_ATTRIBUTE_RESERVED_SHARED_MEMORY_PER_BLOCK: return "CU_DEVICE_ATTRIBUTE_RESERVED_SHARED_MEMORY_PER_BLOCK";
+            case CU_DEVICE_ATTRIBUTE_SPARSE_CUDA_ARRAY_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_SPARSE_CUDA_ARRAY_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_READ_ONLY_HOST_REGISTER_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_READ_ONLY_HOST_REGISTER_SUPPORTED";
         }
         return "INVALID CUdevice_attribute: "+n;
     }

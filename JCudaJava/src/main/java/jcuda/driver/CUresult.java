@@ -99,6 +99,13 @@ public class CUresult
     public static final int CUDA_ERROR_PROFILER_ALREADY_STOPPED       = 8;
 
     /**
+     * This indicates that the CUDA driver that the application has loaded is a
+     * stub library. Applications that run with the stub rather than a real
+     * driver loaded will result in CUDA API returning this error.
+     */
+    public static final int CUDA_ERROR_STUB_LIBRARY                   = 34;
+    
+    /**
      * This indicates that no CUDA-capable devices were detected by the installed
      * CUDA driver.
      */
@@ -110,6 +117,10 @@ public class CUresult
      */
     public static final int CUDA_ERROR_INVALID_DEVICE                 = 101;
 
+    /**
+     * This error indicates that the Grid license is not applied.
+     */
+    public static final int CUDA_ERROR_DEVICE_NOT_LICENSED            = 102;
 
     /**
      * This indicates that the device kernel image is invalid. This can also
@@ -232,6 +243,11 @@ public class CUresult
      * This indicates that the PTX JIT compiler library was not found.
      */
     public static final int CUDA_ERROR_JIT_COMPILER_NOT_FOUND         = 221;
+    
+    /**
+     * This indicates that the provided PTX was compiled with an unsupported toolchain.
+     */
+    public static final int CUDA_ERROR_UNSUPPORTED_PTX_VERSION        = 222;
     
     /**
      * This indicates that the device kernel source is invalid.

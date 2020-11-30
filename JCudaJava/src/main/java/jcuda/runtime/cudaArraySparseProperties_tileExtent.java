@@ -1,7 +1,7 @@
 /*
  * JCuda - Java bindings for NVIDIA CUDA driver and runtime API
  *
- * Copyright (c) 2009-2018 Marco Hutter - http://www.jcuda.org
+ * Copyright (c) 2009-2015 Marco Hutter - http://www.jcuda.org
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -24,51 +24,47 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-package jcuda.driver;
-
-import jcuda.Pointer;
+package jcuda.runtime;
 
 /**
-* Specifies the allocation properties for a allocation.
-*/
-public class CUmemAllocationProp
+ * Java port of the cudaArraySparseProperties::tileExtent structure
+ */
+public class cudaArraySparseProperties_tileExtent
 {
-    /** Allocation type */
-    public int type;
-    /** requested ::CUmemAllocationHandleType */
-    public int requestedHandleTypes;
-    /** Location of allocation */
-    public CUmemLocation location;
     /**
-     * <pre>
-     * Windows-specific LPSECURITYATTRIBUTES required when
-     * ::CU_MEM_HANDLE_TYPE_WIN32 is specified.  This security attribute defines
-     * the scope of which exported allocations may be tranferred to other
-     * processes.  In all other cases, this field is required to be zero.
-     * </pre>
+     * Tile width in elements 
      */
-    public Pointer win32HandleMetaData;
+    public int width;
 
-    public final CUmemAllocationProp_allocFlags allocFlags = new CUmemAllocationProp_allocFlags(); 
-    
     /**
-     * Creates a new, uninitialized CUmemAllocationProp
+     * Tile height in elements 
      */
-    public CUmemAllocationProp()
+    public int height;
+
+    /**
+     * Tile depth in elements 
+     */
+    public int depth;
+
+    /**
+     * Creates a new, uninitialized cudaArraySparseProperties_tileExtent
+     */
+    public cudaArraySparseProperties_tileExtent()
     {
-        // Default constructor
     }
 
+    /**
+     * Returns a String representation of this object.
+     *
+     * @return A String representation of this object.
+     */
     @Override
     public String toString()
     {
-        return "CUmemAllocationProp["+
-            "type="+type+","+
-            "requestedHandleTypes="+requestedHandleTypes+","+
-            "location="+location+","+
-            "win32HandleMetaData="+win32HandleMetaData+","+
-            "allocFlags="+allocFlags+"]";
+        return "tileExtent["+
+            "width="+width+","+
+            "height="+height+","+
+            "depth="+depth+"]";
     }
+   
 }
-
-

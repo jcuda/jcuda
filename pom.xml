@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.jcuda</groupId>
         <artifactId>jcuda-parent</artifactId>
-        <version>11.0.0</version>
+        <version>11.1.0</version>
         <relativePath></relativePath>
     </parent>
 
@@ -40,6 +40,7 @@
                                 <include>lib/*JCudaRuntime*</include>
                                 <include>lib/*JCudaDriver*</include>
                                 <include>lib/*JNvrtc*</include>
+                                <include>lib/*JNvPTXCompiler*</include>
                             </includes>
                         </configuration>
                     </execution>
@@ -70,6 +71,7 @@
                                 <include>JCudaRuntimeJNI/**</include>
                                 <include>JCudaDriverJNI/**</include>
                                 <include>JNvrtcJNI/**</include>
+                                <include>JNvPTXCompilerJNI/**</include>
                             </includes>
                         </configuration>
                     </execution>

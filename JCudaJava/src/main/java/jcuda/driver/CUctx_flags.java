@@ -69,6 +69,10 @@ public class CUctx_flags
 
     /**
      * Support mapped pinned allocations
+     * 
+     * @deprecated This flag was deprecated as of CUDA 11.0 
+     * and it no longer has any effect. All contexts 
+     * as of CUDA 3.2 behave as though the flag is enabled.
      */
     public static final int CU_CTX_MAP_HOST = 0x08;
 

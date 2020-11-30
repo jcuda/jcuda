@@ -243,6 +243,15 @@ jfieldID cudaAccessPolicyWindow_hitRatio; // float
 jfieldID cudaAccessPolicyWindow_hitProp; // cudaAccessProperty
 jfieldID cudaAccessPolicyWindow_missProp; // cudaAccessProperty
 
+jfieldID cudaArraySparseProperties_tileExtent; // (struct) tileExtent
+jfieldID cudaArraySparseProperties_miptailFirstLevel; // unsigned int
+jfieldID cudaArraySparseProperties_miptailSize; // unsigned long long - sure, why not
+jfieldID cudaArraySparseProperties_flags; // unsigned int
+
+jfieldID cudaArraySparseProperties_tileExtent_width; // unsigned int
+jfieldID cudaArraySparseProperties_tileExtent_height; // unsigned int
+jfieldID cudaArraySparseProperties_tileExtent_depth; // unsigned int
+
 
 /**
  * Called when the library is loaded. Will initialize all
@@ -541,6 +550,19 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, cudaAccessPolicyWindow_hitProp,   "hitProp",   "I"              )) return JNI_ERR;
     if (!init(env, cls, cudaAccessPolicyWindow_missProp,  "missProp",  "I"              )) return JNI_ERR;
 
+    // Initialize the field IDs for the cudaArraySparseProperties class
+    if (!init(env, cls, "jcuda/runtime/cudaArraySparseProperties")) return JNI_ERR;
+    if (!init(env, cls, cudaArraySparseProperties_tileExtent,  "tileExtent",  "Ljcuda/runtime/cudaArraySparseProperties_tileExtent;")) return JNI_ERR;
+    if (!init(env, cls, cudaArraySparseProperties_miptailFirstLevel, "miptailFirstLevel", "I")) return JNI_ERR;
+    if (!init(env, cls, cudaArraySparseProperties_miptailSize,       "miptailSize",       "J")) return JNI_ERR;
+    if (!init(env, cls, cudaArraySparseProperties_flags,             "flags",             "I")) return JNI_ERR;
+
+    // Initialize the field IDs for the cudaArraySparseProperties_tileExtent class
+    if (!init(env, cls, "jcuda/runtime/cudaArraySparseProperties_tileExtent")) return JNI_ERR;
+    if (!init(env, cls, cudaArraySparseProperties_tileExtent_width,  "width",  "I")) return JNI_ERR;
+    if (!init(env, cls, cudaArraySparseProperties_tileExtent_height, "height", "I")) return JNI_ERR;
+    if (!init(env, cls, cudaArraySparseProperties_tileExtent_depth,  "depth",  "I")) return JNI_ERR;
+
     return JNI_VERSION_1_4;
 }
 
@@ -810,7 +832,7 @@ void setArray(JNIEnv *env, jobject object, jfieldID field, int *nativeArray)
  * Assigns the properties of the given native structure to the given
  * Java Object
  */
-void setCudaDeviceProp(JNIEnv *env, jobject prop, cudaDeviceProp nativeProp)
+void setCudaDeviceProp(JNIEnv *env, jobject prop, cudaDeviceProp &nativeProp)
 {
     jbyteArray propName = (jbyteArray)env->GetObjectField(prop, cudaDeviceProp_name);
     char *propNameMemory = (char*)env->GetPrimitiveArrayCritical(propName, NULL);
@@ -958,7 +980,7 @@ cudaExtent getCudaExtent(JNIEnv *env, jobject extent)
  * Assigns the properties of the given native structure to the given
  * Java Object
  */
-void setCudaExtent(JNIEnv *env, jobject extent, cudaExtent nativeExtent)
+void setCudaExtent(JNIEnv *env, jobject extent, cudaExtent &nativeExtent)
 {
     env->SetLongField(extent, cudaExtent_width, (jlong)nativeExtent.width);
     env->SetLongField(extent, cudaExtent_height, (jlong)nativeExtent.height);
@@ -969,7 +991,7 @@ void setCudaExtent(JNIEnv *env, jobject extent, cudaExtent nativeExtent)
  * Assigns the properties of the given native structure to the given
  * Java Object
  */
-void setCudaPitchedPtr(JNIEnv *env, jobject pitchedPtr, cudaPitchedPtr nativePitchedPtr)
+void setCudaPitchedPtr(JNIEnv *env, jobject pitchedPtr, cudaPitchedPtr &nativePitchedPtr)
 {
     jobject pitchedPtrPtr = env->GetObjectField(pitchedPtr, cudaPitchedPtr_ptr);
     setPointer(env, pitchedPtrPtr, (jlong)nativePitchedPtr.ptr);
@@ -1091,7 +1113,7 @@ cudaChannelFormatDesc getCudaChannelFormatDesc(JNIEnv *env, jobject desc)
  * Assigns the properties of the given native structure to the given
  * Java Object
  */
-void setCudaChannelFormatDesc(JNIEnv *env, jobject desc, cudaChannelFormatDesc nativeDesc)
+void setCudaChannelFormatDesc(JNIEnv *env, jobject desc, cudaChannelFormatDesc &nativeDesc)
 {
     env->SetIntField(desc, cudaChannelFormatDesc_x, nativeDesc.x);
     env->SetIntField(desc, cudaChannelFormatDesc_y, nativeDesc.y);
@@ -1140,7 +1162,7 @@ textureReference getTextureReference(JNIEnv *env, jobject texref)
  * Assigns the properties of the given native structure to the given
  * Java Object
  */
-void setTextureReference(JNIEnv *env, jobject texref, textureReference nativeTexref)
+void setTextureReference(JNIEnv *env, jobject texref, textureReference &nativeTexref)
 {
     env->SetIntField(texref, textureReference_normalized, (jint)nativeTexref.normalized);
     env->SetIntField(texref, textureReference_filterMode, (jint)nativeTexref.filterMode);
@@ -1188,7 +1210,7 @@ surfaceReference getSurfaceReference(JNIEnv *env, jobject surfref)
  * Assigns the properties of the given native structure to the given
  * Java Object
  */
-void setSurfaceReference(JNIEnv *env, jobject surfref, surfaceReference nativeSurfref)
+void setSurfaceReference(JNIEnv *env, jobject surfref, surfaceReference &nativeSurfref)
 {
     jobject channelDesc = env->GetObjectField(surfref, surfaceReference_channelDesc);
     setCudaChannelFormatDesc(env, channelDesc, nativeSurfref.channelDesc);
@@ -1216,7 +1238,7 @@ dim3 getDim3(JNIEnv *env, jobject dim)
  * Assigns the properties of the given native structure to the given
  * Java Object
  */
-void setCudaFuncAttributes(JNIEnv *env, jobject attr, cudaFuncAttributes nativeAttr)
+void setCudaFuncAttributes(JNIEnv *env, jobject attr, cudaFuncAttributes &nativeAttr)
 {
     env->SetLongField(attr, cudaFuncAttributes_sharedSizeBytes,    (jlong)nativeAttr.sharedSizeBytes);
     env->SetLongField(attr, cudaFuncAttributes_constSizeBytes,     (jlong)nativeAttr.constSizeBytes);
@@ -1241,7 +1263,7 @@ void setCudaFuncAttributes(JNIEnv *env, jobject attr, cudaFuncAttributes nativeA
  * Assigns the properties of the given native structure to the given
  * Java Object
  */
-bool setCudaPointerAttributes(JNIEnv *env, jobject attributes, cudaPointerAttributes nativeAttributes)
+bool setCudaPointerAttributes(JNIEnv *env, jobject attributes, cudaPointerAttributes &nativeAttributes)
 {
 	env->SetIntField(attributes, cudaPointerAttributes_type, (jint)nativeAttributes.type);
 	env->SetIntField(attributes, cudaPointerAttributes_device, (jint)nativeAttributes.device);
@@ -1624,7 +1646,7 @@ cudaAccessPolicyWindow getCudaAccessPolicyWindow(JNIEnv* env, jobject javaObject
 * Assigns the properties of the given native structure to the given
 * Java Object
 */
-void setCudaAccessPolicyWindow(JNIEnv* env, jobject javaObject, cudaAccessPolicyWindow nativeObject)
+void setCudaAccessPolicyWindow(JNIEnv* env, jobject javaObject, cudaAccessPolicyWindow &nativeObject)
 {
     jobject javaBase_ptr = env->NewObject(Pointer_class, Pointer_constructor);
     setNativePointerValue(env, javaBase_ptr, (jlong)nativeObject.base_ptr);
@@ -1687,6 +1709,44 @@ bool writeStreamAttributeValueToNative(JNIEnv* env, cudaStreamAttrID attr, jobje
 }
 
 
+/**
+* Returns the native representation of the given Java object
+*/
+cudaArraySparseProperties getCudaArraySparseProperties(JNIEnv* env, jobject javaObject)
+{
+    cudaArraySparseProperties nativeObject;
+
+    jobject javaTileExtent = env->GetObjectField(javaObject, cudaArraySparseProperties_tileExtent);
+    if (javaTileExtent != NULL)
+    {
+        nativeObject.tileExtent.width = (unsigned int)env->GetIntField(javaObject, cudaArraySparseProperties_tileExtent_width);
+        nativeObject.tileExtent.height = (unsigned int)env->GetIntField(javaObject, cudaArraySparseProperties_tileExtent_height);
+        nativeObject.tileExtent.depth = (unsigned int)env->GetIntField(javaObject, cudaArraySparseProperties_tileExtent_depth);
+    }
+    nativeObject.miptailFirstLevel = (unsigned int)env->GetIntField(javaObject, cudaArraySparseProperties_miptailFirstLevel);
+    nativeObject.miptailSize = (unsigned long long)env->GetLongField(javaObject, cudaArraySparseProperties_miptailSize);
+    nativeObject.flags = (unsigned int)env->GetIntField(javaObject, cudaArraySparseProperties_flags);
+
+    return nativeObject;
+}
+
+/**
+* Assigns the properties of the given native structure to the given
+* Java Object
+*/
+void setCudaArraySparseProperties(JNIEnv* env, jobject javaObject, cudaArraySparseProperties& nativeObject)
+{
+    jobject javaTileExtent = env->GetObjectField(javaObject, cudaArraySparseProperties_tileExtent);
+    if (javaTileExtent != NULL)
+    {
+        env->SetIntField(javaTileExtent, cudaArraySparseProperties_tileExtent_width, (jint)nativeObject.tileExtent.width);
+        env->SetIntField(javaTileExtent, cudaArraySparseProperties_tileExtent_height, (jint)nativeObject.tileExtent.height);
+        env->SetIntField(javaTileExtent, cudaArraySparseProperties_tileExtent_depth, (jint)nativeObject.tileExtent.depth);
+    }
+    env->SetIntField(javaObject, cudaArraySparseProperties_miptailFirstLevel, (jint)nativeObject.miptailFirstLevel);
+    env->SetLongField(javaObject, cudaArraySparseProperties_miptailSize, (jlong)nativeObject.miptailSize);
+    env->SetIntField(javaObject, cudaArraySparseProperties_flags, (jint)nativeObject.flags);
+}
 
 
 
@@ -1756,6 +1816,31 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaDeviceGetLimitNative
     if (!set(env, pValue, 0, (size_t)nativePValue)) return JCUDA_INTERNAL_ERROR;
     return result;
 }
+
+/*
+ * Class:     jcuda_runtime_JCuda
+ * Method:    cudaDeviceGetTexture1DLinearMaxWidthNative
+ * Signature: ([JLjcuda/runtime/cudaChannelFormatDesc;I)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaDeviceGetTexture1DLinearMaxWidthNative
+(JNIEnv *env, jclass cls, jlongArray maxWidthInElements, jobject fmtDesc, jint device)
+{
+    if (maxWidthInElements == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'maxWidthInElements' is null for cudaDeviceGetTexture1DLinearMaxWidth");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cudaDeviceGetTexture1DLinearMaxWidth\n");
+
+    cudaChannelFormatDesc nativeFmtDesc = getCudaChannelFormatDesc(env, fmtDesc);
+
+    size_t nativeMaxWidthInElements;
+    int result = cudaDeviceGetTexture1DLinearMaxWidth(&nativeMaxWidthInElements, &nativeFmtDesc, device);
+    if (!set(env, maxWidthInElements, 0, (size_t)nativeMaxWidthInElements)) return JCUDA_INTERNAL_ERROR;
+    return result;
+
+}
+
 
 /*
  * Class:     jcuda_runtime_JCuda
@@ -3083,9 +3168,67 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaArrayGetInfoNative
     if (flags != NULL) if (!set(env, flags, 0, (jint)nativeFlags)) return JCUDA_INTERNAL_ERROR;
 
     return result;
-
 }
 
+/*
+ * Class:     jcuda_runtime_JCuda
+ * Method:    cudaArrayGetSparsePropertiesNative
+ * Signature: (Ljcuda/runtime/cudaArraySparseProperties;Ljcuda/runtime/cudaArray;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaArrayGetSparsePropertiesNative
+(JNIEnv *env, jclass cls, jobject sparseProperties, jobject array)
+{
+    if (sparseProperties == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'sparseProperties' is null for cudaArrayGetSparseProperties");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (array == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'array' is null for cudaArrayGetSparseProperties");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cudaArrayGetSparseProperties\n");
+
+    cudaArraySparseProperties nativeSparseProperties;
+    cudaArray_t nativeArray = (cudaArray_t)getNativePointerValue(env, array);
+
+    int result = cudaArrayGetSparseProperties(&nativeSparseProperties, nativeArray);
+
+    setCudaArraySparseProperties(env, sparseProperties, nativeSparseProperties);
+
+    return result;
+}
+
+/*
+ * Class:     jcuda_runtime_JCuda
+ * Method:    cudaMipmappedArrayGetSparsePropertiesNative
+ * Signature: (Ljcuda/runtime/cudaArraySparseProperties;Ljcuda/runtime/cudaMipmappedArray;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMipmappedArrayGetSparsePropertiesNative
+(JNIEnv* env, jclass cls, jobject sparseProperties, jobject mipmap)
+{
+    if (sparseProperties == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'sparseProperties' is null for cudaMipmappedArrayGetSparseProperties");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (mipmap == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'mipmap' is null for cudaMipmappedArrayGetSparseProperties");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cudaMipmappedArrayGetSparseProperties\n");
+
+    cudaArraySparseProperties nativeSparseProperties;
+    cudaMipmappedArray_t nativeMipmap = (cudaMipmappedArray_t)getNativePointerValue(env, mipmap);
+
+    int result = cudaMipmappedArrayGetSparseProperties(&nativeSparseProperties, nativeMipmap);
+
+    setCudaArraySparseProperties(env, sparseProperties, nativeSparseProperties);
+
+    return result;
+}
 
 
 /*
@@ -4495,6 +4638,29 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaEventRecordNative
     return cudaEventRecord(nativeEvent, nativeStream);
 }
 
+/*
+ * Class:     jcuda_runtime_JCuda
+ * Method:    cudaEventRecordWithFlagsNative
+ * Signature: (Ljcuda/runtime/cudaEvent_t;Ljcuda/runtime/cudaStream_t;I)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaEventRecordWithFlagsNative
+(JNIEnv* env, jclass cls, jobject event, jobject stream, jint flags)
+{
+    if (event == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'event' is null for cudaEventRecordWithFlags");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    // Stream may be null
+
+    Logger::log(LOG_TRACE, "Executing cudaEventRecordWithFlags\n");
+
+    cudaEvent_t nativeEvent = (cudaEvent_t)getNativePointerValue(env, event);
+
+    cudaStream_t nativeStream = (cudaStream_t)getNativePointerValue(env, stream);
+
+    return cudaEventRecordWithFlags(nativeEvent, nativeStream, (unsigned int)flags);
+}
 
 
 

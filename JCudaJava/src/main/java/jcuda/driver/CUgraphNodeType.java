@@ -63,6 +63,16 @@ public class CUgraphNodeType
     public static final int CU_GRAPH_NODE_TYPE_EMPTY  = 5;
 
     /**
+     * External event wait node 
+     */
+    public static final int CU_GRAPH_NODE_TYPE_WAIT_EVENT   = 6;
+    
+    /**
+     * External event record node 
+     */
+    public static final int  CU_GRAPH_NODE_TYPE_EVENT_RECORD = 7;
+    
+    /**
      * Returns the String identifying the given CUgraphNodeType
      *
      * @param n The CUgraphNodeType
@@ -78,6 +88,8 @@ public class CUgraphNodeType
             case CU_GRAPH_NODE_TYPE_HOST: return "CU_GRAPH_NODE_TYPE_HOST";
             case CU_GRAPH_NODE_TYPE_GRAPH: return "CU_GRAPH_NODE_TYPE_GRAPH";
             case CU_GRAPH_NODE_TYPE_EMPTY: return "CU_GRAPH_NODE_TYPE_EMPTY";
+            case CU_GRAPH_NODE_TYPE_WAIT_EVENT: return "CU_GRAPH_NODE_TYPE_WAIT_EVENT";
+            case CU_GRAPH_NODE_TYPE_EVENT_RECORD: return "CU_GRAPH_NODE_TYPE_EVENT_RECORD";
         }
         return "INVALID CUgraphNodeType: "+n;
     }

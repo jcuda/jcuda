@@ -547,6 +547,17 @@ public class cudaDeviceAttr
     public static final int cudaDevAttrReservedSharedMemoryPerBlock   = 111;
     
     /**
+     * Device supports sparse CUDA arrays and sparse CUDA mipmapped arrays 
+     */
+    public static final int cudaDevAttrSparseCudaArraySupported       = 112;
+    
+    /**
+     * Device supports using the ::cuMemHostRegister flag 
+     * CU_MEMHOSTERGISTER_READ_ONLY to register memory that must be mapped 
+     * as read-only to the GPU */
+    public static final int cudaDevAttrHostRegisterReadOnlySupported  = 113;
+    
+    /**
      * Returns the String identifying the given cudaDeviceAttr
      *
      * @param n The cudaDeviceAttr
@@ -659,7 +670,8 @@ public class cudaDeviceAttr
             case cudaDevAttrDirectManagedMemAccessFromHost   : return "cudaDevAttrDirectManagedMemAccessFromHost";
             case cudaDevAttrMaxBlocksPerMultiprocessor       : return "cudaDevAttrMaxBlocksPerMultiprocessor";
             case cudaDevAttrReservedSharedMemoryPerBlock     : return "cudaDevAttrReservedSharedMemoryPerBlock";
-            
+            case cudaDevAttrSparseCudaArraySupported         : return "cudaDevAttrSparseCudaArraySupported";
+            case cudaDevAttrHostRegisterReadOnlySupported    : return "cudaDevAttrHostRegisterReadOnlySupported";
         }
         return "INVALID cudaDeviceAttr: "+n;
     }

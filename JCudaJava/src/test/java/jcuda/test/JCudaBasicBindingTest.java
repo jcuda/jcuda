@@ -8,6 +8,8 @@ package jcuda.test;
 
 import static org.junit.Assert.assertTrue;
 import jcuda.driver.JCudaDriver;
+import jcuda.nvptxcompiler.JNvPTXCompiler;
+import jcuda.nvrtc.JNvrtc;
 import jcuda.runtime.JCuda;
 
 import org.junit.Test;
@@ -22,6 +24,8 @@ public class JCudaBasicBindingTest
         JCudaBasicBindingTest test = new JCudaBasicBindingTest();
         test.testJCuda();
         test.testJCudaDriver();
+        test.testJnvrtc();
+        test.testJNvPTXCompiler();
     }
 
     @Test
@@ -34,6 +38,18 @@ public class JCudaBasicBindingTest
     public void testJCudaDriver()
     {
         assertTrue(BasicBindingTest.testBinding(JCudaDriver.class));
+    }
+
+    @Test
+    public void testJnvrtc()
+    {
+        assertTrue(BasicBindingTest.testBinding(JNvrtc.class));
+    }
+
+    @Test
+    public void testJNvPTXCompiler()
+    {
+        assertTrue(BasicBindingTest.testBinding(JNvPTXCompiler.class));
     }
 
 }

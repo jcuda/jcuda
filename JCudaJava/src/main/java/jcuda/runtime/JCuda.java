@@ -40,7 +40,7 @@ public class JCuda
     /**
      * CUDA runtime version
      */
-    public static final int CUDART_VERSION = 11000;
+    public static final int CUDART_VERSION = 11010;
 
     /**
      * Returns an unspecified string that will be appended to native 
@@ -50,7 +50,7 @@ public class JCuda
      */
     public static String getJCudaVersion()
     {
-        return "11.0.0";
+        return "11.1.0";
     }
     
     /**
@@ -94,6 +94,11 @@ public class JCuda
      */
     public static final int cudaHostRegisterIoMemory       = 0x04;
 
+    /** 
+     * Memory-mapped read-only 
+     */
+    public static final int cudaHostRegisterReadOnly       = 0x08;
+
     
     /**
      * Default peer addressing enable flag
@@ -132,6 +137,28 @@ public class JCuda
      */
     public static final int cudaEventInterprocess          = 0x04;
 
+    
+    /** 
+     * Default event record flag 
+     */
+    public static final int cudaEventRecordDefault         =     0x00;
+    
+    /**
+     * Event is captured in the graph as an external event node when 
+     * performing stream capture 
+     */
+    public static final int cudaEventRecordExternal        =     0x01;
+
+    /**
+     * Default event wait flag 
+     */
+    public static final int cudaEventWaitDefault           =     0x00;
+    
+    /** Event is captured in the graph as an external event node when 
+     * performing stream capture 
+     */
+    public static final int cudaEventWaitExternal          =     0x01;
+    
 
     /**
      * Device flag - Automatic scheduling
@@ -214,6 +241,13 @@ public class JCuda
      */
     public static final int cudaArrayColorAttachment       = 0x20;
 
+    /**
+     * Must be set in cudaMallocArray, cudaMalloc3DArray or 
+     * cudaMallocMipmappedArray in order to create a sparse CUDA array 
+     * or CUDA mipmapped array 
+     */
+    public static final int cudaArraySparse         = 0x40;
+    
     /**
      * Automatically enable peer access between remote devices as needed
      */
@@ -362,6 +396,13 @@ public class JCuda
      * before it begins execution.
      */
     public static final int cudaCooperativeLaunchMultiDeviceNoPostSync = 0x02;    
+    
+    
+    /**
+     * Indicates that the layered sparse CUDA array or CUDA mipmapped array 
+     * has a single mip tail region for all layers
+     */
+    public static final int cudaArraySparsePropertiesSingleMipTail = 0x1;
     
     /**
      * Private inner class for the constant stream values
@@ -3573,6 +3614,67 @@ public class JCuda
     }
     private static native int cudaArrayGetInfoNative(cudaChannelFormatDesc desc, cudaExtent extent, int flags[], cudaArray array);
 
+    
+    /**
+     * Returns the layout properties of a sparse CUDA array.<br>
+     * <br>
+     * Returns the layout properties of a sparse CUDA array in \p sparseProperties.
+     * If the CUDA array is not allocated with flag ::cudaArraySparse
+     * ::cudaErrorInvalidValue will be returned.<br>
+     * <br>
+     * If the returned value in ::cudaArraySparseProperties::flags contains ::cudaArraySparsePropertiesSingleMipTail,
+     * then ::cudaArraySparseProperties::miptailSize represents the total size of the array. Otherwise, it will be zero.
+     * Also, the returned value in ::cudaArraySparseProperties::miptailFirstLevel is always zero.
+     * Note that the \p array must have been allocated using ::cudaMallocArray or ::cudaMalloc3DArray. For CUDA arrays obtained
+     * using ::cudaMipmappedArrayGetLevel, ::cudaErrorInvalidValue will be returned. Instead, ::cudaMipmappedArrayGetSparseProperties
+     * must be used to obtain the sparse properties of the entire CUDA mipmapped array to which \p array belongs to.
+     *
+     * @return
+     * cudaSuccess
+     * cudaErrorInvalidValue
+     *
+     * @param sparseProperties Pointer to return the ::cudaArraySparseProperties
+     * @param array            The CUDA array to get the sparse properties of 
+     *
+     * @see JCuda#cudaMipmappedArrayGetSparseProperties
+     * @see JCudaDriver#cuMemMapArrayAsync
+     */
+    public static int cudaArrayGetSparseProperties(cudaArraySparseProperties sparseProperties, cudaArray array)
+    {
+        return checkResult(cudaArrayGetSparsePropertiesNative(sparseProperties, array));
+    }
+    private static native int cudaArrayGetSparsePropertiesNative(cudaArraySparseProperties sparseProperties, cudaArray array);
+
+    /**
+     * Returns the layout properties of a sparse CUDA mipmapped array.<br>
+     * <br>
+     * Returns the sparse array layout properties in \p sparseProperties.
+     * If the CUDA mipmapped array is not allocated with flag ::cudaArraySparse
+     * ::cudaErrorInvalidValue will be returned.<br>
+     * <br>
+     * For non-layered CUDA mipmapped arrays, ::cudaArraySparseProperties::miptailSize returns the
+     * size of the mip tail region. The mip tail region includes all mip levels whose width, height or depth
+     * is less than that of the tile.
+     * For layered CUDA mipmapped arrays, if ::cudaArraySparseProperties::flags contains ::cudaArraySparsePropertiesSingleMipTail,
+     * then ::cudaArraySparseProperties::miptailSize specifies the size of the mip tail of all layers combined.
+     * Otherwise, ::cudaArraySparseProperties::miptailSize specifies mip tail size per layer.
+     * The returned value of ::cudaArraySparseProperties::miptailFirstLevel is valid only if ::cudaArraySparseProperties::miptailSize is non-zero.
+     *
+     * @return
+     * cudaSuccess
+     * cudaErrorInvalidValue
+     *
+     * @param sparseProperties Pointer to return ::cudaArraySparseProperties
+     * @param mipmap           The CUDA mipmapped array to get the sparse properties of
+     *
+     * @see JCuda#cudaArrayGetSparseProperties
+     * @see JCudaDriver#cuMemMapArrayAsync
+     */
+    public static int cudaMipmappedArrayGetSparseProperties(cudaArraySparseProperties sparseProperties, cudaMipmappedArray mipmap)
+    {
+        return checkResult(cudaMipmappedArrayGetSparsePropertiesNative(sparseProperties, mipmap));
+    }
+    private static native int cudaMipmappedArrayGetSparsePropertiesNative(cudaArraySparseProperties sparseProperties, cudaMipmappedArray mipmap);
 
     /**
      * Allocates page-locked memory on the host.
@@ -6845,9 +6947,14 @@ public class JCuda
      *   </p>
      * </div>
      *
+     * Flags include:
+     * {@link JCuda#cudaEventWaitDefault): Default event creation flag.
+     * {@link JCuda#cudaEventWaitExternal): Event is captured in the graph as 
+     * an external event node when performing stream capture.
+     * 
      * @param stream Stream to wait
      * @param event Event to wait on
-     * @param flags Parameters for the operation (must be 0)
+     * @param flags Parameters for the operation
      *
      * @return cudaSuccess, cudaErrorInvalidResourceHandle
      *
@@ -7215,6 +7322,54 @@ public class JCuda
     }
     private static native int cudaEventRecordNative(cudaEvent_t event, cudaStream_t stream);
 
+    /**
+     * Records an event.<br>
+     * <br>
+     * Captures in \p event the contents of \p stream at the time of this call.
+     * \p event and \p stream must be on the same device.
+     * Calls such as ::cudaEventQuery() or ::cudaStreamWaitEvent() will then
+     * examine or wait for completion of the work that was captured. Uses of
+     * \p stream after this call do not modify \p event. See note on default
+     * stream behavior for what is captured in the default case.<br>
+     * <br>
+     * ::cudaEventRecordWithFlags() can be called multiple times on the same event and
+     * will overwrite the previously captured state. Other APIs such as
+     * ::cudaStreamWaitEvent() use the most recently captured state at the time
+     * of the API call, and are not affected by later calls to
+     * ::cudaEventRecordWithFlags(). Before the first call to ::cudaEventRecordWithFlags(), an
+     * event represents an empty set of work, so for example ::cudaEventQuery()
+     * would return ::cudaSuccess.<br>
+     * <br>
+     * flags include:
+     * {@link JCuda#cudaEventRecordDefault}: Default event creation flag.
+     * {@link JCuda#cudaEventRecordExternal}: Event is captured in the graph as an external
+     * event node when performing stream capture.
+     *
+     * @param event  Event to record
+     * @param stream Stream in which to record event
+     * @param flags  Parameters for the operation(See above)
+     *
+     * @return
+     * cudaSuccess,
+     * cudaErrorInvalidValue,
+     * cudaErrorInvalidResourceHandle,
+     * cudaErrorLaunchFailure
+     *
+     * 
+     * @see JCuda#cudaEventCreateWithFlags
+     * @see JCuda#cudaEventQuery
+     * @see JCuda#cudaEventSynchronize
+     * @see JCuda#cudaEventDestroy
+     * @see JCuda#cudaEventElapsedTime
+     * @see JCuda#cudaStreamWaitEvent
+     * @see JCuda#cudaEventRecord
+     * @see JCuda#cuEventRecord
+     */
+     public static int cudaEventRecordWithFlags(cudaEvent_t event, cudaStream_t stream, int flags)
+     {
+         return checkResult(cudaEventRecordWithFlagsNative(event, stream, flags));
+     }
+     private static native int cudaEventRecordWithFlagsNative(cudaEvent_t event, cudaStream_t stream, int flags);
 
     /**
      * Queries an event's status.
@@ -7729,6 +7884,29 @@ public class JCuda
     }
     private static native int cudaDeviceGetLimitNative(long pValue[], int limit);
 
+    
+    /**
+     *  Returns the maximum number of elements allocatable in a 1D linear texture for a given element size.<br>
+     * <br>
+     * Returns in \p maxWidthInElements the maximum number of elements allocatable in a 1D linear texture
+     * for given format descriptor \p fmtDesc.
+     *
+     * @param maxWidthInElements Returns maximum number of texture elements allocatable for given \p fmtDesc.
+     * @param fmtDesc            Texture format description.
+     *
+     * @return
+     * cudaSuccess,
+     * cudaErrorUnsupportedLimit,
+     * cudaErrorInvalidValue
+     *
+     * JCudaDriver#cuDeviceGetMaxTexture1DLinear
+     */
+    public static int cudaDeviceGetTexture1DLinearMaxWidth(long maxWidthInElements[], cudaChannelFormatDesc fmtDesc, int device)
+    {
+        return checkResult(cudaDeviceGetTexture1DLinearMaxWidthNative(maxWidthInElements, fmtDesc, device));
+    }
+    private static native int cudaDeviceGetTexture1DLinearMaxWidthNative(long maxWidthInElements[], cudaChannelFormatDesc fmtDesc, int device);
+    
     /**
      * Returns the preferred cache configuration for the current device.
      *

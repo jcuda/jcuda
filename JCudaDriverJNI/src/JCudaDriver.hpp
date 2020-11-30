@@ -35,7 +35,7 @@
 extern "C" {
 #endif
 #undef jcuda_driver_JCudaDriver_CUDA_VERSION
-#define jcuda_driver_JCudaDriver_CUDA_VERSION 11000L
+#define jcuda_driver_JCudaDriver_CUDA_VERSION 11010L
 #undef jcuda_driver_JCudaDriver_CU_MEMHOSTALLOC_PORTABLE
 #define jcuda_driver_JCudaDriver_CU_MEMHOSTALLOC_PORTABLE 1L
 #undef jcuda_driver_JCudaDriver_CU_MEMHOSTALLOC_DEVICEMAP
@@ -50,6 +50,12 @@ extern "C" {
 #define jcuda_driver_JCudaDriver_CU_MEMPEERREGISTER_DEVICEMAP 2L
 #undef jcuda_driver_JCudaDriver_CU_MEMHOSTREGISTER_IOMEMORY
 #define jcuda_driver_JCudaDriver_CU_MEMHOSTREGISTER_IOMEMORY 4L
+#undef jcuda_driver_JCudaDriver_CU_MEMHOSTREGISTER_READ_ONLY
+#define jcuda_driver_JCudaDriver_CU_MEMHOSTREGISTER_READ_ONLY 8L
+#undef jcuda_driver_JCudaDriver_CU_ARRAY_SPARSE_PROPERTIES_SINGLE_MIPTAIL
+#define jcuda_driver_JCudaDriver_CU_ARRAY_SPARSE_PROPERTIES_SINGLE_MIPTAIL 1L
+#undef jcuda_driver_JCudaDriver_CU_MEM_CREATE_USAGE_TILE_POOL
+#define jcuda_driver_JCudaDriver_CU_MEM_CREATE_USAGE_TILE_POOL 1L
 #undef jcuda_driver_JCudaDriver_CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_PRE_LAUNCH_SYNC
 #define jcuda_driver_JCudaDriver_CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_PRE_LAUNCH_SYNC 1L
 #undef jcuda_driver_JCudaDriver_CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_POST_LAUNCH_SYNC
@@ -68,6 +74,8 @@ extern "C" {
 #define jcuda_driver_JCudaDriver_CUDA_ARRAY3D_DEPTH_TEXTURE 16L
 #undef jcuda_driver_JCudaDriver_CUDA_ARRAY3D_COLOR_ATTACHMENT
 #define jcuda_driver_JCudaDriver_CUDA_ARRAY3D_COLOR_ATTACHMENT 32L
+#undef jcuda_driver_JCudaDriver_CUDA_ARRAY3D_SPARSE
+#define jcuda_driver_JCudaDriver_CUDA_ARRAY3D_SPARSE 64L
 #undef jcuda_driver_JCudaDriver_CU_PARAM_TR_DEFAULT
 #define jcuda_driver_JCudaDriver_CU_PARAM_TR_DEFAULT -1L
 #undef jcuda_driver_JCudaDriver_CU_TRSA_OVERRIDE_FORMAT
@@ -198,11 +206,35 @@ extern "C" {
 
     /*
      * Class:     jcuda_driver_JCudaDriver
+     * Method:    cuDevicePrimaryCtxGetStateNative
+     * Signature: (Ljcuda/driver/CUdevice;[I[I)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDevicePrimaryCtxGetStateNative
+    (JNIEnv*, jclass, jobject, jintArray, jintArray);
+
+    /*
+     * Class:     jcuda_driver_JCudaDriver
+     * Method:    cuDevicePrimaryCtxResetNative
+     * Signature: (Ljcuda/driver/CUdevice;)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDevicePrimaryCtxResetNative
+    (JNIEnv*, jclass, jobject);
+
+    /*
+     * Class:     jcuda_driver_JCudaDriver
      * Method:    cuDeviceTotalMemNative
      * Signature: ([JLjcuda/driver/CUdevice;)I
      */
     JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDeviceTotalMemNative
     (JNIEnv*, jclass, jlongArray, jobject);
+
+    /*
+     * Class:     jcuda_driver_JCudaDriver
+     * Method:    cuDeviceGetTexture1DLinearMaxWidthNative
+     * Signature: ([JIILjcuda/driver/CUdevice;)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDeviceGetTexture1DLinearMaxWidthNative
+    (JNIEnv*, jclass, jlongArray, jint, jint, jobject);
 
     /*
      * Class:     jcuda_driver_JCudaDriver
@@ -942,6 +974,22 @@ extern "C" {
 
     /*
      * Class:     jcuda_driver_JCudaDriver
+     * Method:    cuArrayGetSparsePropertiesNative
+     * Signature: (Ljcuda/driver/CUDA_ARRAY_SPARSE_PROPERTIES;Ljcuda/driver/CUarray;)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuArrayGetSparsePropertiesNative
+    (JNIEnv*, jclass, jobject, jobject);
+
+    /*
+     * Class:     jcuda_driver_JCudaDriver
+     * Method:    cuMipmappedArrayGetSparsePropertiesNative
+     * Signature: (Ljcuda/driver/CUDA_ARRAY_SPARSE_PROPERTIES;Ljcuda/driver/CUmipmappedArray;)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMipmappedArrayGetSparsePropertiesNative
+    (JNIEnv*, jclass, jobject, jobject);
+
+    /*
+     * Class:     jcuda_driver_JCudaDriver
      * Method:    cuArrayDestroyNative
      * Signature: (Ljcuda/driver/CUarray;)I
      */
@@ -1027,6 +1075,14 @@ extern "C" {
      */
     JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemMapNative
     (JNIEnv*, jclass, jobject, jlong, jlong, jobject, jlong);
+
+    /*
+     * Class:     jcuda_driver_JCudaDriver
+     * Method:    cuMemMapArrayAsyncNative
+     * Signature: ([Ljcuda/driver/CUarrayMapInfo;ILjcuda/driver/CUstream;)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemMapArrayAsyncNative
+    (JNIEnv*, jclass, jobjectArray, jint, jobject);
 
     /*
      * Class:     jcuda_driver_JCudaDriver
@@ -1590,6 +1646,54 @@ extern "C" {
 
     /*
      * Class:     jcuda_driver_JCudaDriver
+     * Method:    cuGraphAddEventRecordNodeNative
+     * Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUgraph;[Ljcuda/driver/CUgraphNode;JLjcuda/driver/CUevent;)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphAddEventRecordNodeNative
+    (JNIEnv*, jclass, jobject, jobject, jobjectArray, jlong, jobject);
+
+    /*
+     * Class:     jcuda_driver_JCudaDriver
+     * Method:    cuGraphEventRecordNodeGetEventNative
+     * Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUevent;)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphEventRecordNodeGetEventNative
+    (JNIEnv*, jclass, jobject, jobject);
+
+    /*
+     * Class:     jcuda_driver_JCudaDriver
+     * Method:    cuGraphEventRecordNodeSetEventNative
+     * Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUevent;)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphEventRecordNodeSetEventNative
+    (JNIEnv*, jclass, jobject, jobject);
+
+    /*
+     * Class:     jcuda_driver_JCudaDriver
+     * Method:    cuGraphAddEventWaitNodeNative
+     * Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUgraph;[Ljcuda/driver/CUgraphNode;JLjcuda/driver/CUevent;)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphAddEventWaitNodeNative
+    (JNIEnv*, jclass, jobject, jobject, jobjectArray, jlong, jobject);
+
+    /*
+     * Class:     jcuda_driver_JCudaDriver
+     * Method:    cuGraphEventWaitNodeGetEventNative
+     * Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUevent;)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphEventWaitNodeGetEventNative
+    (JNIEnv*, jclass, jobject, jobject);
+
+    /*
+     * Class:     jcuda_driver_JCudaDriver
+     * Method:    cuGraphEventWaitNodeSetEventNative
+     * Signature: (Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUevent;)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphEventWaitNodeSetEventNative
+    (JNIEnv*, jclass, jobject, jobject);
+
+    /*
+     * Class:     jcuda_driver_JCudaDriver
      * Method:    cuGraphCloneNative
      * Signature: (Ljcuda/driver/CUgraph;Ljcuda/driver/CUgraph;)I
      */
@@ -1715,6 +1819,38 @@ extern "C" {
      */
     JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphExecHostNodeSetParamsNative
     (JNIEnv*, jclass, jobject, jobject, jobject);
+
+    /*
+     * Class:     jcuda_driver_JCudaDriver
+     * Method:    cuGraphExecChildGraphNodeSetParamsNative
+     * Signature: (Ljcuda/driver/CUgraphExec;Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUgraph;)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphExecChildGraphNodeSetParamsNative
+    (JNIEnv*, jclass, jobject, jobject, jobject);
+
+    /*
+     * Class:     jcuda_driver_JCudaDriver
+     * Method:    cuGraphExecEventRecordNodeSetEventNative
+     * Signature: (Ljcuda/driver/CUgraphExec;Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUevent;)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphExecEventRecordNodeSetEventNative
+    (JNIEnv*, jclass, jobject, jobject, jobject);
+
+    /*
+     * Class:     jcuda_driver_JCudaDriver
+     * Method:    cuGraphExecEventWaitNodeSetEventNative
+     * Signature: (Ljcuda/driver/CUgraphExec;Ljcuda/driver/CUgraphNode;Ljcuda/driver/CUevent;)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphExecEventWaitNodeSetEventNative
+    (JNIEnv*, jclass, jobject, jobject, jobject);
+
+    /*
+     * Class:     jcuda_driver_JCudaDriver
+     * Method:    cuGraphUploadNative
+     * Signature: (Ljcuda/driver/CUgraphExec;Ljcuda/driver/CUstream;)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphUploadNative
+    (JNIEnv*, jclass, jobject, jobject);
 
     /*
      * Class:     jcuda_driver_JCudaDriver
@@ -1851,6 +1987,14 @@ extern "C" {
      */
     JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuEventRecordNative
     (JNIEnv*, jclass, jobject, jobject);
+
+    /*
+     * Class:     jcuda_driver_JCudaDriver
+     * Method:    cuEventRecordWithFlagsNative
+     * Signature: (Ljcuda/driver/CUevent;Ljcuda/driver/CUstream;I)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuEventRecordWithFlagsNative
+    (JNIEnv*, jclass, jobject, jobject, jint);
 
     /*
      * Class:     jcuda_driver_JCudaDriver

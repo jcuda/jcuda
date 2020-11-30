@@ -1,7 +1,7 @@
 /*
  * JCuda - Java bindings for NVIDIA CUDA driver and runtime API
  *
- * Copyright (c) 2009-2020 Marco Hutter - http://www.jcuda.org
+ * Copyright (c) 2009-2016 Marco Hutter - http://www.jcuda.org
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -24,35 +24,26 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-package jcuda.driver;
 
-/**
- * Additional allocation hint for requesting compressible memory.
- * Compressed memory allows higher bandwidth, but may cause
- * compression resource thrashing, and compressed memory may not be
- * mappeable on all devices.
- */
-public class CUmemAllocationProp_allocFlags
-{
-    public byte compressionType;
-    public byte gpuDirectRDMACapable;
-    /** Bitmask indicating intended usage for this allocation */
-    public short usage;
-    
-    /**
-     * Creates a new, uninitialized CUmemAllocationProp_allocFlags
-     */
-    public CUmemAllocationProp_allocFlags()
-    {
-        // Default constructor
-    }
-    
-    @Override
-    public String toString()
-    {
-        return "CUmemAllocationProp_allocFlags["+
-            "compressionType="+compressionType+","+
-            "gpuDirectRDMACapable="+gpuDirectRDMACapable+"]";
-    }
-    
-}
+#ifndef JCUDA_COMMON
+#define JCUDA_COMMON
+
+#ifdef _WIN32
+#  define WINDOWS_LEAN_AND_MEAN
+#  define NOMINMAX
+#  include <windows.h>
+#endif
+
+#include <stdlib.h>
+#include <jni.h>
+#include <nvPTXCompiler.h>
+#include <stdint.h>
+
+#include "Logger.hpp"
+#include "PointerUtils.hpp"
+#include "JNIUtils.hpp"
+
+#define JCUDA_INTERNAL_ERROR 0x80000001
+
+#endif // JCUDA_COMMON
+

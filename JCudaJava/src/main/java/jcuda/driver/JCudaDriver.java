@@ -43,7 +43,7 @@ import jcuda.runtime.JCuda;
 public class JCudaDriver
 {
     /** The CUDA version */
-    public static final int CUDA_VERSION = 11000;
+    public static final int CUDA_VERSION = 11010;
 
     /**
      * If set, host memory is portable between CUDA contexts.
@@ -102,6 +102,29 @@ public class JCudaDriver
      * Flag for ::cuMemHostRegister()
      */
     public static final int CU_MEMHOSTREGISTER_IOMEMORY   =  0x04;
+    
+    /**
+    * If set, the passed memory pointer is treated as pointing to memory that is
+    * considered read-only by the device.  On platforms without
+    * CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES, this flag is
+    * required in order to register memory mapped to the CPU as read-only.  Support
+    * for the use of this flag can be queried from the device attribute
+    * CU_DEVICE_ATTRIBUTE_READ_ONLY_HOST_REGISTER_SUPPORTED.  Using this flag with
+    * a current context associated with a device that does not have this attribute
+    * set will cause ::cuMemHostRegister to error with CUDA_ERROR_NOT_SUPPORTED.
+    */
+    public static final int CU_MEMHOSTREGISTER_READ_ONLY   = 0x08;
+    
+    /**
+     * Indicates that the layered sparse CUDA array or CUDA mipmapped array 
+     * has a single mip tail region for all layers
+     */
+    public static final int CU_ARRAY_SPARSE_PROPERTIES_SINGLE_MIPTAIL = 0x1;
+    
+    /**
+     * This flag if set indicates that the memory will be used as a tile pool.
+     */
+    public static final int CU_MEM_CREATE_USAGE_TILE_POOL = 0x1;
     
     /**
      * If set, each kernel launched as part of
@@ -167,6 +190,12 @@ public class JCudaDriver
      * in an external graphics API
      */
     public static final int CUDA_ARRAY3D_COLOR_ATTACHMENT = 0x20;
+    
+    /**
+     * This flag if set indicates that the CUDA array or CUDA mipmapped array
+     * is a sparse CUDA array or CUDA mipmapped array respectively
+     */
+    public static final int CUDA_ARRAY3D_SPARSE = 0x40;
     
     /**
      * For texture references loaded into the module, use default
@@ -775,6 +804,53 @@ public class JCudaDriver
     private static native int cuDeviceComputeCapabilityNative(int major[], int minor[], CUdevice dev);
 
 
+    /**
+     * Retain the primary context on the GPU.
+     *
+     * Retains the primary context on the device.
+     * Once the user successfully retains the primary context, the primary context
+     * will be active and available to the user until the user releases it
+     * with ::cuDevicePrimaryCtxRelease() or resets it with ::cuDevicePrimaryCtxReset().
+     * Unlike ::cuCtxCreate() the newly retained context is not pushed onto the stack.
+     *
+     * Retaining the primary context for the first time will fail with ::CUDA_ERROR_UNKNOWN
+     * if the compute mode of the device is ::CU_COMPUTEMODE_PROHIBITED. The function
+     * ::cuDeviceGetAttribute() can be used with ::CU_DEVICE_ATTRIBUTE_COMPUTE_MODE to
+     * determine the compute mode  of the device.
+     * The <i>nvidia-smi</i> tool can be used to set the compute mode for
+     * devices. Documentation for <i>nvidia-smi</i> can be obtained by passing a
+     * -h option to it.
+     *
+     * Please note that the primary context always supports pinned allocations. Other
+     * flags can be specified by ::cuDevicePrimaryCtxSetFlags().
+     *
+     * @param pctx Returned context handle of the new context
+     * @param dev   - Device for which primary context is requested
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_CONTEXT,
+     * CUDA_ERROR_INVALID_DEVICE,
+     * CUDA_ERROR_INVALID_VALUE,
+     * CUDA_ERROR_OUT_OF_MEMORY,
+     * CUDA_ERROR_UNKNOWN
+     *
+     * @see JCudaDriver#cuDevicePrimaryCtxRelease
+     * @see JCudaDriver#cuDevicePrimaryCtxSetFlags
+     * @see JCudaDriver#cuCtxCreate
+     * @see JCudaDriver#cuCtxGetApiVersion
+     * @see JCudaDriver#cuCtxGetCacheConfig
+     * @see JCudaDriver#cuCtxGetDevice
+     * @see JCudaDriver#cuCtxGetFlags
+     * @see JCudaDriver#cuCtxGetLimit
+     * @see JCudaDriver#cuCtxPopCurrent
+     * @see JCudaDriver#cuCtxPushCurrent
+     * @see JCudaDriver#cuCtxSetCacheConfig
+     * @see JCudaDriver#cuCtxSetLimit
+     * @see JCudaDriver#cuCtxSynchronize
+     */    
     public static int cuDevicePrimaryCtxRetain(CUcontext pctx, CUdevice dev)
     {
         return checkResult(cuDevicePrimaryCtxRetainNative(pctx, dev));
@@ -782,14 +858,118 @@ public class JCudaDriver
     private static native int cuDevicePrimaryCtxRetainNative(CUcontext pctx, CUdevice dev);
 
 
-
+    /**
+     * Release the primary context on the GPU.
+     *
+     * Releases the primary context interop on the device.
+     * A retained context should always be released once the user is done using
+     * it. The context is automatically reset once the last reference to it is
+     * released. This behavior is different when the primary context was retained
+     * by the CUDA runtime from CUDA 4.0 and earlier. In this case, the primary
+     * context remains always active.
+     *
+     * Releasing a primary context that has not been previously retained will
+     * fail with ::CUDA_ERROR_INVALID_CONTEXT.
+     *
+     * Please note that unlike ::cuCtxDestroy() this method does not pop the context
+     * from stack in any circumstances.
+     *
+     * @param dev Device which primary context is released
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_DEVICE,
+     * CUDA_ERROR_INVALID_CONTEXT
+     *
+     * @see JCudaDriver#cuDevicePrimaryCtxRetain
+     * @see JCudaDriver#cuCtxDestroy
+     * @see JCudaDriver#cuCtxGetApiVersion
+     * @see JCudaDriver#cuCtxGetCacheConfig
+     * @see JCudaDriver#cuCtxGetDevice
+     * @see JCudaDriver#cuCtxGetFlags
+     * @see JCudaDriver#cuCtxGetLimit
+     * @see JCudaDriver#cuCtxPopCurrent
+     * @see JCudaDriver#cuCtxPushCurrent
+     * @see JCudaDriver#cuCtxSetCacheConfig
+     * @see JCudaDriver#cuCtxSetLimit
+     * @see JCudaDriver#cuCtxSynchronize
+     */
     public static int cuDevicePrimaryCtxRelease(CUdevice dev)
     {
         return checkResult(cuDevicePrimaryCtxReleaseNative(dev));
     }
     private static native int cuDevicePrimaryCtxReleaseNative(CUdevice dev);
 
-
+    /**
+     * Set flags for the primary context.
+     *
+     * Sets the flags for the primary context on the device overwriting perviously
+     * set ones.
+     *
+     * The three LSBs of the \p flags parameter can be used to control how the OS
+     * thread, which owns the CUDA context at the time of an API call, interacts
+     * with the OS scheduler when waiting for results from the GPU. Only one of
+     * the scheduling flags can be set when creating a context.
+     * <br>
+     * <br>
+     * CU_CTX_SCHED_SPIN: Instruct CUDA to actively spin when waiting for
+     * results from the GPU. This can decrease latency when waiting for the GPU,
+     * but may lower the performance of CPU threads if they are performing work in
+     * parallel with the CUDA thread.
+     * <br>
+     * <br>
+     * CU_CTX_SCHED_YIELD: Instruct CUDA to yield its thread when waiting for
+     * results from the GPU. This can increase latency when waiting for the GPU,
+     * but can increase the performance of CPU threads performing work in parallel
+     * with the GPU.
+     * <br>
+     * <br>
+     * CU_CTX_SCHED_BLOCKING_SYNC: Instruct CUDA to block the CPU thread on a
+     * synchronization primitive when waiting for the GPU to finish work.
+     * <br>
+     * <br>
+     * CU_CTX_BLOCKING_SYNC: Instruct CUDA to block the CPU thread on a
+     * synchronization primitive when waiting for the GPU to finish work. <br>
+     * <b>Deprecated:</b> This flag was deprecated as of CUDA 4.0 and was
+     * replaced with ::CU_CTX_SCHED_BLOCKING_SYNC.
+     * <br>
+     * <br>
+     * CU_CTX_SCHED_AUTO: The default value if the \p flags parameter is zero,
+     * uses a heuristic based on the number of active CUDA contexts in the
+     * process \e C and the number of logical processors in the system \e P. If
+     * \e C > \e P, then CUDA will yield to other OS threads when waiting for
+     * the GPU (::CU_CTX_SCHED_YIELD), otherwise CUDA will not yield while
+     * waiting for results and actively spin on the processor (::CU_CTX_SCHED_SPIN).
+     * Additionally, on Tegra devices, ::CU_CTX_SCHED_AUTO uses a heuristic based on
+     * the power profile of the platform and may choose ::CU_CTX_SCHED_BLOCKING_SYNC
+     * for low-powered devices.
+     * <br>
+     * <br>
+     * CU_CTX_LMEM_RESIZE_TO_MAX: Instruct CUDA to not reduce local memory
+     * after resizing local memory for a kernel. This can prevent thrashing by
+     * local memory allocations when launching many kernels with high local
+     * memory usage at the cost of potentially increased memory usage. <br>
+     * <b>Deprecated:</b> This flag is deprecated and the behavior enabled
+     * by this flag is now the default and cannot be disabled.
+     *
+     * @param dev Device for which the primary context flags are set
+     * @param flags New flags for the device
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_DEVICE,
+     * CUDA_ERROR_INVALID_VALUE,
+     *
+     * @see JCudaDriver#cuDevicePrimaryCtxRetain
+     * @see JCudaDriver#cuDevicePrimaryCtxGetState
+     * @see JCudaDriver#cuCtxCreate
+     * @see JCudaDriver#cuCtxGetFlags
+     * @see JCudaDriver#cudaSetDeviceFlags
+     */
     public static int cuDevicePrimaryCtxSetFlags(CUdevice dev, int flags)
     {
         return checkResult(cuDevicePrimaryCtxSetFlagsNative(dev, flags));
@@ -797,7 +977,76 @@ public class JCudaDriver
     private static native int cuDevicePrimaryCtxSetFlagsNative(CUdevice dev, int flags);
 
 
+    /**
+     * Get the state of the primary context.
+     *
+     * Returns in \p *flags the flags for the primary context of \p dev, and in
+     * \p *active whether it is active.  See ::cuDevicePrimaryCtxSetFlags for flag
+     * values.
+     *
+     * @param dev Device to get primary context flags for
+     * @param flags Pointer to store flags
+     * @param active Pointer to store context state; 0 = inactive, 1 = active
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_DEVICE,
+     * CUDA_ERROR_INVALID_VALUE,
+     * 
+     * @see JCudaDriver#cuDevicePrimaryCtxSetFlags,
+     * @see JCudaDriver#cuCtxGetFlags,
+     * @see JCudaDriver#cudaGetDeviceFlags
+     */
+    public static int cuDevicePrimaryCtxGetState(CUdevice dev, int flags[], int active[])
+    {
+        return checkResult(cuDevicePrimaryCtxGetStateNative(dev, flags, active));
+    }
+    private static native int cuDevicePrimaryCtxGetStateNative(CUdevice dev, int flags[], int active[]);
 
+    /**
+     * Destroy all allocations and reset all state on the primary context.
+     *
+     * Explicitly destroys and cleans up all resources associated with the current
+     * device in the current process.
+     *
+     * Note that it is responsibility of the calling function to ensure that no
+     * other module in the process is using the device any more. For that reason
+     * it is recommended to use ::cuDevicePrimaryCtxRelease() in most cases.
+     * However it is safe for other modules to call ::cuDevicePrimaryCtxRelease()
+     * even after resetting the device.
+     * Resetting the primary context does not release it, an application that has
+     * retained the primary context should explicitly release its usage.
+     *
+     * @param dev Device for which primary context is destroyed
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_DEVICE,
+     * CUDA_ERROR_PRIMARY_CONTEXT_ACTIVE
+     *
+     * @see JCudaDriver#cuDevicePrimaryCtxRetain
+     * @see JCudaDriver#cuDevicePrimaryCtxRelease
+     * @see JCudaDriver#cuCtxGetApiVersion
+     * @see JCudaDriver#cuCtxGetCacheConfig
+     * @see JCudaDriver#cuCtxGetDevice
+     * @see JCudaDriver#cuCtxGetFlags
+     * @see JCudaDriver#cuCtxGetLimit
+     * @see JCudaDriver#cuCtxPopCurrent
+     * @see JCudaDriver#cuCtxPushCurrent
+     * @see JCudaDriver#cuCtxSetCacheConfig
+     * @see JCudaDriver#cuCtxSetLimit
+     * @see JCudaDriver#cuCtxSynchronize
+     * @see JCudaDriver#cudaDeviceReset
+     */
+    public static int cuDevicePrimaryCtxReset(CUdevice dev) 
+    {
+        return checkResult(cuDevicePrimaryCtxResetNative(dev));
+    }
+    private static native int cuDevicePrimaryCtxResetNative(CUdevice dev);
 
     /**
      * Returns the total amount of memory on the device.
@@ -841,6 +1090,37 @@ public class JCudaDriver
 
     private static native int cuDeviceTotalMemNative(long bytes[], CUdevice dev);
 
+    
+    /**
+     * Returns the maximum number of elements allocatable in a 1D linear 
+     * texture for a given texture element size.
+     *
+     * Returns in \p maxWidthInElements the maximum number of texture elements 
+     * allocatable in a 1D linear texture for given \p format and \p numChannels.
+     *
+     * @param maxWidthInElements Returned maximum number of texture elements allocatable for given \p format and \p numChannels.
+     * @param format Texture format.
+     * @param numChannels Number of channels per texture element.
+     * @param dev Device handle.
+     *
+     * @return
+     * CUDA_SUCCESS, CUDA_ERROR_DEINITIALIZED, CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_CONTEXT, CUDA_ERROR_INVALID_VALUE, CUDA_ERROR_INVALID_DEVICE
+     * 
+     * @see JCudaDriver#cuDeviceGetAttribute,
+     * @see JCudaDriver#cuDeviceGetCount,
+     * @see JCudaDriver#cuDeviceGetName,
+     * @see JCudaDriver#cuDeviceGetUuid,
+     * @see JCudaDriver#cuDeviceGet,
+     * @see JCudaDriver#cudaMemGetInfo
+     * @see JCudaDriver#cuDeviceTotalMem
+     */
+    public static int cuDeviceGetTexture1DLinearMaxWidth(long maxWidthInElements[], int format, int numChannels, CUdevice dev)
+    {
+        return checkResult(cuDeviceGetTexture1DLinearMaxWidthNative(maxWidthInElements, format, numChannels, dev));
+    }
+    private static native int cuDeviceGetTexture1DLinearMaxWidthNative(long maxWidthInElements[], int format, int numChannels, CUdevice dev);
+    
 
     /**
      * Returns properties for a selected device.
@@ -3563,6 +3843,9 @@ public class JCudaDriver
      *     in a given process may only be opened by one CUcontext per CUdevice
      *     per other process.
      *   </p>
+     * If the memory handle has already been opened by the current context, the
+     * reference count on the handle is incremented by 1 and the existing device pointer
+     * is returned.
      *   <p>Memory returned from cuIpcOpenMemHandle
      *     must be freed with cuIpcCloseMemHandle.
      *   </p>
@@ -3608,7 +3891,8 @@ public class JCudaDriver
      * </pre>
      * <div>
      *   <p>Close memory mapped with cuIpcOpenMemHandle.
-     *     Unmaps memory returnd by cuIpcOpenMemHandle. The original allocation
+     * Decrements the reference count of the memory returned by ::cuIpcOpenMemHandle by 1.
+     * When the reference count reaches 0, this API unmaps the memory. The original allocation
      *     in the exporting process as well as imported mappings in other processes
      *     will be unaffected.
      *   </p>
@@ -3676,26 +3960,27 @@ public class JCudaDriver
      *     different options to be specified that affect the allocation, as
      *     follows.
      *   </p>
-     *   <ul>
-     *     <li>
-     *       <p>CU_MEMHOSTREGISTER_PORTABLE:
-     *         The memory returned by this call will be considered as pinned memory
-     *         by all CUDA contexts, not just the one that performed
-     *         the allocation.
-     *       </p>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <ul>
-     *     <li>
-     *       <p>CU_MEMHOSTREGISTER_DEVICEMAP:
-     *         Maps the allocation into the CUDA address space. The device pointer to
-     *         the memory may be obtained by calling cuMemHostGetDevicePointer(). This
-     *         feature is available only on GPUs with compute capability greater than
-     *         or equal to 1.1.
-     *       </p>
-     *     </li>
-     *   </ul>
+     * <br>
+     * - ::CU_MEMHOSTREGISTER_PORTABLE: The memory returned by this call will be
+     *   considered as pinned memory by all CUDA contexts, not just the one that
+     *   performed the allocation.
+     * <br><br>
+     * - ::CU_MEMHOSTREGISTER_DEVICEMAP: Maps the allocation into the CUDA address
+     *   space. The device pointer to the memory may be obtained by calling
+     *   ::cuMemHostGetDevicePointer().
+     * <br><br>
+     * - ::CU_MEMHOSTREGISTER_IOMEMORY: The pointer is treated as pointing to some
+     *   I/O memory space, e.g. the PCI Express resource of a 3rd party device.
+     * <br><br>
+     * - ::CU_MEMHOSTREGISTER_READ_ONLY: The pointer is treated as pointing to memory
+     *   that is considered read-only by the device.  On platforms without
+     *   CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES, this flag is
+     *   required in order to register memory mapped to the CPU as read-only.  Support
+     *   for the use of this flag can be queried from the device attribute
+     *   CU_DEVICE_ATTRIBUTE_READ_ONLY_HOST_REGISTER_SUPPORTED.  Using this flag with
+     *   a current context associated with a device that does not have this attribute
+     *   set will cause ::cuMemHostRegister to error with CUDA_ERROR_NOT_SUPPORTED.
+     *  <br><br>  
      *   </p>
      *   <p>All of these flags are orthogonal to
      *     one another: a developer may page-lock memory that is portable or
@@ -8684,6 +8969,68 @@ public class JCudaDriver
 
 
     /**
+     * Returns the layout properties of a sparse CUDA array.
+     *
+     * Returns the layout properties of a sparse CUDA array in \p sparseProperties
+     * If the CUDA array is not allocated with flag ::CUDA_ARRAY3D_SPARSE 
+     * ::CUDA_ERROR_INVALID_VALUE will be returned.
+     *
+     * If the returned value in ::CUDA_ARRAY_SPARSE_PROPERTIES::flags contains ::CU_ARRAY_SPARSE_PROPERTIES_SINGLE_MIPTAIL,
+     * then ::CUDA_ARRAY_SPARSE_PROPERTIES::miptailSize represents the total size of the array. Otherwise, it will be zero.
+     * Also, the returned value in ::CUDA_ARRAY_SPARSE_PROPERTIES::miptailFirstLevel is always zero.
+     * Note that the \p array must have been allocated using ::cuArrayCreate or ::cuArray3DCreate. For CUDA arrays obtained
+     * using ::cuMipmappedArrayGetLevel, ::CUDA_ERROR_INVALID_VALUE will be returned. Instead, ::cuMipmappedArrayGetSparseProperties 
+     * must be used to obtain the sparse properties of the entire CUDA mipmapped array to which \p array belongs to.
+     *
+     * @return
+     * CUDA_SUCCESS
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @param sparseProperties Pointer to ::CUDA_ARRAY_SPARSE_PROPERTIES
+     * @param array CUDA array to get the sparse properties of
+     * 
+     * @see JCudaDriver#cuMipmappedArrayGetSparseProperties
+     * @see JCudaDriver#cuMemMapArrayAsync
+     */
+    public static int cuArrayGetSparseProperties(CUDA_ARRAY_SPARSE_PROPERTIES sparseProperties, CUarray array)
+    {
+        return checkResult(cuArrayGetSparsePropertiesNative(sparseProperties, array));
+    }
+    private static native int cuArrayGetSparsePropertiesNative(CUDA_ARRAY_SPARSE_PROPERTIES sparseProperties, CUarray array);
+
+    /**
+     * Returns the layout properties of a sparse CUDA mipmapped array.
+     *
+     * Returns the sparse array layout properties in \p sparseProperties
+     * If the CUDA mipmapped array is not allocated with flag ::CUDA_ARRAY3D_SPARSE 
+     * ::CUDA_ERROR_INVALID_VALUE will be returned.
+     *
+     * For non-layered CUDA mipmapped arrays, ::CUDA_ARRAY_SPARSE_PROPERTIES::miptailSize returns the
+     * size of the mip tail region. The mip tail region includes all mip levels whose width, height or depth
+     * is less than that of the tile.
+     * For layered CUDA mipmapped arrays, if ::CUDA_ARRAY_SPARSE_PROPERTIES::flags contains ::CU_ARRAY_SPARSE_PROPERTIES_SINGLE_MIPTAIL,
+     * then ::CUDA_ARRAY_SPARSE_PROPERTIES::miptailSize specifies the size of the mip tail of all layers combined. 
+     * Otherwise, ::CUDA_ARRAY_SPARSE_PROPERTIES::miptailSize specifies mip tail size per layer.
+     * The returned value of ::CUDA_ARRAY_SPARSE_PROPERTIES::miptailFirstLevel is valid only if ::CUDA_ARRAY_SPARSE_PROPERTIES::miptailSize is non-zero.
+     *
+     * @return
+     * CUDA_SUCCESS
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @param sparseProperties - Pointer to ::CUDA_ARRAY_SPARSE_PROPERTIES
+     * @param mipmap - CUDA mipmapped array to get the sparse properties of
+     * 
+     * @see JCudaDriver#cuArrayGetSparseProperties
+     * @see JCudaDriver#cuMemMapArrayAsync
+     */
+    public static int cuMipmappedArrayGetSparseProperties(CUDA_ARRAY_SPARSE_PROPERTIES sparseProperties, CUmipmappedArray mipmap)
+    {
+        return checkResult(cuMipmappedArrayGetSparsePropertiesNative(sparseProperties, mipmap));
+    }
+    private static native int cuMipmappedArrayGetSparsePropertiesNative(CUDA_ARRAY_SPARSE_PROPERTIES sparseProperties, CUmipmappedArray mipmap);
+    
+    
+    /**
      * Destroys a CUDA array.
      *
      * <pre>
@@ -9769,6 +10116,93 @@ public class JCudaDriver
     }
     private static native int cuMemMapNative(CUdeviceptr ptr, long size, long offset, CUmemGenericAllocationHandle handle, long flags);
 
+    /**
+     * Maps or unmaps subregions of sparse CUDA arrays and sparse CUDA mipmapped arrays.
+     * <br><br>
+     * Performs map or unmap operations on subregions of sparse CUDA arrays and sparse CUDA mipmapped arrays.
+     * Each operation is specified by a ::CUarrayMapInfo entry in the \p mapInfoList array of size \p count.
+     * The structure ::CUarrayMapInfo is defined in {@link CUarrayMapInfo}
+     * where ::CUarrayMapInfo::resourceType specifies the type of resource to be operated on.
+     * If ::CUarrayMapInfo::resourceType is set to ::CUresourcetype::CU_RESOURCE_TYPE_ARRAY then 
+     * ::CUarrayMapInfo::resource::array must be set to a valid sparse CUDA array handle.
+     * The CUDA array must be either a 2D, 2D layered or 3D CUDA array and must have been allocated using
+     * ::cuArrayCreate or ::cuArray3DCreate with the flag ::CUDA_ARRAY3D_SPARSE. 
+     * For CUDA arrays obtained using ::cuMipmappedArrayGetLevel, ::CUDA_ERROR_INVALID_VALUE will be returned.
+     * If ::CUarrayMapInfo::resourceType is set to ::CUresourcetype::CU_RESOURCE_TYPE_MIPMAPPED_ARRAY 
+     * then ::CUarrayMapInfo::resource::mipmap must be set to a valid sparse CUDA mipmapped array handle.
+     * The CUDA mipmapped array must be either a 2D, 2D layered or 3D CUDA mipmapped array and must have been
+     * allocated using ::cuMipmappedArrayCreate with the flag ::CUDA_ARRAY3D_SPARSE.
+     * <br><br>
+     * ::CUarrayMapInfo::subresourceType specifies the type of subresource within the resource. 
+     * ::CUarraySparseSubresourceType_enum is defined as {@link CUarraySparseSubresourceType}
+     * where ::CUarraySparseSubresourceType::CU_ARRAY_SPARSE_SUBRESOURCE_TYPE_SPARSE_LEVEL indicates a
+     * sparse-miplevel which spans at least one tile in every dimension. The remaining miplevels which
+     * are too small to span at least one tile in any dimension constitute the mip tail region as indicated by 
+     * ::CUarraySparseSubresourceType::CU_ARRAY_SPARSE_SUBRESOURCE_TYPE_MIPTAIL subresource type.
+     * <br><br>
+     * If ::CUarrayMapInfo::subresourceType is set to ::CUarraySparseSubresourceType::CU_ARRAY_SPARSE_SUBRESOURCE_TYPE_SPARSE_LEVEL
+     * then ::CUarrayMapInfo::subresource::sparseLevel struct must contain valid array subregion offsets and extents.
+     * The ::CUarrayMapInfo::subresource::sparseLevel::offsetX, ::CUarrayMapInfo::subresource::sparseLevel::offsetY
+     * and ::CUarrayMapInfo::subresource::sparseLevel::offsetZ must specify valid X, Y and Z offsets respectively.
+     * The ::CUarrayMapInfo::subresource::sparseLevel::extentWidth, ::CUarrayMapInfo::subresource::sparseLevel::extentHeight
+     * and ::CUarrayMapInfo::subresource::sparseLevel::extentDepth must specify valid width, height and depth extents respectively.
+     * These offsets and extents must be aligned to the corresponding tile dimension.
+     * For CUDA mipmapped arrays ::CUarrayMapInfo::subresource::sparseLevel::level must specify a valid mip level index. Otherwise,
+     * must be zero.
+     * For layered CUDA arrays and layered CUDA mipmapped arrays ::CUarrayMapInfo::subresource::sparseLevel::layer must specify a valid layer index. Otherwise,
+     * must be zero.
+     * ::CUarrayMapInfo::subresource::sparseLevel::offsetZ must be zero and ::CUarrayMapInfo::subresource::sparseLevel::extentDepth
+     * must be set to 1 for 2D and 2D layered CUDA arrays and CUDA mipmapped arrays.
+     * Tile extents can be obtained by calling ::cuArrayGetSparseProperties and ::cuMipmappedArrayGetSparseProperties
+     * <br><br>
+     * If ::CUarrayMapInfo::subresourceType is set to ::CUarraySparseSubresourceType::CU_ARRAY_SPARSE_SUBRESOURCE_TYPE_MIPTAIL
+     * then ::CUarrayMapInfo::subresource::miptail struct must contain valid mip tail offset in 
+     * ::CUarrayMapInfo::subresource::miptail::offset and size in ::CUarrayMapInfo::subresource::miptail::size.
+     * Both, mip tail offset and mip tail size must be aligned to the tile size. 
+     * For layered CUDA mipmapped arrays which don't have the flag ::CU_ARRAY_SPARSE_PROPERTIES_SINGLE_MIPTAIL set in ::CUDA_ARRAY_SPARSE_PROPERTIES::flags
+     * as returned by ::cuMipmappedArrayGetSparseProperties, ::CUarrayMapInfo::subresource::miptail::layer must specify a valid layer index.
+     * Otherwise, must be zero.
+     * <br><br>
+     * ::CUarrayMapInfo::memOperationType specifies the type of operation. ::CUmemOperationType is defined as
+     * {@link CUmemOperationType}.
+     * If ::CUarrayMapInfo::memOperationType is set to ::CUmemOperationType::CU_MEM_OPERATION_TYPE_MAP then the subresource 
+     * will be mapped onto the tile pool memory specified by ::CUarrayMapInfo::memHandle at offset ::CUarrayMapInfo::offset. 
+     * The tile pool allocation has to be created by specifying the ::CU_MEM_CREATE_USAGE_TILE_POOL flag when calling ::cuMemCreate. Also, 
+     * ::CUarrayMapInfo::memHandleType must be set to ::CUmemHandleType::CU_MEM_HANDLE_TYPE_GENERIC.
+     * <br><br>
+     * If ::CUarrayMapInfo::memOperationType is set to ::CUmemOperationType::CU_MEM_OPERATION_TYPE_UNMAP then an unmapping operation
+     * is performed. ::CUarrayMapInfo::memHandle must be NULL.
+     * <br><br>
+     * ::CUarrayMapInfo::deviceBitMask specifies the list of devices that must map or unmap physical memory. 
+     * Currently, this mask must have exactly one bit set, and the corresponding device must match the device associated with the stream. 
+     * If ::CUarrayMapInfo::memOperationType is set to ::CUmemOperationType::CU_MEM_OPERATION_TYPE_MAP, the device must also match 
+     * the device associated with the tile pool memory allocation as specified by ::CUarrayMapInfo::memHandle.
+     * <br><br>
+     * ::CUarrayMapInfo::flags and ::CUarrayMapInfo::reserved[] are unused and must be set to zero.
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_INVALID_VALUE,
+     * CUDA_ERROR_INVALID_HANDLE
+     *
+     * @param mapInfoList List of ::CUarrayMapInfo
+     * @param count Count of ::CUarrayMapInfo  in \p mapInfoList
+     * @param hStream Stream identifier for the stream to use for map or unmap operations
+     *
+     * @see JCudaDriver#cuMipmappedArrayCreate
+     * @see JCudaDriver#cuArrayCreate
+     * @see JCudaDriver#cuArray3DCreate
+     * @see JCudaDriver#cuMemCreate
+     * @see JCudaDriver#cuArrayGetSparseProperties
+     * @see JCudaDriver#cuMipmappedArrayGetSparseProperties
+     */
+    public static int cuMemMapArrayAsync(CUarrayMapInfo mapInfoList[], int count, CUstream hStream)
+    {
+        return checkResult(cuMemMapArrayAsyncNative(mapInfoList, count, hStream));
+    }
+    private static native int cuMemMapArrayAsyncNative(CUarrayMapInfo mapInfoList[], int count, CUstream hStream);
+    
+    
     /**
     * Unmap the backing memory of a given address range.<br>
     * <br>
@@ -12380,19 +12814,19 @@ public class JCudaDriver
      * CUDA_ERROR_INVALID_VALUE,
      * CUDA_ERROR_OUT_OF_MEMORY
      *
-     * @see
-     * JCudaDriver#cuGraphAddChildGraphNode
-     * JCudaDriver#cuGraphAddEmptyNode
-     * JCudaDriver#cuGraphAddKernelNode
-     * JCudaDriver#cuGraphAddHostNode
-     * JCudaDriver#cuGraphAddMemcpyNode
-     * JCudaDriver#cuGraphAddMemsetNode
-     * JCudaDriver#cuGraphInstantiate
-     * JCudaDriver#cuGraphDestroy
-     * JCudaDriver#cuGraphGetNodes
-     * JCudaDriver#cuGraphGetRootNodes
-     * JCudaDriver#cuGraphGetEdges
-     * JCudaDriver#cuGraphClone
+     * 
+     * @see JCudaDriver#cuGraphAddChildGraphNode
+     * @see JCudaDriver#cuGraphAddEmptyNode
+     * @see JCudaDriver#cuGraphAddKernelNode
+     * @see JCudaDriver#cuGraphAddHostNode
+     * @see JCudaDriver#cuGraphAddMemcpyNode
+     * @see JCudaDriver#cuGraphAddMemsetNode
+     * @see JCudaDriver#cuGraphInstantiate
+     * @see JCudaDriver#cuGraphDestroy
+     * @see JCudaDriver#cuGraphGetNodes
+     * @see JCudaDriver#cuGraphGetRootNodes
+     * @see JCudaDriver#cuGraphGetEdges
+     * @see JCudaDriver#cuGraphClone
      */
     public static int cuGraphCreate(CUgraph phGraph, int flags) 
     {
@@ -12486,17 +12920,17 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuLaunchKernel
-     * JCudaDriver#cuGraphKernelNodeGetParams
-     * JCudaDriver#cuGraphKernelNodeSetParams
-     * JCudaDriver#cuGraphCreate
-     * JCudaDriver#cuGraphDestroyNode
-     * JCudaDriver#cuGraphAddChildGraphNode
-     * JCudaDriver#cuGraphAddEmptyNode
-     * JCudaDriver#cuGraphAddHostNode
-     * JCudaDriver#cuGraphAddMemcpyNode
-     * JCudaDriver#cuGraphAddMemsetNode
+     * 
+     * @see JCudaDriver#cuLaunchKernel
+     * @see JCudaDriver#cuGraphKernelNodeGetParams
+     * @see JCudaDriver#cuGraphKernelNodeSetParams
+     * @see JCudaDriver#cuGraphCreate
+     * @see JCudaDriver#cuGraphDestroyNode
+     * @see JCudaDriver#cuGraphAddChildGraphNode
+     * @see JCudaDriver#cuGraphAddEmptyNode
+     * @see JCudaDriver#cuGraphAddHostNode
+     * @see JCudaDriver#cuGraphAddMemcpyNode
+     * @see JCudaDriver#cuGraphAddMemsetNode
      */
     public static int cuGraphAddKernelNode(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUDA_KERNEL_NODE_PARAMS nodeParams) 
     {
@@ -12528,10 +12962,9 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuLaunchKernel
-     * JCudaDriver#cuGraphAddKernelNode
-     * JCudaDriver#cuGraphKernelNodeSetParams
+     * @see JCudaDriver#cuLaunchKernel
+     * @see JCudaDriver#cuGraphAddKernelNode
+     * @see JCudaDriver#cuGraphKernelNodeSetParams
      */
     public static int cuGraphKernelNodeGetParams(CUgraphNode hNode, CUDA_KERNEL_NODE_PARAMS nodeParams) 
     {
@@ -12554,10 +12987,10 @@ public class JCudaDriver
      * CUDA_ERROR_INVALID_HANDLE,
      * CUDA_ERROR_OUT_OF_MEMORY
      *
-     * @see
-     * JCudaDriver#cuLaunchKernel
-     * JCudaDriver#cuGraphAddKernelNode
-     * JCudaDriver#cuGraphKernelNodeGetParams
+     * 
+     * @see JCudaDriver#cuLaunchKernel
+     * @see JCudaDriver#cuGraphAddKernelNode
+     * @see JCudaDriver#cuGraphKernelNodeGetParams
      */
     public static int cuGraphKernelNodeSetParams(CUgraphNode hNode, CUDA_KERNEL_NODE_PARAMS nodeParams) 
     {
@@ -12598,17 +13031,17 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuMemcpy3D
-     * JCudaDriver#cuGraphMemcpyNodeGetParams
-     * JCudaDriver#cuGraphMemcpyNodeSetParams
-     * JCudaDriver#cuGraphCreate
-     * JCudaDriver#cuGraphDestroyNode
-     * JCudaDriver#cuGraphAddChildGraphNode
-     * JCudaDriver#cuGraphAddEmptyNode
-     * JCudaDriver#cuGraphAddKernelNode
-     * JCudaDriver#cuGraphAddHostNode
-     * JCudaDriver#cuGraphAddMemsetNode
+     * 
+     * @see JCudaDriver#cuMemcpy3D
+     * @see JCudaDriver#cuGraphMemcpyNodeGetParams
+     * @see JCudaDriver#cuGraphMemcpyNodeSetParams
+     * @see JCudaDriver#cuGraphCreate
+     * @see JCudaDriver#cuGraphDestroyNode
+     * @see JCudaDriver#cuGraphAddChildGraphNode
+     * @see JCudaDriver#cuGraphAddEmptyNode
+     * @see JCudaDriver#cuGraphAddKernelNode
+     * @see JCudaDriver#cuGraphAddHostNode
+     * @see JCudaDriver#cuGraphAddMemsetNode
      */
     public static int cuGraphAddMemcpyNode(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUDA_MEMCPY3D copyParams, CUcontext ctx) 
     {
@@ -12631,10 +13064,10 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuMemcpy3D
-     * JCudaDriver#cuGraphAddMemcpyNode
-     * JCudaDriver#cuGraphMemcpyNodeSetParams
+     * 
+     * @see JCudaDriver#cuMemcpy3D
+     * @see JCudaDriver#cuGraphAddMemcpyNode
+     * @see JCudaDriver#cuGraphMemcpyNodeSetParams
      */
     public static int cuGraphMemcpyNodeGetParams(CUgraphNode hNode, CUDA_MEMCPY3D nodeParams) 
     {
@@ -12657,10 +13090,10 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE,
      *
-     * @see
-     * JCudaDriver#cuMemcpy3D
-     * JCudaDriver#cuGraphAddMemcpyNode
-     * JCudaDriver#cuGraphMemcpyNodeGetParams
+     * 
+     * @see JCudaDriver#cuMemcpy3D
+     * @see JCudaDriver#cuGraphAddMemcpyNode
+     * @see JCudaDriver#cuGraphMemcpyNodeGetParams
      */
     public static int cuGraphMemcpyNodeSetParams(CUgraphNode hNode, CUDA_MEMCPY3D nodeParams) 
     {
@@ -12695,17 +13128,17 @@ public class JCudaDriver
      * CUDA_ERROR_INVALID_VALUE,
      * CUDA_ERROR_INVALID_CONTEXT
      *
-     * @see
-     * JCudaDriver#cuMemsetD2D32
-     * JCudaDriver#cuGraphMemsetNodeGetParams
-     * JCudaDriver#cuGraphMemsetNodeSetParams
-     * JCudaDriver#cuGraphCreate
-     * JCudaDriver#cuGraphDestroyNode
-     * JCudaDriver#cuGraphAddChildGraphNode
-     * JCudaDriver#cuGraphAddEmptyNode
-     * JCudaDriver#cuGraphAddKernelNode
-     * JCudaDriver#cuGraphAddHostNode
-     * JCudaDriver#cuGraphAddMemcpyNode
+     * 
+     * @see JCudaDriver#cuMemsetD2D32
+     * @see JCudaDriver#cuGraphMemsetNodeGetParams
+     * @see JCudaDriver#cuGraphMemsetNodeSetParams
+     * @see JCudaDriver#cuGraphCreate
+     * @see JCudaDriver#cuGraphDestroyNode
+     * @see JCudaDriver#cuGraphAddChildGraphNode
+     * @see JCudaDriver#cuGraphAddEmptyNode
+     * @see JCudaDriver#cuGraphAddKernelNode
+     * @see JCudaDriver#cuGraphAddHostNode
+     * @see JCudaDriver#cuGraphAddMemcpyNode
      */
     public static int cuGraphAddMemsetNode(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUDA_MEMSET_NODE_PARAMS memsetParams, CUcontext ctx) 
     {
@@ -12728,10 +13161,10 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuMemsetD2D32
-     * JCudaDriver#cuGraphAddMemsetNode
-     * JCudaDriver#cuGraphMemsetNodeSetParams
+     * 
+     * @see JCudaDriver#cuMemsetD2D32
+     * @see JCudaDriver#cuGraphAddMemsetNode
+     * @see JCudaDriver#cuGraphMemsetNodeSetParams
      */
     public static int cuGraphMemsetNodeGetParams(CUgraphNode hNode, CUDA_MEMSET_NODE_PARAMS nodeParams) 
     {
@@ -12754,10 +13187,10 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuMemsetD2D32
-     * JCudaDriver#cuGraphAddMemsetNode
-     * JCudaDriver#cuGraphMemsetNodeGetParams
+     * 
+     * @see JCudaDriver#cuMemsetD2D32
+     * @see JCudaDriver#cuGraphAddMemsetNode
+     * @see JCudaDriver#cuGraphMemsetNodeGetParams
      */
     public static int cuGraphMemsetNodeSetParams(CUgraphNode hNode, CUDA_MEMSET_NODE_PARAMS nodeParams) 
     {
@@ -12789,17 +13222,17 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuLaunchHostFunc
-     * JCudaDriver#cuGraphHostNodeGetParams
-     * JCudaDriver#cuGraphHostNodeSetParams
-     * JCudaDriver#cuGraphCreate
-     * JCudaDriver#cuGraphDestroyNode
-     * JCudaDriver#cuGraphAddChildGraphNode
-     * JCudaDriver#cuGraphAddEmptyNode
-     * JCudaDriver#cuGraphAddKernelNode
-     * JCudaDriver#cuGraphAddMemcpyNode
-     * JCudaDriver#cuGraphAddMemsetNode
+     * 
+     * @see JCudaDriver#cuLaunchHostFunc
+     * @see JCudaDriver#cuGraphHostNodeGetParams
+     * @see JCudaDriver#cuGraphHostNodeSetParams
+     * @see JCudaDriver#cuGraphCreate
+     * @see JCudaDriver#cuGraphDestroyNode
+     * @see JCudaDriver#cuGraphAddChildGraphNode
+     * @see JCudaDriver#cuGraphAddEmptyNode
+     * @see JCudaDriver#cuGraphAddKernelNode
+     * @see JCudaDriver#cuGraphAddMemcpyNode
+     * @see JCudaDriver#cuGraphAddMemsetNode
      */
     public static int cuGraphAddHostNode(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUDA_HOST_NODE_PARAMS nodeParams) 
     {
@@ -12822,10 +13255,10 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuLaunchHostFunc
-     * JCudaDriver#cuGraphAddHostNode
-     * JCudaDriver#cuGraphHostNodeSetParams
+     * 
+     * @see JCudaDriver#cuLaunchHostFunc
+     * @see JCudaDriver#cuGraphAddHostNode
+     * @see JCudaDriver#cuGraphHostNodeSetParams
      */
     public static int cuGraphHostNodeGetParams(CUgraphNode hNode, CUDA_HOST_NODE_PARAMS nodeParams) 
     {
@@ -12848,10 +13281,10 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuLaunchHostFunc
-     * JCudaDriver#cuGraphAddHostNode
-     * JCudaDriver#cuGraphHostNodeGetParams
+     * 
+     * @see JCudaDriver#cuLaunchHostFunc
+     * @see JCudaDriver#cuGraphAddHostNode
+     * @see JCudaDriver#cuGraphHostNodeGetParams
      */
     public static int cuGraphHostNodeSetParams(CUgraphNode hNode, CUDA_HOST_NODE_PARAMS nodeParams) 
     {
@@ -12883,16 +13316,16 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE,
      *
-     * @see
-     * JCudaDriver#cuGraphChildGraphNodeGetGraph
-     * JCudaDriver#cuGraphCreate
-     * JCudaDriver#cuGraphDestroyNode
-     * JCudaDriver#cuGraphAddEmptyNode
-     * JCudaDriver#cuGraphAddKernelNode
-     * JCudaDriver#cuGraphAddHostNode
-     * JCudaDriver#cuGraphAddMemcpyNode
-     * JCudaDriver#cuGraphAddMemsetNode
-     * JCudaDriver#cuGraphClone
+     * 
+     * @see JCudaDriver#cuGraphChildGraphNodeGetGraph
+     * @see JCudaDriver#cuGraphCreate
+     * @see JCudaDriver#cuGraphDestroyNode
+     * @see JCudaDriver#cuGraphAddEmptyNode
+     * @see JCudaDriver#cuGraphAddKernelNode
+     * @see JCudaDriver#cuGraphAddHostNode
+     * @see JCudaDriver#cuGraphAddMemcpyNode
+     * @see JCudaDriver#cuGraphAddMemsetNode
+     * @see JCudaDriver#cuGraphClone
      */
     public static int cuGraphAddChildGraphNode(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUgraph childGraph) 
     {
@@ -12917,9 +13350,9 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE,
      *
-     * @see
-     * JCudaDriver#cuGraphAddChildGraphNode
-     * JCudaDriver#cuGraphNodeFindInClone
+     * 
+     * @see JCudaDriver#cuGraphAddChildGraphNode
+     * @see JCudaDriver#cuGraphNodeFindInClone
      */
     public static int cuGraphChildGraphNodeGetGraph(CUgraphNode hNode, CUgraph phGraph) 
     {
@@ -12953,14 +13386,14 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE,
      *
-     * @see
-     * JCudaDriver#cuGraphCreate
-     * JCudaDriver#cuGraphDestroyNode
-     * JCudaDriver#cuGraphAddChildGraphNode
-     * JCudaDriver#cuGraphAddKernelNode
-     * JCudaDriver#cuGraphAddHostNode
-     * JCudaDriver#cuGraphAddMemcpyNode
-     * JCudaDriver#cuGraphAddMemsetNode
+     * 
+     * @see JCudaDriver#cuGraphCreate
+     * @see JCudaDriver#cuGraphDestroyNode
+     * @see JCudaDriver#cuGraphAddChildGraphNode
+     * @see JCudaDriver#cuGraphAddKernelNode
+     * @see JCudaDriver#cuGraphAddHostNode
+     * @see JCudaDriver#cuGraphAddMemcpyNode
+     * @see JCudaDriver#cuGraphAddMemsetNode
      */
     public static int cuGraphAddEmptyNode(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies) 
     {
@@ -12968,6 +13401,196 @@ public class JCudaDriver
     }
     private static native int cuGraphAddEmptyNodeNative(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies);
     
+    
+    /**
+     * Creates an event record node and adds it to a graph.<br>.<br>
+     *
+     * Creates a new event record node and adds it to \p hGraph with \p numDependencies
+     * dependencies specified via \p dependencies and arguments specified in \p params.
+     * It is possible for \p numDependencies to be 0, in which case the node will be placed
+     * at the root of the graph. \p dependencies may not have any duplicate entries.
+     * A handle to the new node will be returned in \p phGraphNode.
+     *
+     * Each launch of the graph will record \p event to capture execution of the
+     * node's dependencies.
+     *
+     * @param phGraphNode Returns newly created node
+     * @param hGraph Graph to which to add the node
+     * @param dependencies Dependencies of the node
+     * @param numDependencies Number of dependencies
+     * @param event Event for the node
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_NOT_SUPPORTED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * 
+     * @see JCudaDriver#cuGraphAddEventWaitNode,
+     * @see JCudaDriver#cuEventRecord,
+     * @see JCudaDriver#cuStreamWaitEvent,
+     * @see JCudaDriver#cuGraphCreate,
+     * @see JCudaDriver#cuGraphDestroyNode,
+     * @see JCudaDriver#cuGraphAddChildGraphNode,
+     * @see JCudaDriver#cuGraphAddEmptyNode,
+     * @see JCudaDriver#cuGraphAddKernelNode,
+     * @see JCudaDriver#cuGraphAddMemcpyNode,
+     * @see JCudaDriver#cuGraphAddMemsetNode,
+     */
+    public static int cuGraphAddEventRecordNode(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUevent event)
+    {
+        return checkResult(cuGraphAddEventRecordNodeNative(phGraphNode, hGraph, dependencies, numDependencies, event));
+    }
+    private static native int cuGraphAddEventRecordNodeNative(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUevent event);
+     
+    /**
+     * Returns the event associated with an event record node.<br>
+     *
+     * Returns the event of event record node \p hNode in \p event_out.
+     *
+     * @param hNode Node to get the event for
+     * @param event_out Pointer to return the event
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see JCudaDriver#cuGraphAddEventRecordNode,
+     * @see JCudaDriver#cuGraphEventRecordNodeSetEvent,
+     * @see JCudaDriver#cuGraphEventWaitNodeGetEvent,
+     * @see JCudaDriver#cuEventRecord,
+     * @see JCudaDriver#cuStreamWaitEvent
+     */
+    public static int cuGraphEventRecordNodeGetEvent(CUgraphNode hNode, CUevent event_out)
+    {
+        return checkResult(cuGraphEventRecordNodeGetEventNative(hNode, event_out));
+    }
+    private static native int cuGraphEventRecordNodeGetEventNative(CUgraphNode hNode, CUevent event_out);
+    
+    /**
+     * Sets an event record node's event.<br>
+     *
+     * Sets the event of event record node \p hNode to \p event.
+     *
+     * @param hNode Node to set the event for
+     * @param event Event to use
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_INVALID_VALUE,
+     * CUDA_ERROR_INVALID_HANDLE,
+     * CUDA_ERROR_OUT_OF_MEMORY
+     *
+     * @see JCudaDriver#cuGraphAddEventRecordNode,
+     * @see JCudaDriver#cuGraphEventRecordNodeGetEvent,
+     * @see JCudaDriver#cuGraphEventWaitNodeSetEvent,
+     * @see JCudaDriver#cuEventRecord,
+     * @see JCudaDriver#cuStreamWaitEvent
+     */
+    public static int cuGraphEventRecordNodeSetEvent(CUgraphNode hNode, CUevent event)
+    {
+        return checkResult(cuGraphEventRecordNodeSetEventNative(hNode, event));
+    }
+    private static native int cuGraphEventRecordNodeSetEventNative(CUgraphNode hNode, CUevent event);
+
+    /**
+     * Creates an event wait node and adds it to a graph.<br>
+     *
+     * Creates a new event wait node and adds it to \p hGraph with \p numDependencies
+     * dependencies specified via \p dependencies and arguments specified in \p params.
+     * It is possible for \p numDependencies to be 0, in which case the node will be placed
+     * at the root of the graph. \p dependencies may not have any duplicate entries.
+     * A handle to the new node will be returned in \p phGraphNode.
+     *
+     * The graph node will wait for all work captured in \p event.  See @see JCudaDriver#cuEventRecord()
+     * for details on what is captured by an event. \p event may be from a different context
+     * or device than the launch stream.
+     *
+     * @param phGraphNode Returns newly created node
+     * @param hGraph Graph to which to add the node
+     * @param dependencies Dependencies of the node
+     * @param numDependencies Number of dependencies
+     * @param event Event for the node
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_NOT_SUPPORTED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see JCudaDriver#cuGraphAddEventRecordNode,
+     * @see JCudaDriver#cuEventRecord,
+     * @see JCudaDriver#cuStreamWaitEvent,
+     * @see JCudaDriver#cuGraphCreate,
+     * @see JCudaDriver#cuGraphDestroyNode,
+     * @see JCudaDriver#cuGraphAddChildGraphNode,
+     * @see JCudaDriver#cuGraphAddEmptyNode,
+     * @see JCudaDriver#cuGraphAddKernelNode,
+     * @see JCudaDriver#cuGraphAddMemcpyNode,
+     * @see JCudaDriver#cuGraphAddMemsetNode,
+     */
+    public static int cuGraphAddEventWaitNode(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUevent event)
+    {
+        return checkResult(cuGraphAddEventWaitNodeNative(phGraphNode, hGraph, dependencies, numDependencies, event));
+    }
+    private static native int cuGraphAddEventWaitNodeNative(CUgraphNode phGraphNode, CUgraph hGraph, CUgraphNode dependencies[], long numDependencies, CUevent event);
+
+    /**
+     * Returns the event associated with an event wait node.<br>
+     *
+     * Returns the event of event wait node \p hNode in \p event_out.
+     *
+     * @param hNode Node to get the event for
+     * @param event_out Pointer to return the event
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see JCudaDriver#cuGraphAddEventWaitNode,
+     * @see JCudaDriver#cuGraphEventWaitNodeSetEvent,
+     * @see JCudaDriver#cuGraphEventRecordNodeGetEvent,
+     * @see JCudaDriver#cuEventRecord,
+     * @see JCudaDriver#cuStreamWaitEvent
+     */
+    public static int cuGraphEventWaitNodeGetEvent(CUgraphNode hNode, CUevent event_out)
+    {
+        return checkResult(cuGraphEventWaitNodeGetEventNative(hNode, event_out));
+    }
+    private static native int cuGraphEventWaitNodeGetEventNative(CUgraphNode hNode, CUevent event_out);
+
+    /**
+     * Sets an event wait node's event.<br>
+     *
+     * Sets the event of event wait node \p hNode to \p event.
+     *
+     * @param hNode Node to set the event for
+     * @param event Event to use
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_INVALID_VALUE,
+     * CUDA_ERROR_INVALID_HANDLE,
+     * CUDA_ERROR_OUT_OF_MEMORY
+     *
+     * @see JCudaDriver#cuGraphAddEventWaitNode,
+     * @see JCudaDriver#cuGraphEventWaitNodeGetEvent,
+     * @see JCudaDriver#cuGraphEventRecordNodeSetEvent,
+     * @see JCudaDriver#cuEventRecord,
+     * @see JCudaDriver#cuStreamWaitEvent
+     */
+    public static int cuGraphEventWaitNodeSetEvent(CUgraphNode hNode, CUevent event)
+    {
+        return checkResult(cuGraphEventWaitNodeSetEventNative(hNode, event));
+    }
+    private static native int cuGraphEventWaitNodeSetEventNative(CUgraphNode hNode, CUevent event);    
 
     /**
      * Clones a graph.<br>
@@ -12986,9 +13609,9 @@ public class JCudaDriver
      * CUDA_ERROR_INVALID_VALUE,
      * CUDA_ERROR_OUT_OF_MEMORY
      *
-     * @see
-     * JCudaDriver#cuGraphCreate
-     * JCudaDriver#cuGraphNodeFindInClone
+     * 
+     * @see JCudaDriver#cuGraphCreate
+     * @see JCudaDriver#cuGraphNodeFindInClone
      */
     public static int cuGraphClone(CUgraph phGraphClone, CUgraph originalGraph) 
     {
@@ -13016,8 +13639,7 @@ public class JCudaDriver
      * CUDA_SUCCESS,
      * CUDA_ERROR_INVALID_VALUE,
      *
-     * @see
-     * JCudaDriver#cuGraphClone
+     * @see JCudaDriver#cuGraphClone
      */
     public static int cuGraphNodeFindInClone(CUgraphNode phNode, CUgraphNode hOriginalNode, CUgraph hClonedGraph) 
     {
@@ -13040,18 +13662,18 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuGraphGetNodes
-     * JCudaDriver#cuGraphGetRootNodes
-     * JCudaDriver#cuGraphChildGraphNodeGetGraph
-     * JCudaDriver#cuGraphKernelNodeGetParams
-     * JCudaDriver#cuGraphKernelNodeSetParams
-     * JCudaDriver#cuGraphHostNodeGetParams
-     * JCudaDriver#cuGraphHostNodeSetParams
-     * JCudaDriver#cuGraphMemcpyNodeGetParams
-     * JCudaDriver#cuGraphMemcpyNodeSetParams
-     * JCudaDriver#cuGraphMemsetNodeGetParams
-     * JCudaDriver#cuGraphMemsetNodeSetParams
+     * 
+     * @see JCudaDriver#cuGraphGetNodes
+     * @see JCudaDriver#cuGraphGetRootNodes
+     * @see JCudaDriver#cuGraphChildGraphNodeGetGraph
+     * @see JCudaDriver#cuGraphKernelNodeGetParams
+     * @see JCudaDriver#cuGraphKernelNodeSetParams
+     * @see JCudaDriver#cuGraphHostNodeGetParams
+     * @see JCudaDriver#cuGraphHostNodeSetParams
+     * @see JCudaDriver#cuGraphMemcpyNodeGetParams
+     * @see JCudaDriver#cuGraphMemcpyNodeSetParams
+     * @see JCudaDriver#cuGraphMemsetNodeGetParams
+     * @see JCudaDriver#cuGraphMemsetNodeSetParams
      */
     public static int cuGraphNodeGetType(CUgraphNode hNode, int type[]) 
     {
@@ -13079,13 +13701,13 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuGraphCreate
-     * JCudaDriver#cuGraphGetRootNodes
-     * JCudaDriver#cuGraphGetEdges
-     * JCudaDriver#cuGraphNodeGetType
-     * JCudaDriver#cuGraphNodeGetDependencies
-     * JCudaDriver#cuGraphNodeGetDependentNodes
+     * 
+     * @see JCudaDriver#cuGraphCreate
+     * @see JCudaDriver#cuGraphGetRootNodes
+     * @see JCudaDriver#cuGraphGetEdges
+     * @see JCudaDriver#cuGraphNodeGetType
+     * @see JCudaDriver#cuGraphNodeGetDependencies
+     * @see JCudaDriver#cuGraphNodeGetDependentNodes
      */
     public static int cuGraphGetNodes(CUgraph hGraph, CUgraphNode nodes[], long numNodes[]) 
     {
@@ -13113,13 +13735,13 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuGraphCreate
-     * JCudaDriver#cuGraphGetNodes
-     * JCudaDriver#cuGraphGetEdges
-     * JCudaDriver#cuGraphNodeGetType
-     * JCudaDriver#cuGraphNodeGetDependencies
-     * JCudaDriver#cuGraphNodeGetDependentNodes
+     * 
+     * @see JCudaDriver#cuGraphCreate
+     * @see JCudaDriver#cuGraphGetNodes
+     * @see JCudaDriver#cuGraphGetEdges
+     * @see JCudaDriver#cuGraphNodeGetType
+     * @see JCudaDriver#cuGraphNodeGetDependencies
+     * @see JCudaDriver#cuGraphNodeGetDependentNodes
      */
     public static int cuGraphGetRootNodes(CUgraph hGraph, CUgraphNode rootNodes[], long numRootNodes[]) 
     {
@@ -13150,13 +13772,13 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuGraphGetNodes
-     * JCudaDriver#cuGraphGetRootNodes
-     * JCudaDriver#cuGraphAddDependencies
-     * JCudaDriver#cuGraphRemoveDependencies
-     * JCudaDriver#cuGraphNodeGetDependencies
-     * JCudaDriver#cuGraphNodeGetDependentNodes
+     * 
+     * @see JCudaDriver#cuGraphGetNodes
+     * @see JCudaDriver#cuGraphGetRootNodes
+     * @see JCudaDriver#cuGraphAddDependencies
+     * @see JCudaDriver#cuGraphRemoveDependencies
+     * @see JCudaDriver#cuGraphNodeGetDependencies
+     * @see JCudaDriver#cuGraphNodeGetDependentNodes
      */
     public static int cuGraphGetEdges(CUgraph hGraph, CUgraphNode from[], CUgraphNode to[], long numEdges[]) 
     {
@@ -13184,13 +13806,13 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuGraphNodeGetDependentNodes
-     * JCudaDriver#cuGraphGetNodes
-     * JCudaDriver#cuGraphGetRootNodes
-     * JCudaDriver#cuGraphGetEdges
-     * JCudaDriver#cuGraphAddDependencies
-     * JCudaDriver#cuGraphRemoveDependencies
+     * 
+     * @see JCudaDriver#cuGraphNodeGetDependentNodes
+     * @see JCudaDriver#cuGraphGetNodes
+     * @see JCudaDriver#cuGraphGetRootNodes
+     * @see JCudaDriver#cuGraphGetEdges
+     * @see JCudaDriver#cuGraphAddDependencies
+     * @see JCudaDriver#cuGraphRemoveDependencies
      */
     public static int cuGraphNodeGetDependencies(CUgraphNode hNode, CUgraphNode dependencies[], long numDependencies[]) 
     {
@@ -13219,13 +13841,13 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuGraphNodeGetDependencies
-     * JCudaDriver#cuGraphGetNodes
-     * JCudaDriver#cuGraphGetRootNodes
-     * JCudaDriver#cuGraphGetEdges
-     * JCudaDriver#cuGraphAddDependencies
-     * JCudaDriver#cuGraphRemoveDependencies
+     * 
+     * @see JCudaDriver#cuGraphNodeGetDependencies
+     * @see JCudaDriver#cuGraphGetNodes
+     * @see JCudaDriver#cuGraphGetRootNodes
+     * @see JCudaDriver#cuGraphGetEdges
+     * @see JCudaDriver#cuGraphAddDependencies
+     * @see JCudaDriver#cuGraphRemoveDependencies
      */
     public static int cuGraphNodeGetDependentNodes(CUgraphNode hNode, CUgraphNode dependentNodes[], long numDependentNodes[]) 
     {
@@ -13253,11 +13875,11 @@ public class JCudaDriver
      * CUDA_SUCCESS,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuGraphRemoveDependencies
-     * JCudaDriver#cuGraphGetEdges
-     * JCudaDriver#cuGraphNodeGetDependencies
-     * JCudaDriver#cuGraphNodeGetDependentNodes
+     * 
+     * @see JCudaDriver#cuGraphRemoveDependencies
+     * @see JCudaDriver#cuGraphGetEdges
+     * @see JCudaDriver#cuGraphNodeGetDependencies
+     * @see JCudaDriver#cuGraphNodeGetDependentNodes
      */
     public static int cuGraphAddDependencies(CUgraph hGraph, CUgraphNode from[], CUgraphNode to[], long numDependencies) 
     {
@@ -13285,11 +13907,11 @@ public class JCudaDriver
      * CUDA_SUCCESS,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuGraphAddDependencies
-     * JCudaDriver#cuGraphGetEdges
-     * JCudaDriver#cuGraphNodeGetDependencies
-     * JCudaDriver#cuGraphNodeGetDependentNodes
+     * 
+     * @see JCudaDriver#cuGraphAddDependencies
+     * @see JCudaDriver#cuGraphGetEdges
+     * @see JCudaDriver#cuGraphNodeGetDependencies
+     * @see JCudaDriver#cuGraphNodeGetDependentNodes
      */
     public static int cuGraphRemoveDependencies(CUgraph hGraph, CUgraphNode from[], CUgraphNode to[], long numDependencies) 
     {
@@ -13310,13 +13932,13 @@ public class JCudaDriver
      * CUDA_SUCCESS,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuGraphAddChildGraphNode
-     * JCudaDriver#cuGraphAddEmptyNode
-     * JCudaDriver#cuGraphAddKernelNode
-     * JCudaDriver#cuGraphAddHostNode
-     * JCudaDriver#cuGraphAddMemcpyNode
-     * JCudaDriver#cuGraphAddMemsetNode
+     * 
+     * @see JCudaDriver#cuGraphAddChildGraphNode
+     * @see JCudaDriver#cuGraphAddEmptyNode
+     * @see JCudaDriver#cuGraphAddKernelNode
+     * @see JCudaDriver#cuGraphAddHostNode
+     * @see JCudaDriver#cuGraphAddMemcpyNode
+     * @see JCudaDriver#cuGraphAddMemsetNode
      */
     public static int cuGraphDestroyNode(CUgraphNode hNode) 
     {
@@ -13352,10 +13974,10 @@ public class JCudaDriver
      * CUDA_ERROR_NOT_INITIALIZED,
      * CUDA_ERROR_INVALID_VALUE
      *
-     * @see
-     * JCudaDriver#cuGraphCreate
-     * JCudaDriver#cuGraphLaunch
-     * JCudaDriver#cuGraphExecDestroy
+     * 
+     * @see JCudaDriver#cuGraphCreate
+     * @see JCudaDriver#cuGraphLaunch
+     * @see JCudaDriver#cuGraphExecDestroy
      */
     public static int cuGraphInstantiate(CUgraphExec phGraphExec, CUgraph hGraph, CUgraphNode phErrorNode, byte logBuffer[], long bufferSize) 
     {
@@ -13499,7 +14121,138 @@ public class JCudaDriver
          return checkResult(cuGraphExecHostNodeSetParamsNative(hGraphExec, hNode, nodeParams));
      }
      private static native int cuGraphExecHostNodeSetParamsNative(CUgraphExec hGraphExec, CUgraphNode hNode, CUDA_HOST_NODE_PARAMS nodeParams);
+
      
+     /**
+      * Updates node parameters in the child graph node in the given graphExec.<br><br>
+      *
+      * Updates the work represented by \p hNode in \p hGraphExec as though the nodes contained
+      * in \p hNode's graph had the parameters contained in \p childGraph's nodes at instantiation.
+      * \p hNode must remain in the graph which was used to instantiate \p hGraphExec.
+      * Changed edges to and from \p hNode are ignored.<br><br>
+      *
+      * The modifications only affect future launches of \p hGraphExec.  Already enqueued 
+      * or running launches of \p hGraphExec are not affected by this call.  \p hNode is also 
+      * not modified by this call.<br><br>
+      *
+      * The topology of \p childGraph, as well as the node insertion order,  must match that
+      * of the graph contained in \p hNode.  See ::cuGraphExecUpdate() for a list of restrictions
+      * on what can be updated in an instantiated graph.  The update is recursive, so child graph
+      * nodes contained within the top level child graph will also be updated.<br><br>
+      *
+      * @param hGraphExec The executable graph in which to set the specified node
+      * @param hNode      Host node from the graph which was used to instantiate graphExec
+      * @param childGraph The graph supplying the updated parameters
+      *
+      * @return
+      * CUDA_SUCCESS,
+      * CUDA_ERROR_INVALID_VALUE,
+      *
+      * @see JCudaDriver#cuGraphInstantiate
+      * @see JCudaDriver#cuGraphExecUpdate
+      * @see JCudaDriver#cuGraphExecKernelNodeSetParams
+      * @see JCudaDriver#cuGraphExecMemcpyNodeSetParams
+      * @see JCudaDriver#cuGraphExecMemsetNodeSetParams 
+      */
+     public static int cuGraphExecChildGraphNodeSetParams(CUgraphExec hGraphExec, CUgraphNode hNode, CUgraph childGraph)
+     {
+         return checkResult(cuGraphExecChildGraphNodeSetParamsNative(hGraphExec, hNode, childGraph));
+     }
+     private static native int cuGraphExecChildGraphNodeSetParamsNative(CUgraphExec hGraphExec, CUgraphNode hNode, CUgraph childGraph);
+
+     /**
+      * Sets the event for an event record node in the given graphExec.<br><br>
+      *
+      * Sets the event of an event record node in an executable graph \p hGraphExec.
+      * The node is identified by the corresponding node \p hNode in the
+      * non-executable graph, from which the executable graph was instantiated.<br><br>
+      *
+      * The modifications only affect future launches of \p hGraphExec. Already
+      * enqueued or running launches of \p hGraphExec are not affected by this call.
+      * \p hNode is also not modified by this call.<br><br>
+      *
+      * @param hGraphExec The executable graph in which to set the specified node
+      * @param hNode      event record node from the graph from which graphExec was instantiated
+      * @param event      Updated event to use
+      *
+      * @return
+      * CUDA_SUCCESS,
+      * CUDA_ERROR_INVALID_VALUE,
+      *
+      * @see JCudaDriver#cuGraphAddEventRecordNode
+      * @see JCudaDriver#cuGraphEventRecordNodeGetEvent
+      * @see JCudaDriver#cuGraphEventWaitNodeSetEvent
+      * @see JCudaDriver#cuEventRecord
+      * @see JCudaDriver#cuStreamWaitEvent
+      * @see JCudaDriver#cuGraphCreate
+      * @see JCudaDriver#cuGraphDestroyNode
+      * @see JCudaDriver#cuGraphInstantiate
+      */
+     public static int cuGraphExecEventRecordNodeSetEvent(CUgraphExec hGraphExec, CUgraphNode hNode, CUevent event)
+     {
+         return checkResult(cuGraphExecEventRecordNodeSetEventNative(hGraphExec, hNode, event));
+     }
+     private static native int cuGraphExecEventRecordNodeSetEventNative(CUgraphExec hGraphExec, CUgraphNode hNode, CUevent event);
+     
+     /**
+      * Sets the event for an event record node in the given graphExec.<br><br>
+      *
+      * Sets the event of an event record node in an executable graph \p hGraphExec.
+      * The node is identified by the corresponding node \p hNode in the
+      * non-executable graph, from which the executable graph was instantiated.<br><br>
+      *
+      * The modifications only affect future launches of \p hGraphExec. Already
+      * enqueued or running launches of \p hGraphExec are not affected by this call.
+      * \p hNode is also not modified by this call.<br><br>
+      *
+      * @param hGraphExec The executable graph in which to set the specified node
+      * @param hNode      event wait node from the graph from which graphExec was instantiated
+      * @param event      Updated event to use
+      *
+      * @return
+      * CUDA_SUCCESS,
+      * CUDA_ERROR_INVALID_VALUE,
+      *
+      * @see JCudaDriver#cuGraphAddEventWaitNode
+      * @see JCudaDriver#cuGraphEventWaitNodeGetEvent
+      * @see JCudaDriver#cuGraphEventRecordNodeSetEvent
+      * @see JCudaDriver#cuEventRecord
+      * @see JCudaDriver#cuStreamWaitEvent
+      * @see JCudaDriver#cuGraphCreate
+      * @see JCudaDriver#cuGraphDestroyNode
+      * @see JCudaDriver#cuGraphInstantiate
+      */
+     public static int cuGraphExecEventWaitNodeSetEvent(CUgraphExec hGraphExec, CUgraphNode hNode, CUevent event)
+     {
+         return checkResult(cuGraphExecEventWaitNodeSetEventNative(hGraphExec, hNode, event));
+     }
+     private static native int cuGraphExecEventWaitNodeSetEventNative(CUgraphExec hGraphExec, CUgraphNode hNode, CUevent event);
+
+     /**
+      * Uploads an executable graph in a stream.<br><br>
+      *
+      * Uploads \p hGraphExec to the device in \p hStream without executing it. Uploads of
+      * the same \p hGraphExec will be serialized. Each upload is ordered behind both any
+      * previous work in \p hStream and any previous launches of \p hGraphExec.<br><br>
+      *
+      * @param hGraphExec Executable graph to upload
+      * @param hStream    Stream in which to upload the graph
+      *
+      * @return
+      * CUDA_SUCCESS,
+      * CUDA_ERROR_DEINITIALIZED,
+      * CUDA_ERROR_NOT_INITIALIZED,
+      * CUDA_ERROR_INVALID_VALUE
+      *
+      * @see JCudaDriver#cuGraphInstantiate
+      * @see JCudaDriver#cuGraphLaunch
+      * @see JCudaDriver#cuGraphExecDestroy
+      */
+     public static int cuGraphUpload(CUgraphExec hGraphExec, CUstream hStream)
+     {
+         return checkResult(cuGraphUploadNative(hGraphExec, hStream));
+     }
+     private static native int cuGraphUploadNative(CUgraphExec hGraphExec, CUstream hStream);
 
     /**
      * Launches an executable graph in a stream.<br>
@@ -14208,6 +14961,57 @@ public class JCudaDriver
 
     private static native int cuEventRecordNative(CUevent hEvent, CUstream hStream);
 
+    
+    /**
+     * Records an event.
+     * <br><br>
+     * Captures in \p hEvent the contents of \p hStream at the time of this call.
+     * \p hEvent and \p hStream must be from the same context.
+     * Calls such as ::cuEventQuery() or ::cuStreamWaitEvent() will then
+     * examine or wait for completion of the work that was captured. Uses of
+     * \p hStream after this call do not modify \p hEvent. See note on default
+     * stream behavior for what is captured in the default case.
+     * <br><br>
+     * ::cuEventRecordWithFlags() can be called multiple times on the same event and
+     * will overwrite the previously captured state. Other APIs such as
+     * ::cuStreamWaitEvent() use the most recently captured state at the time
+     * of the API call, and are not affected by later calls to
+     * ::cuEventRecordWithFlags(). Before the first call to ::cuEventRecordWithFlags(), an
+     * event represents an empty set of work, so for example ::cuEventQuery()
+     * would return ::CUDA_SUCCESS.
+     * <br><br>
+     * flags include:
+     * - ::CU_EVENT_RECORD_DEFAULT: Default event creation flag.
+     * - ::CU_EVENT_RECORD_EXTERNAL: Event is captured in the graph as an external
+     *   event node when performing stream capture. This flag is invalid outside
+     *   of stream capture.
+     *
+     * @param hEvent Event to record
+     * @param hStream Stream to record event for
+     * @param flags See ::CUevent_capture_flags
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_CONTEXT,
+     * CUDA_ERROR_INVALID_HANDLE,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see JCudaDriver#cuEventCreate
+     * @see JCudaDriver#cuEventQuery
+     * @see JCudaDriver#cuEventSynchronize
+     * @see JCudaDriver#cuStreamWaitEvent
+     * @see JCudaDriver#cuEventDestroy
+     * @see JCudaDriver#cuEventElapsedTime
+     * @see JCudaDriver#cuEventRecord
+     * @see JCudaDriver#cudaEventRecord
+     */
+    public static int cuEventRecordWithFlags(CUevent hEvent, CUstream hStream, int flags)
+    {
+        return checkResult(cuEventRecordWithFlagsNative(hEvent, hStream, flags));
+    }
+    private static native int cuEventRecordWithFlagsNative(CUevent hEvent, CUstream hStream, int flags);
 
     /**
      * Queries an event's status.

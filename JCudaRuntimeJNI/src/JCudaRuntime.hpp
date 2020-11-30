@@ -35,7 +35,7 @@
 extern "C" {
 #endif
 #undef jcuda_runtime_JCuda_CUDART_VERSION
-#define jcuda_runtime_JCuda_CUDART_VERSION 11000L
+#define jcuda_runtime_JCuda_CUDART_VERSION 11010L
 #undef jcuda_runtime_JCuda_cudaHostAllocDefault
 #define jcuda_runtime_JCuda_cudaHostAllocDefault 0L
 #undef jcuda_runtime_JCuda_cudaHostAllocPortable
@@ -52,6 +52,8 @@ extern "C" {
 #define jcuda_runtime_JCuda_cudaHostRegisterMapped 2L
 #undef jcuda_runtime_JCuda_cudaHostRegisterIoMemory
 #define jcuda_runtime_JCuda_cudaHostRegisterIoMemory 4L
+#undef jcuda_runtime_JCuda_cudaHostRegisterReadOnly
+#define jcuda_runtime_JCuda_cudaHostRegisterReadOnly 8L
 #undef jcuda_runtime_JCuda_cudaPeerAccessDefault
 #define jcuda_runtime_JCuda_cudaPeerAccessDefault 0L
 #undef jcuda_runtime_JCuda_cudaStreamDefault
@@ -66,6 +68,14 @@ extern "C" {
 #define jcuda_runtime_JCuda_cudaEventDisableTiming 2L
 #undef jcuda_runtime_JCuda_cudaEventInterprocess
 #define jcuda_runtime_JCuda_cudaEventInterprocess 4L
+#undef jcuda_runtime_JCuda_cudaEventRecordDefault
+#define jcuda_runtime_JCuda_cudaEventRecordDefault 0L
+#undef jcuda_runtime_JCuda_cudaEventRecordExternal
+#define jcuda_runtime_JCuda_cudaEventRecordExternal 1L
+#undef jcuda_runtime_JCuda_cudaEventWaitDefault
+#define jcuda_runtime_JCuda_cudaEventWaitDefault 0L
+#undef jcuda_runtime_JCuda_cudaEventWaitExternal
+#define jcuda_runtime_JCuda_cudaEventWaitExternal 1L
 #undef jcuda_runtime_JCuda_cudaDeviceScheduleAuto
 #define jcuda_runtime_JCuda_cudaDeviceScheduleAuto 0L
 #undef jcuda_runtime_JCuda_cudaDeviceScheduleSpin
@@ -96,6 +106,8 @@ extern "C" {
 #define jcuda_runtime_JCuda_cudaArrayTextureGather 8L
 #undef jcuda_runtime_JCuda_cudaArrayColorAttachment
 #define jcuda_runtime_JCuda_cudaArrayColorAttachment 32L
+#undef jcuda_runtime_JCuda_cudaArraySparse
+#define jcuda_runtime_JCuda_cudaArraySparse 64L
 #undef jcuda_runtime_JCuda_cudaIpcMemLazyEnablePeerAccess
 #define jcuda_runtime_JCuda_cudaIpcMemLazyEnablePeerAccess 1L
 #undef jcuda_runtime_JCuda_cudaStreamCallbackNonblocking
@@ -148,6 +160,8 @@ extern "C" {
 #define jcuda_runtime_JCuda_cudaCooperativeLaunchMultiDeviceNoPreSync 1L
 #undef jcuda_runtime_JCuda_cudaCooperativeLaunchMultiDeviceNoPostSync
 #define jcuda_runtime_JCuda_cudaCooperativeLaunchMultiDeviceNoPostSync 2L
+#undef jcuda_runtime_JCuda_cudaArraySparsePropertiesSingleMipTail
+#define jcuda_runtime_JCuda_cudaArraySparsePropertiesSingleMipTail 1L
     /*
      * Class:     jcuda_runtime_JCuda
      * Method:    setLogLevel
@@ -347,6 +361,22 @@ extern "C" {
      */
     JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaArrayGetInfoNative
     (JNIEnv*, jclass, jobject, jobject, jintArray, jobject);
+
+    /*
+     * Class:     jcuda_runtime_JCuda
+     * Method:    cudaArrayGetSparsePropertiesNative
+     * Signature: (Ljcuda/runtime/cudaArraySparseProperties;Ljcuda/runtime/cudaArray;)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaArrayGetSparsePropertiesNative
+    (JNIEnv*, jclass, jobject, jobject);
+
+    /*
+     * Class:     jcuda_runtime_JCuda
+     * Method:    cudaMipmappedArrayGetSparsePropertiesNative
+     * Signature: (Ljcuda/runtime/cudaArraySparseProperties;Ljcuda/runtime/cudaMipmappedArray;)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMipmappedArrayGetSparsePropertiesNative
+    (JNIEnv*, jclass, jobject, jobject);
 
     /*
      * Class:     jcuda_runtime_JCuda
@@ -790,6 +820,14 @@ extern "C" {
 
     /*
      * Class:     jcuda_runtime_JCuda
+     * Method:    cudaEventRecordWithFlagsNative
+     * Signature: (Ljcuda/runtime/cudaEvent_t;Ljcuda/runtime/cudaStream_t;I)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaEventRecordWithFlagsNative
+    (JNIEnv*, jclass, jobject, jobject, jint);
+
+    /*
+     * Class:     jcuda_runtime_JCuda
      * Method:    cudaEventQueryNative
      * Signature: (Ljcuda/runtime/cudaEvent_t;)I
      */
@@ -851,6 +889,14 @@ extern "C" {
      */
     JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaDeviceGetLimitNative
     (JNIEnv*, jclass, jlongArray, jint);
+
+    /*
+     * Class:     jcuda_runtime_JCuda
+     * Method:    cudaDeviceGetTexture1DLinearMaxWidthNative
+     * Signature: ([JLjcuda/runtime/cudaChannelFormatDesc;I)I
+     */
+    JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaDeviceGetTexture1DLinearMaxWidthNative
+    (JNIEnv*, jclass, jlongArray, jobject, jint);
 
     /*
      * Class:     jcuda_runtime_JCuda

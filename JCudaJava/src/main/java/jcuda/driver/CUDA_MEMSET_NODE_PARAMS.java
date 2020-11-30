@@ -52,7 +52,7 @@ public class CUDA_MEMSET_NODE_PARAMS
     public int elementSize;           
     
     /**
-     * Width in bytes, of the row 
+     * Width of the row in elements 
      */
     public long width; 
     

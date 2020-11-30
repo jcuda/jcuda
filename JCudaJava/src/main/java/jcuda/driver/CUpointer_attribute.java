@@ -113,6 +113,12 @@ public class CUpointer_attribute
     public static final int CU_POINTER_ATTRIBUTE_IS_GPU_DIRECT_RDMA_CAPABLE = 15;
     
     /**
+     * Returns the access flags the device associated with the current 
+     * context has on the corresponding memory referenced by the pointer given 
+     */
+    public static final int CU_POINTER_ATTRIBUTE_ACCESS_FLAGS = 16;
+    
+    /**
      * Returns the String identifying the given CUpointer_attribute
      *
      * @param n The CUpointer_attribute
@@ -137,6 +143,7 @@ public class CUpointer_attribute
             case CU_POINTER_ATTRIBUTE_MAPPED: return "CU_POINTER_ATTRIBUTE_MAPPED";
             case CU_POINTER_ATTRIBUTE_ALLOWED_HANDLE_TYPES: return "CU_POINTER_ATTRIBUTE_ALLOWED_HANDLE_TYPES";
             case CU_POINTER_ATTRIBUTE_IS_GPU_DIRECT_RDMA_CAPABLE: return "CU_POINTER_ATTRIBUTE_IS_GPU_DIRECT_RDMA_CAPABLE";
+            case CU_POINTER_ATTRIBUTE_ACCESS_FLAGS: return "CU_POINTER_ATTRIBUTE_ACCESS_FLAGS";
         }
         return "INVALID CUpointer_attribute: "+n;
     }

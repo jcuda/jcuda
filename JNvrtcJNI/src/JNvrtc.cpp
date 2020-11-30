@@ -350,6 +350,71 @@ JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetPTXNative
     return result;
 }
 
+
+/*
+ * Class:     jcuda_nvrtc_JNvrtc
+ * Method:    nvrtcGetCUBINSizeNative
+ * Signature: (Ljcuda/nvrtc/nvrtcProgram;[J)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetCUBINSizeNative
+(JNIEnv* env, jclass cls, jobject prog, jlongArray cubinSizeRet) 
+{
+    if (prog == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'prog' is null for nvrtcGetCUBINSize");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (cubinSizeRet == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'cubinSizeRet' is null for nvrtcGetCUBINSize");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing nvrtcGetCUBINSize\n");
+
+    nvrtcProgram nativeProg = (nvrtcProgram)(intptr_t)getNativePointerValue(env, prog);
+    size_t nativeCubinSizeRet = 0;
+    int result = nvrtcGetCUBINSize(nativeProg, &nativeCubinSizeRet);
+    if (!set(env, cubinSizeRet, 0, nativeCubinSizeRet)) return JCUDA_INTERNAL_ERROR;
+    return result;
+
+}
+
+/*
+ * Class:     jcuda_nvrtc_JNvrtc
+ * Method:    nvrtcGetCUBINNative
+ * Signature: (Ljcuda/nvrtc/nvrtcProgram;[B)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetCUBINNative
+(JNIEnv* env, jclass cls, jobject prog, jbyteArray cubin)
+{
+    if (prog == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'prog' is null for nvrtcGetCUBIN");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (cubin == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'ptx' is null for nvrtcGetCUBIN");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing nvrtcGetCUBIN\n");
+
+    int length = env->GetArrayLength(cubin);
+    nvrtcProgram nativeProg = (nvrtcProgram)(intptr_t)getNativePointerValue(env, prog);
+    char* nativeCubin = (char*)env->GetPrimitiveArrayCritical(cubin, NULL);
+    int result = nvrtcGetCUBIN(nativeProg, nativeCubin);
+    env->ReleasePrimitiveArrayCritical(cubin, nativeCubin, 0);
+    return result;
+
+}
+
+
 /*
 * Class:     jcuda_nvrtc_JNvrtc
 * Method:    nvrtcGetProgramLogSizeNative
