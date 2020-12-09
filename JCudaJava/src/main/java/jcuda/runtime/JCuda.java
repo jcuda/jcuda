@@ -50,7 +50,7 @@ public class JCuda
      */
     public static String getJCudaVersion()
     {
-        return "11.1.0";
+        return "11.1.1";
     }
     
     /**
