@@ -31,6 +31,7 @@ import java.util.Arrays;
 
 import jcuda.CudaException;
 import jcuda.LibUtils;
+import jcuda.LibUtilsCuda;
 import jcuda.LogLevel;
 import jcuda.Pointer;
 import jcuda.runtime.JCuda;
@@ -334,7 +335,7 @@ public class JCudaDriver
         String libraryBaseName = "JCudaDriver-" + JCuda.getJCudaVersion();
         String libraryName = 
             LibUtils.createPlatformLibraryName(libraryBaseName);
-        LibUtils.loadLibrary(libraryName);
+        LibUtilsCuda.loadLibrary(libraryName);
     }
 
     /* Private constructor to prevent instantiation */

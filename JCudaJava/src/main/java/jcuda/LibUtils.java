@@ -59,9 +59,33 @@ public final class LibUtils
         Logger.getLogger(LibUtils.class.getName());
     
     /**
-     * The default log level
+     * The log level
      */
-    private static final Level level = Level.FINE;
+    private static final Level level;
+    
+    // Check whether a custom level for the log messages has been defined
+    // as a command line parameter, as in
+    // java -Djcuda.LibUtils.level=INFO ...
+    static
+    {
+        String levelPropertyName = "jcuda.LibUtils.level";
+        String levelValue = System.getProperty(levelPropertyName);
+        Level parsedLevel = Level.FINE;
+        if (levelValue != null)
+        {
+            try
+            {
+                parsedLevel = Level.parse(levelValue);
+            }
+            catch (IllegalArgumentException e)
+            {
+               logger.warning("Invalid value for " + levelPropertyName 
+                   + ": " + levelValue + " - defaulting to Level.FINE"); 
+            }
+        }
+        level = parsedLevel;
+    }
+    
 
     /**
      * The directory where libraries are expected in JAR files,
@@ -83,7 +107,8 @@ public final class LibUtils
      */
     public static enum ArchType
     {
-        PPC, PPC_64, SPARC, X86, X86_64, ARM, ARM64, AARCH64, MIPS, MIPS64, RISC, UNKNOWN
+        PPC, PPC_64, SPARC, X86, X86_64, ARM, ARM64, AARCH64, MIPS, MIPS64, 
+        RISC, UNKNOWN
     }
     
     /**

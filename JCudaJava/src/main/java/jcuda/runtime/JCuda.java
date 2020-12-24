@@ -465,7 +465,7 @@ public class JCuda
             String libraryBaseName = "JCudaRuntime-" + getJCudaVersion();
             String libraryName = 
                 LibUtils.createPlatformLibraryName(libraryBaseName);
-            LibUtils.loadLibrary(libraryName);
+            LibUtilsCuda.loadLibrary(libraryName);
             initialized = true;
         }
     }
