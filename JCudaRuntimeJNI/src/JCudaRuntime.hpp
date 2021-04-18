@@ -236,30 +236,6 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaDeviceGetAttributeNative
 
 /*
  * Class:     jcuda_runtime_JCuda
- * Method:    cudaDeviceGetDefaultMemPoolNative
- * Signature: (Ljcuda/runtime/cudaMemPool;I)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaDeviceGetDefaultMemPoolNative
-  (JNIEnv *, jclass, jobject, jint);
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaDeviceSetMemPoolNative
- * Signature: (ILjcuda/runtime/cudaMemPool;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaDeviceSetMemPoolNative
-  (JNIEnv *, jclass, jint, jobject);
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaDeviceGetMemPoolNative
- * Signature: (Ljcuda/runtime/cudaMemPool;I)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaDeviceGetMemPoolNative
-  (JNIEnv *, jclass, jobject, jint);
-
-/*
- * Class:     jcuda_runtime_JCuda
  * Method:    cudaDeviceGetP2PAttributeNative
  * Signature: ([IIII)I
  */

@@ -6497,6 +6497,30 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemRetainAllocationHandle
 
 /*
  * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuMemFreeAsyncNative
+ * Signature: (Ljcuda/driver/CUdeviceptr;Ljcuda/driver/CUstream;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemFreeAsyncNative
+  (JNIEnv *env, jclass cls, jobject dptr, jobject hStream)
+{
+    if (dptr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'dptr' is null for cuMemFreeAsync");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuMemFreeAsync\n");
+
+    CUdeviceptr nativeDptr = (CUdeviceptr)getPointer(env, dptr);
+  	CUstream nativeHStream = (CUstream)getNativePointerValue(env, hStream);
+    int result = cuMemFreeAsync(nativeDptr, nativeHStream);
+
+    return result;
+
+}
+
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
  * Method:    cuTexRefCreateNative
  * Signature: (Ljcuda/driver/CUtexref;)I
  */
