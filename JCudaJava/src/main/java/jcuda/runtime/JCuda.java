@@ -40,19 +40,8 @@ public class JCuda
     /**
      * CUDA runtime version
      */
-    public static final int CUDART_VERSION = 11010;
+    public static final int CUDART_VERSION = 11020;
 
-    /**
-     * Returns an unspecified string that will be appended to native 
-     * library names for disambiguation
-     * 
-     * @return The JCuda version  
-     */
-    public static String getJCudaVersion()
-    {
-        return "11.1.1";
-    }
-    
     /**
      * Default page-locked allocation flag
      */
@@ -462,7 +451,7 @@ public class JCuda
     {
         if (!initialized)
         {
-            String libraryBaseName = "JCudaRuntime-" + getJCudaVersion();
+            String libraryBaseName = "JCudaRuntime-" + JCudaVersion.get();
             String libraryName = 
                 LibUtils.createPlatformLibraryName(libraryBaseName);
             LibUtilsCuda.loadLibrary(libraryName);
@@ -1762,6 +1751,86 @@ public class JCuda
     }
     private static native int cudaDeviceGetAttributeNative(int value[], int cudaDeviceAttr_attr, int device);
 
+    /**
+     * <pre>
+     * \brief Returns the default mempool of a device
+     *
+     * The default mempool of a device contains device memory from that device.
+     *
+     * \return
+     * ::cudaSuccess,
+     * ::cudaErrorInvalidDevice,
+     * ::cudaErrorInvalidValue
+     * ::cudaErrorNotSupported
+     * \notefnerr
+     * \note_init_rt
+     * \note_callback
+     *
+     * \sa ::cuDeviceGetDefaultMemPool, ::cudaMallocAsync, ::cudaMemPoolTrimTo, ::cudaMemPoolGetAttribute, ::cudaMemPoolSetAttribute, ::cudaMemPoolSetAccess
+     * </pre>
+     */
+    public static int cudaDeviceGetDefaultMemPool(cudaMemPool memPool, int device)
+    {
+        return checkResult(cudaDeviceGetDefaultMemPoolNative(memPool, device));
+    }
+    private static native int cudaDeviceGetDefaultMemPoolNative(cudaMemPool memPool, int device);
+
+
+   /**
+    * <pre>
+    * \brief Sets the current memory pool of a device
+    *
+    * The memory pool must be local to the specified device.
+    * Unless a mempool is specified in the ::cudaMallocAsync call,
+    * ::cudaMallocAsync allocates from the current mempool of the provided stream's device.
+    * By default, a device's current memory pool is its default memory pool.
+    *
+    * \note Use ::cudaMallocFromPoolAsync to specify asynchronous allocations from a device different
+    * than the one the stream runs on.
+    *
+    * \returns
+    * ::cudaSuccess,
+    * ::cudaErrorInvalidValue
+    * ::cudaErrorInvalidDevice
+    * ::cudaErrorNotSupported
+    * \notefnerr
+    * \note_callback
+    *
+    * \sa ::cuDeviceSetDefaultMemPool, ::cudaDeviceGetDefaultMemPool, ::cudaMemPoolCreate, ::cudaMemPoolDestroy, ::cudaMallocFromPoolAsync
+    * </pre>
+    */
+    public static int cudaDeviceSetMemPool(int device, cudaMemPool memPool)
+    {
+        return checkResult(cudaDeviceSetMemPoolNative(device, memPool));
+    }
+    private static native int cudaDeviceSetMemPoolNative(int device, cudaMemPool memPool);
+
+    /**
+     * <pre>
+     * \brief Gets the current mempool for a device
+     *
+     * Returns the last pool provided to ::cudaDeviceSetMemPool for this device
+     * or the device's default memory pool if ::cudaDeviceSetMemPool has never been called.
+     * By default the current mempool is the default mempool for a device,
+     * otherwise the returned pool must have been set with ::cuDeviceSetMemPool or ::cudaDeviceSetMemPool.
+     *
+     * \returns
+     * ::cudaSuccess,
+     * ::cudaErrorInvalidValue
+     * ::cudaErrorNotSupported
+     * \notefnerr
+     * \note_init_rt
+     * \note_callback
+     *
+     * \sa ::cuDeviceGetMemPool
+     * </pre>
+     */
+    public static int cudaDeviceGetMemPool(cudaMemPool memPool, int device)
+    {
+        return checkResult(cudaDeviceGetMemPoolNative(memPool, device));
+    }
+    private static native int cudaDeviceGetMemPoolNative(cudaMemPool memPool, int device);
+    
 
     /**
      * Queries attributes of the link between two devices.<br>
@@ -3614,6 +3683,40 @@ public class JCuda
     }
     private static native int cudaArrayGetInfoNative(cudaChannelFormatDesc desc, cudaExtent extent, int flags[], cudaArray array);
 
+    /**
+     * <pre>
+     * \brief Gets a CUDA array plane from a CUDA array
+     *
+     * Returns in \p pPlaneArray a CUDA array that represents a single format plane
+     * of the CUDA array \p hArray.
+     *
+     * If \p planeIdx is greater than the maximum number of planes in this array or if the array does
+     * not have a multi-planar format e.g: ::cudaChannelFormatKindNV12, then ::cudaErrorInvalidValue is returned.
+     *
+     * Note that if the \p hArray has format ::cudaChannelFormatKindNV12, then passing in 0 for \p planeIdx returns
+     * a CUDA array of the same size as \p hArray but with one 8-bit channel and ::cudaChannelFormatKindUnsigned as its format kind.
+     * If 1 is passed for \p planeIdx, then the returned CUDA array has half the height and width
+     * of \p hArray with two 8-bit channels and ::cudaChannelFormatKindUnsigned as its format kind.
+     *
+     * \param pPlaneArray   - Returned CUDA array referenced by the \p planeIdx
+     * \param hArray        - CUDA array
+     * \param planeIdx      - Plane index
+     *
+     * \return
+     * ::cudaSuccess,
+     * ::cudaErrorInvalidValue
+     * ::cudaErrorInvalidResourceHandle
+     * \notefnerr
+     *
+     * \sa
+     * ::cuArrayGetPlane
+     * </pre>
+     */
+    public static int cudaArrayGetPlane(cudaArray pPlaneArray, cudaArray hArray, int planeIdx)
+    {
+        return checkResult(cudaArrayGetPlaneNative(pPlaneArray, hArray, planeIdx));
+    }
+    private static native int cudaArrayGetPlaneNative(cudaArray pPlaneArray, cudaArray hArray, int planeIdx);
     
     /**
      * Returns the layout properties of a sparse CUDA array.<br>
@@ -11402,9 +11505,6 @@ public class JCuda
         return checkResult(cudaRuntimeGetVersionNative(runtimeVersion));
     }
     private static native int cudaRuntimeGetVersionNative(int runtimeVersion[]);
-
-
-
 
 
     /**

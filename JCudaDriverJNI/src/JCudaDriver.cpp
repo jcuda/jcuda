@@ -5935,6 +5935,36 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMipmappedArrayGetSparsePr
     return result;
 }
 
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuArrayGetPlaneNative
+ * Signature: (Ljcuda/driver/CUarray;Ljcuda/driver/CUarray;I)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuArrayGetPlaneNative
+  (JNIEnv *env, jclass cls, jobject pPlaneArray, jobject hArray, jint planeIdx)
+{
+    if (pPlaneArray == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'pPlaneArray' is null for cuArrayGetPlane");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (hArray == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hArray' is null for cuArrayGetPlane");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuArrayGetPlane\n");
+
+    CUarray nativePPlaneArray;
+    CUarray nativeHArray = (CUarray)getNativePointerValue(env, hArray);
+
+    int result = cuArrayGetPlane(&nativePPlaneArray, nativeHArray, (unsigned int)planeIdx);
+
+    setNativePointerValue(env, pPlaneArray, (jlong)nativePPlaneArray);
+
+    return result;
+
+}
 
 
 /*

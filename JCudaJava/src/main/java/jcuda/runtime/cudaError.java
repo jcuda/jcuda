@@ -386,6 +386,15 @@ public class cudaError
     public static final int cudaErrorDeviceNotLicensed = 102;
     
     /**
+     * By default, the CUDA runtime may perform a minimal set of self-tests,
+     * as well as CUDA driver tests, to establish the validity of both.
+     * Introduced in CUDA 11.2, this error return indicates that at least one
+     * of these tests has failed and the validity of either the runtime
+     * or the driver could not be established.
+     */
+    public static final int cudaErrorSoftwareValidityNotEstablished = 103;
+    
+    /**
      * This indicates an internal startup failure in the CUDA runtime.
      */
     public static final int cudaErrorStartupFailure = 127;
@@ -515,6 +524,13 @@ public class cudaError
      * than what is supported by the CUDA driver and PTX JIT compiler.
      */
     public static final int cudaErrorUnsupportedPtxVersion = 222;
+    
+    /**
+     * This indicates that the JIT compilation was disabled. The JIT compilation compiles
+     * PTX. The runtime may fall back to compiling PTX if an application does not contain
+     * a suitable binary for the current device.
+     */
+    public static final int cudaErrorJitCompilationDisabled = 223;
     
     /**
      * This indicates that the device kernel source is invalid.
@@ -902,6 +918,7 @@ public class cudaError
             case cudaErrorNoDevice: return "cudaErrorNoDevice";
             case cudaErrorInvalidDevice: return "cudaErrorInvalidDevice";
             case cudaErrorDeviceNotLicensed: return "cudaErrorDeviceNotLicensed";
+            case cudaErrorSoftwareValidityNotEstablished: return "cudaErrorSoftwareValidityNotEstablished";
             case cudaErrorStartupFailure: return "cudaErrorStartupFailure";
             case cudaErrorInvalidKernelImage: return "cudaErrorInvalidKernelImage";
             case cudaErrorDeviceUninitialized: return "cudaErrorDeviceUninitialized";
@@ -923,6 +940,7 @@ public class cudaError
             case cudaErrorNvlinkUncorrectable: return "cudaErrorNvlinkUncorrectable";
             case cudaErrorJitCompilerNotFound: return "cudaErrorJitCompilerNotFound";
             case cudaErrorUnsupportedPtxVersion: return "cudaErrorUnsupportedPtxVersion";
+            case cudaErrorJitCompilationDisabled: return "cudaErrorJitCompilationDisabled";
             case cudaErrorInvalidSource: return "cudaErrorInvalidSource";
             case cudaErrorFileNotFound: return "cudaErrorFileNotFound";
             case cudaErrorSharedObjectSymbolNotFound: return "cudaErrorSharedObjectSymbolNotFound";

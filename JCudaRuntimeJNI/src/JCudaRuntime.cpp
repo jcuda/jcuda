@@ -3172,6 +3172,38 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaArrayGetInfoNative
 
 /*
  * Class:     jcuda_runtime_JCuda
+ * Method:    cudaArrayGetPlaneNative
+ * Signature: (Ljcuda/runtime/cudaArray;Ljcuda/runtime/cudaArray;I)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaArrayGetPlaneNative
+  (JNIEnv *env, jclass cls, jobject pPlaneArray, jobject hArray, jint planeIdx)
+{
+    if (pPlaneArray == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'pPlaneArray' is null for cudaArrayGetPlane");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (hArray == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hArray' is null for cudaArrayGetPlane");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cudaArrayGetPlane\n");
+
+    cudaArray_t nativePPlaneArray;
+    cudaArray_t nativeHArray = (cudaArray_t)getNativePointerValue(env, hArray);
+
+    int result = cudaArrayGetPlane(&nativePPlaneArray, nativeHArray, (unsigned int)planeIdx);
+
+    setNativePointerValue(env, pPlaneArray, (jlong)nativePPlaneArray);
+
+    return result;
+}
+
+
+
+/*
+ * Class:     jcuda_runtime_JCuda
  * Method:    cudaArrayGetSparsePropertiesNative
  * Signature: (Ljcuda/runtime/cudaArraySparseProperties;Ljcuda/runtime/cudaArray;)I
  */

@@ -73,6 +73,16 @@ public class CUgraphNodeType
     public static final int  CU_GRAPH_NODE_TYPE_EVENT_RECORD = 7;
     
     /**
+     * External semaphore signal node 
+     */
+    public static final int CU_GRAPH_NODE_TYPE_EXT_SEMAS_SIGNAL = 8;
+    
+    /** 
+     * External semaphore wait node 
+     */
+    public static final int CU_GRAPH_NODE_TYPE_EXT_SEMAS_WAIT   = 9;
+    
+    /**
      * Returns the String identifying the given CUgraphNodeType
      *
      * @param n The CUgraphNodeType
@@ -90,6 +100,8 @@ public class CUgraphNodeType
             case CU_GRAPH_NODE_TYPE_EMPTY: return "CU_GRAPH_NODE_TYPE_EMPTY";
             case CU_GRAPH_NODE_TYPE_WAIT_EVENT: return "CU_GRAPH_NODE_TYPE_WAIT_EVENT";
             case CU_GRAPH_NODE_TYPE_EVENT_RECORD: return "CU_GRAPH_NODE_TYPE_EVENT_RECORD";
+            case CU_GRAPH_NODE_TYPE_EXT_SEMAS_SIGNAL: return "CU_GRAPH_NODE_TYPE_EXT_SEMAS_SIGNAL";
+            case CU_GRAPH_NODE_TYPE_EXT_SEMAS_WAIT: return "CU_GRAPH_NODE_TYPE_EXT_SEMAS_WAIT";
         }
         return "INVALID CUgraphNodeType: "+n;
     }

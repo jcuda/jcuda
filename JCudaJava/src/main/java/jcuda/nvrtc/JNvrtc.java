@@ -27,10 +27,10 @@
 package jcuda.nvrtc;
 
 import jcuda.CudaException;
+import jcuda.JCudaVersion;
 import jcuda.LibUtils;
 import jcuda.LibUtilsCuda;
 import jcuda.LogLevel;
-import jcuda.runtime.JCuda;
 
 /**
  * Java bindings for NVRTC, the NVIDIA CUDA RunTime Compiler
@@ -54,7 +54,7 @@ public class JNvrtc
     // Initialize the native library.
     static
     {
-        String libraryBaseName = "JNvrtc-" + JCuda.getJCudaVersion();
+        String libraryBaseName = "JNvrtc-" + JCudaVersion.get();
         String libraryName = 
             LibUtils.createPlatformLibraryName(libraryBaseName);
         LibUtilsCuda.loadLibrary(libraryName);
@@ -142,6 +142,20 @@ public class JNvrtc
     }
     private static native int nvrtcVersionNative(int major[], int minor[]);
 
+
+    public static int nvrtcGetNumSupportedArchs(int numArchs[])
+    {
+        return checkResult(nvrtcGetNumSupportedArchsNative(numArchs));
+    }
+    private static native int nvrtcGetNumSupportedArchsNative(int numArchs[]);
+    
+    public static int nvrtcGetSupportedArchs(int supportedArchs[])
+    {
+        return checkResult(nvrtcGetSupportedArchsNative(supportedArchs));
+    }
+    private static native int nvrtcGetSupportedArchsNative(int supportedArchs[]);
+    
+    
     /**
      * Creates an instance of nvrtcProgram with the given input parameters, 
      * and sets the output parameter <code>prog</code> with it.

@@ -250,6 +250,11 @@ public class CUresult
     public static final int CUDA_ERROR_UNSUPPORTED_PTX_VERSION        = 222;
     
     /**
+     * This indicates that the PTX JIT compilation was disabled.
+     */
+    public static final int CUDA_ERROR_JIT_COMPILATION_DISABLED       = 223;
+    
+    /**
      * This indicates that the device kernel source is invalid.
      */
     public static final int CUDA_ERROR_INVALID_SOURCE                 = 300;
@@ -606,8 +611,10 @@ public class CUresult
             case CUDA_ERROR_PROFILER_NOT_INITIALIZED       : return "CUDA_ERROR_PROFILER_NOT_INITIALIZED";
             case CUDA_ERROR_PROFILER_ALREADY_STARTED       : return "CUDA_ERROR_PROFILER_ALREADY_STARTED";
             case CUDA_ERROR_PROFILER_ALREADY_STOPPED       : return "CUDA_ERROR_PROFILER_ALREADY_STOPPED";
+            case CUDA_ERROR_STUB_LIBRARY                   : return "CUDA_ERROR_STUB_LIBRARY";
             case CUDA_ERROR_NO_DEVICE                      : return "CUDA_ERROR_NO_DEVICE";
             case CUDA_ERROR_INVALID_DEVICE                 : return "CUDA_ERROR_INVALID_DEVICE";
+            case CUDA_ERROR_DEVICE_NOT_LICENSED            : return "CUDA_ERROR_DEVICE_NOT_LICENSED";
             case CUDA_ERROR_INVALID_IMAGE                  : return "CUDA_ERROR_INVALID_IMAGE";
             case CUDA_ERROR_INVALID_CONTEXT                : return "CUDA_ERROR_INVALID_CONTEXT";
             case CUDA_ERROR_CONTEXT_ALREADY_CURRENT        : return "CUDA_ERROR_CONTEXT_ALREADY_CURRENT";
@@ -628,6 +635,8 @@ public class CUresult
             case CUDA_ERROR_INVALID_GRAPHICS_CONTEXT       : return "CUDA_ERROR_INVALID_GRAPHICS_CONTEXT";
             case CUDA_ERROR_NVLINK_UNCORRECTABLE           : return "CUDA_ERROR_NVLINK_UNCORRECTABLE";
             case CUDA_ERROR_JIT_COMPILER_NOT_FOUND         : return "CUDA_ERROR_JIT_COMPILER_NOT_FOUND";
+            case CUDA_ERROR_UNSUPPORTED_PTX_VERSION        : return "CUDA_ERROR_UNSUPPORTED_PTX_VERSION";
+            case CUDA_ERROR_JIT_COMPILATION_DISABLED       : return "CUDA_ERROR_JIT_COMPILATION_DISABLED";
             case CUDA_ERROR_INVALID_SOURCE                 : return "CUDA_ERROR_INVALID_SOURCE";
             case CUDA_ERROR_FILE_NOT_FOUND                 : return "CUDA_ERROR_FILE_NOT_FOUND";
             case CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND : return "CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND";

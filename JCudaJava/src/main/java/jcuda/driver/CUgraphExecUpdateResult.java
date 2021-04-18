@@ -1,7 +1,7 @@
 /*
  * JCuda - Java bindings for NVIDIA CUDA driver and runtime API
  *
- * Copyright (c) 2009-2018 Marco Hutter - http://www.jcuda.org
+ * Copyright (c) 2009-2020 Marco Hutter - http://www.jcuda.org
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -45,7 +45,7 @@ public class CUgraphExecUpdateResult
      */
     public static final int CU_GRAPH_EXEC_UPDATE_ERROR_NODE_TYPE_CHANGED = 0x3;
     /**
-     * The update failed because the function of a kernel node changed 
+     * The update failed because the function of a kernel node changed (CUDA driver < 11.2) 
      */
     public static final int CU_GRAPH_EXEC_UPDATE_ERROR_FUNCTION_CHANGED = 0x4;
     /**
@@ -56,6 +56,10 @@ public class CUgraphExecUpdateResult
      * The update failed because something about the node is not supported 
      */
     public static final int CU_GRAPH_EXEC_UPDATE_ERROR_NOT_SUPPORTED = 0x6;
+    /**
+     * The update failed because the function of a kernel node changed in an unsupported way 
+     */
+    public static final int CU_GRAPH_EXEC_UPDATE_ERROR_UNSUPPORTED_FUNCTION_CHANGE = 0x7;
 
     /**
      * Private constructor to prevent instantiation
@@ -81,6 +85,7 @@ public class CUgraphExecUpdateResult
             case CU_GRAPH_EXEC_UPDATE_ERROR_FUNCTION_CHANGED: return "CU_GRAPH_EXEC_UPDATE_ERROR_FUNCTION_CHANGED";
             case CU_GRAPH_EXEC_UPDATE_ERROR_PARAMETERS_CHANGED: return "CU_GRAPH_EXEC_UPDATE_ERROR_PARAMETERS_CHANGED";
             case CU_GRAPH_EXEC_UPDATE_ERROR_NOT_SUPPORTED: return "CU_GRAPH_EXEC_UPDATE_ERROR_NOT_SUPPORTED";
+            case CU_GRAPH_EXEC_UPDATE_ERROR_UNSUPPORTED_FUNCTION_CHANGE: return "CU_GRAPH_EXEC_UPDATE_ERROR_UNSUPPORTED_FUNCTION_CHANGE";
         }
         return "INVALID CUgraphExecUpdateResult: "+n;
     }

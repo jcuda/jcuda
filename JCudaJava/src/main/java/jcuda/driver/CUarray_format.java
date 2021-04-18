@@ -78,6 +78,10 @@ public class CUarray_format
      */
     public static final int CU_AD_FORMAT_FLOAT          = 0x20;
 
+    /**
+     * 8-bit YUV planar format, with 4:2:0 sampling 
+     */
+    public static final int CU_AD_FORMAT_NV12           = 0xb0;  
 
     /**
      * Returns the String identifying the given CUarray_format
@@ -97,6 +101,7 @@ public class CUarray_format
             case CU_AD_FORMAT_SIGNED_INT32 : return "CU_AD_FORMAT_SIGNED_INT32";
             case CU_AD_FORMAT_HALF : return "CU_AD_FORMAT_HALF";
             case CU_AD_FORMAT_FLOAT : return "CU_AD_FORMAT_FLOAT";
+            case CU_AD_FORMAT_NV12 : return "CU_AD_FORMAT_NV12";
         }
         return "INVALID CUarray_format: "+n;
     }

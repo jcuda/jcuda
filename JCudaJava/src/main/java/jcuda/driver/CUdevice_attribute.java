@@ -412,7 +412,10 @@ public class CUdevice_attribute
     public static final int CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_LAYERED_LAYERS = 68;
 
     /**
-     * Maximum 1D linear texture width
+     * Maximum 1D linear texture width.
+     * 
+     * @deprecated As of CUDA 11.2. Use cudaDeviceGetTexture1DLinearMaxWidth() 
+     * or cuDeviceGetTexture1DLinearMaxWidth() instead.
      */
     public static final int CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LINEAR_WIDTH = 69;
 
@@ -584,10 +587,15 @@ public class CUdevice_attribute
     public static final int CU_DEVICE_ATTRIBUTE_DIRECT_MANAGED_MEM_ACCESS_FROM_HOST = 101;    
     
     /**
+     * @deprecated as of CUDA 11.2, use CU_DEVICE_ATTRIBUTE_VIRTUAL_MEMORY_MANAGEMENT_SUPPORTED
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_VIRTUAL_ADDRESS_MANAGEMENT_SUPPORTED = 102;
+
+    /**
      * Device supports virtual address management APIs like ::cuMemAddressReserve, 
      * ::cuMemCreate, ::cuMemMap and related APIs 
      */
-    public static final int CU_DEVICE_ATTRIBUTE_VIRTUAL_ADDRESS_MANAGEMENT_SUPPORTED = 102;
+    public static final int CU_DEVICE_ATTRIBUTE_VIRTUAL_MEMORY_MANAGEMENT_SUPPORTED = 102;
 
     /**
      * Device supports exporting memory to a posix file descriptor with 
@@ -647,6 +655,16 @@ public class CUdevice_attribute
      * to register memory that must be mapped as read-only to the GPU 
      */
     public static final int CU_DEVICE_ATTRIBUTE_READ_ONLY_HOST_REGISTER_SUPPORTED = 113;            
+    
+    /**
+     * External timeline semaphore interop is supported on the device 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_TIMELINE_SEMAPHORE_INTEROP_SUPPORTED = 114;
+    
+    /**
+     * Device supports using the ::cuMemAllocAsync and ::cuMemPool family of APIs 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_MEMORY_POOLS_SUPPORTED = 115;
     
     /**
      * Returns the String identifying the given CUdevice_attribute
@@ -759,7 +777,7 @@ public class CUdevice_attribute
             case CU_DEVICE_ATTRIBUTE_HOST_REGISTER_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_HOST_REGISTER_SUPPORTED";
             case CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES: return "CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES";
             case CU_DEVICE_ATTRIBUTE_DIRECT_MANAGED_MEM_ACCESS_FROM_HOST: return "CU_DEVICE_ATTRIBUTE_DIRECT_MANAGED_MEM_ACCESS_FROM_HOST";
-            case CU_DEVICE_ATTRIBUTE_VIRTUAL_ADDRESS_MANAGEMENT_SUPPORTED : return "CU_DEVICE_ATTRIBUTE_VIRTUAL_ADDRESS_MANAGEMENT_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_VIRTUAL_MEMORY_MANAGEMENT_SUPPORTED : return "CU_DEVICE_ATTRIBUTE_VIRTUAL_MEMORY_MANAGEMENT_SUPPORTED";
             case CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR_SUPPORTED : return "CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR_SUPPORTED";
             case CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_HANDLE_SUPPORTED : return "CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_HANDLE_SUPPORTED";
             case CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_KMT_HANDLE_SUPPORTED : return "CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_KMT_HANDLE_SUPPORTED";
@@ -771,6 +789,8 @@ public class CUdevice_attribute
             case CU_DEVICE_ATTRIBUTE_RESERVED_SHARED_MEMORY_PER_BLOCK: return "CU_DEVICE_ATTRIBUTE_RESERVED_SHARED_MEMORY_PER_BLOCK";
             case CU_DEVICE_ATTRIBUTE_SPARSE_CUDA_ARRAY_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_SPARSE_CUDA_ARRAY_SUPPORTED";
             case CU_DEVICE_ATTRIBUTE_READ_ONLY_HOST_REGISTER_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_READ_ONLY_HOST_REGISTER_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_TIMELINE_SEMAPHORE_INTEROP_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_TIMELINE_SEMAPHORE_INTEROP_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_MEMORY_POOLS_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_MEMORY_POOLS_SUPPORTED";
         }
         return "INVALID CUdevice_attribute: "+n;
     }

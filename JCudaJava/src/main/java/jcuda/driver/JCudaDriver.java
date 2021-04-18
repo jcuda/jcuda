@@ -30,6 +30,7 @@ package jcuda.driver;
 import java.util.Arrays;
 
 import jcuda.CudaException;
+import jcuda.JCudaVersion;
 import jcuda.LibUtils;
 import jcuda.LibUtilsCuda;
 import jcuda.LogLevel;
@@ -44,7 +45,7 @@ import jcuda.runtime.JCuda;
 public class JCudaDriver
 {
     /** The CUDA version */
-    public static final int CUDA_VERSION = 11010;
+    public static final int CUDA_VERSION = 11020;
 
     /**
      * If set, host memory is portable between CUDA contexts.
@@ -332,7 +333,7 @@ public class JCudaDriver
 
     static
     {
-        String libraryBaseName = "JCudaDriver-" + JCuda.getJCudaVersion();
+        String libraryBaseName = "JCudaDriver-" + JCudaVersion.get();
         String libraryName = 
             LibUtils.createPlatformLibraryName(libraryBaseName);
         LibUtilsCuda.loadLibrary(libraryName);
@@ -1763,7 +1764,6 @@ public class JCudaDriver
     }
 
     private static native int cuDeviceGetAttributeNative(int pi[], int attrib, CUdevice dev);
-
 
     /**
      * Returns the latest CUDA version supported by driver.
@@ -9032,6 +9032,46 @@ public class JCudaDriver
     
     
     /**
+     * <pre><code>
+     * \brief Gets a CUDA array plane from a CUDA array
+     *
+     * Returns in \p pPlaneArray a CUDA array that represents a single format plane
+     * of the CUDA array \p hArray.
+     *
+     * If \p planeIdx is greater than the maximum number of planes in this array or if the array does
+     * not have a multi-planar format e.g: ::CU_AD_FORMAT_NV12, then ::CUDA_ERROR_INVALID_VALUE is returned.
+     *
+     * Note that if the \p hArray has format ::CU_AD_FORMAT_NV12, then passing in 0 for \p planeIdx returns
+     * a CUDA array of the same size as \p hArray but with one channel and ::CU_AD_FORMAT_UNSIGNED_INT8 as its format.
+     * If 1 is passed for \p planeIdx, then the returned CUDA array has half the height and width
+     * of \p hArray with two channels and ::CU_AD_FORMAT_UNSIGNED_INT8 as its format.
+     *
+     * \param pPlaneArray   - Returned CUDA array referenced by the \p planeIdx
+     * \param hArray        - Multiplanar CUDA array
+     * \param planeIdx      - Plane index
+     *
+     * \return
+     * ::CUDA_SUCCESS,
+     * ::CUDA_ERROR_DEINITIALIZED,
+     * ::CUDA_ERROR_NOT_INITIALIZED,
+     * ::CUDA_ERROR_INVALID_CONTEXT,
+     * ::CUDA_ERROR_INVALID_VALUE,
+     * ::CUDA_ERROR_INVALID_HANDLE
+     * \notefnerr
+     *
+     * \sa
+     * ::cuArrayCreate,
+     * ::cudaGetArrayPlane
+     * </code></pre>
+     */
+    public static int cuArrayGetPlane(CUarray pPlaneArray, CUarray hArray, int planeIdx)
+    {
+        return checkResult(cuArrayGetPlaneNative(pPlaneArray, hArray, planeIdx));
+    }
+    private static native int cuArrayGetPlaneNative(CUarray pPlaneArray, CUarray hArray, int planeIdx);
+    
+    
+    /**
      * Destroys a CUDA array.
      *
      * <pre>
@@ -10403,6 +10443,36 @@ public class JCudaDriver
     private static native int cuMemRetainAllocationHandleNative(CUmemGenericAllocationHandle handle, Pointer addr);
     
     
+    /**
+     * <pre>
+     * Frees memory with stream ordered semantics.
+     *
+     * Inserts a free operation into \p hStream.
+     * The allocation must not be accessed after stream execution reaches the free.
+     * After this API returns, accessing the memory from any subsequent work launched on the GPU
+     * or querying its pointer attributes results in undefined behavior.
+     * 
+     * \param dptr - memory to free
+     * \param hStream - The stream establishing the stream ordering contract. 
+     * \returns
+     * ::CUDA_SUCCESS,
+     * ::CUDA_ERROR_INVALID_VALUE,
+     * ::CUDA_ERROR_NOT_INITIALIZED,
+     * ::CUDA_ERROR_INVALID_CONTEXT (default stream specified with no current context),
+     * ::CUDA_ERROR_NOT_SUPPORTED
+     * </pre>
+     */
+    public static int cuMemFreeAsync(
+        CUdeviceptr dptr, 
+        CUstream hStream)
+    {
+        return checkResult(cuMemFreeAsyncNative(dptr, hStream));
+    }
+    private static native int cuMemFreeAsyncNative(
+        CUdeviceptr dptr, 
+        CUstream hStream);
+
+
     /**
      * Creates a texture reference.
      *
@@ -13593,6 +13663,7 @@ public class JCudaDriver
     }
     private static native int cuGraphEventWaitNodeSetEventNative(CUgraphNode hNode, CUevent event);    
 
+    
     /**
      * Clones a graph.<br>
      * <br>
@@ -14229,6 +14300,91 @@ public class JCudaDriver
      }
      private static native int cuGraphExecEventWaitNodeSetEventNative(CUgraphExec hGraphExec, CUgraphNode hNode, CUevent event);
 
+     
+     /**
+      * <pre>
+      * \brief Sets the parameters for an external semaphore signal node in the given graphExec
+      *
+      * Sets the parameters of an external semaphore signal node in an executable graph \p hGraphExec.
+      * The node is identified by the corresponding node \p hNode in the
+      * non-executable graph, from which the executable graph was instantiated.
+      *
+      * \p hNode must not have been removed from the original graph.
+      *
+      * The modifications only affect future launches of \p hGraphExec. Already
+      * enqueued or running launches of \p hGraphExec are not affected by this call.
+      * \p hNode is also not modified by this call.
+      *
+      * Changing \p nodeParams->numExtSems is not supported.
+      *
+      * \param hGraphExec - The executable graph in which to set the specified node
+      * \param hNode      - semaphore signal node from the graph from which graphExec was instantiated
+      * \param nodeParams - Updated Parameters to set
+      *
+      * \return
+      * ::CUDA_SUCCESS,
+      * ::CUDA_ERROR_INVALID_VALUE,
+      * \note_graph_thread_safety
+      * \notefnerr
+      *
+      * \sa
+      * ::cuGraphAddExternalSemaphoresSignalNode,
+      * ::cuImportExternalSemaphore,
+      * ::cuSignalExternalSemaphoresAsync,
+      * ::cuWaitExternalSemaphoresAsync,
+      * ::cuGraphCreate,
+      * ::cuGraphDestroyNode,
+      * ::cuGraphInstantiate
+      * </pre>
+      */
+     public static int cuGraphExecExternalSemaphoresSignalNodeSetParams(CUgraphExec hGraphExec, CUgraphNode hNode, CUDA_EXT_SEM_SIGNAL_NODE_PARAMS nodeParams[])
+     {
+         // TODO Not supported. Pull requests welcome.
+         throw new UnsupportedOperationException("The cuGraphExecExternalSemaphoresSignalNodeSetParams function is not supported in JCuda");
+     }
+
+     /**
+      * <pre>
+      * \brief Sets the parameters for an external semaphore wait node in the given graphExec
+      *
+      * Sets the parameters of an external semaphore wait node in an executable graph \p hGraphExec.
+      * The node is identified by the corresponding node \p hNode in the
+      * non-executable graph, from which the executable graph was instantiated.
+      *
+      * \p hNode must not have been removed from the original graph.
+      *
+      * The modifications only affect future launches of \p hGraphExec. Already
+      * enqueued or running launches of \p hGraphExec are not affected by this call.
+      * \p hNode is also not modified by this call.
+      *
+      * Changing \p nodeParams->numExtSems is not supported.
+      *
+      * \param hGraphExec - The executable graph in which to set the specified node
+      * \param hNode      - semaphore wait node from the graph from which graphExec was instantiated
+      * \param nodeParams - Updated Parameters to set
+      *
+      * \return
+      * ::CUDA_SUCCESS,
+      * ::CUDA_ERROR_INVALID_VALUE,
+      * \note_graph_thread_safety
+      * \notefnerr
+      *
+      * \sa
+      * ::cuGraphAddExternalSemaphoresWaitNode,
+      * ::cuImportExternalSemaphore,
+      * ::cuSignalExternalSemaphoresAsync,
+      * ::cuWaitExternalSemaphoresAsync,
+      * ::cuGraphCreate,
+      * ::cuGraphDestroyNode,
+      * ::cuGraphInstantiate
+      * </pre>
+      */
+     public static int cuGraphExecExternalSemaphoresWaitNodeSetParams(CUgraphExec hGraphExec, CUgraphNode hNode, CUDA_EXT_SEM_WAIT_NODE_PARAMS nodeParams[])
+     {
+         // TODO Not supported. Pull requests welcome.
+         throw new UnsupportedOperationException("The cuGraphExecExternalSemaphoresWaitNodeSetParams function is not supported in JCuda");
+     }
+     
      /**
       * Uploads an executable graph in a stream.<br><br>
       *

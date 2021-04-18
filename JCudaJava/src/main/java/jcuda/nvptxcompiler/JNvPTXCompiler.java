@@ -27,10 +27,10 @@
 package jcuda.nvptxcompiler;
 
 import jcuda.CudaException;
+import jcuda.JCudaVersion;
 import jcuda.LibUtils;
 import jcuda.LibUtilsCuda;
 import jcuda.LogLevel;
-import jcuda.runtime.JCuda;
 
 /**
  * JNvPTXCompiler
@@ -54,7 +54,7 @@ public class JNvPTXCompiler
     // Initialize the native library.
     static
     {
-        String libraryBaseName = "JNvPTXCompiler-" + JCuda.getJCudaVersion();
+        String libraryBaseName = "JNvPTXCompiler-" + JCudaVersion.get();
         String libraryName = 
             LibUtils.createPlatformLibraryName(libraryBaseName);
         LibUtilsCuda.loadLibrary(libraryName);

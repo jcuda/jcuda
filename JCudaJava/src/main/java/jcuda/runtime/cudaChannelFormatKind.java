@@ -55,6 +55,11 @@ public class cudaChannelFormatKind
      *  No channel format
      */
     public static final int cudaChannelFormatKindNone = 3;
+    
+    /**
+     * Unsigned 8-bit integers, planar 4:2:0 YUV format 
+     */
+    public static final int cudaChannelFormatKindNV12 = 4;
 
     /**
      * Returns the String identifying the given cudaChannelFormatKind
@@ -70,6 +75,7 @@ public class cudaChannelFormatKind
             case cudaChannelFormatKindUnsigned: return "cudaChannelFormatKindUnsigned";
             case cudaChannelFormatKindFloat: return "cudaChannelFormatKindFloat";
             case cudaChannelFormatKindNone: return "cudaChannelFormatKindNone";
+            case cudaChannelFormatKindNV12: return "cudaChannelFormatKindNV12";
         }
         return "INVALID cudaChannelFormatKind: "+f;
     }

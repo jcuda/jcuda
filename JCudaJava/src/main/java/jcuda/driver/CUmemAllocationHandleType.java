@@ -32,6 +32,10 @@ package jcuda.driver;
 public class CUmemAllocationHandleType
 {
     /**
+     * Does not allow any export mechanism. 
+     */
+    public static final int CU_MEM_HANDLE_TYPE_NONE = 0x0;
+    /**
      * Allows a file descriptor to be used for exporting. Permitted only on POSIX systems. (int) 
      */
     public static final int CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR = 0x1;
@@ -62,6 +66,7 @@ public class CUmemAllocationHandleType
     {
         switch (n)
         {
+            case CU_MEM_HANDLE_TYPE_NONE: return "CU_MEM_HANDLE_TYPE_NONE";
             case CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR: return "CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR";
             case CU_MEM_HANDLE_TYPE_WIN32: return "CU_MEM_HANDLE_TYPE_WIN32";
             case CU_MEM_HANDLE_TYPE_WIN32_KMT: return "CU_MEM_HANDLE_TYPE_WIN32_KMT";

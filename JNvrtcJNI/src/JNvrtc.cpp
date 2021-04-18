@@ -121,6 +121,59 @@ JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcVersionNative
     return result;
 }
 
+
+/*
+ * Class:     jcuda_nvrtc_JNvrtc
+ * Method:    nvrtcGetNumSupportedArchsNative
+ * Signature: ([I)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetNumSupportedArchsNative
+  (JNIEnv *env, jclass cls, jintArray numArchs) {
+    if (numArchs == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", 
+            "Parameter 'numArchs' is null for nvrtcGetNumSupportedArchs");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing nvrtcGetNumSupportedArchs\n");
+
+    int nativeNumArchs = 0;
+    int result = nvrtcGetNumSupportedArchs(&nativeNumArchs);
+    if (!set(env, numArchs, 0, nativeNumArchs)) return JCUDA_INTERNAL_ERROR;
+    return result;
+}
+
+/*
+ * Class:     jcuda_nvrtc_JNvrtc
+ * Method:    nvrtcGetSupportedArchsNative
+ * Signature: ([I)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetSupportedArchsNative
+  (JNIEnv *env, jclass cls, jintArray supportedArchs) {
+  
+    if (supportedArchs == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", 
+            "Parameter 'supportedArchs' is null for nvrtcGetSupportedArchs");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing nvrtcGetSupportedArchs\n");
+
+    int *nativeSupportedArchs;
+    if (!initNative(env, supportedArchs, nativeSupportedArchs, false)) return JCUDA_INTERNAL_ERROR;
+
+    
+    int nativeNumArchs = 0;
+    int result = nvrtcGetSupportedArchs(nativeSupportedArchs);
+    
+    if (!releaseNative(env, nativeSupportedArchs, supportedArchs, true)) return JCUDA_INTERNAL_ERROR;
+
+    return result;
+}
+
+
 /*
 * Class:     jcuda_nvrtc_JNvrtc
 * Method:    nvrtcCreateProgramNative
