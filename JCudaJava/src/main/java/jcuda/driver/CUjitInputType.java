@@ -62,6 +62,12 @@ public class CUjitInputType
     public static final int CU_JIT_INPUT_LIBRARY = 4;
 
     /**
+     * High-level intermediate code for link-time optimization\n
+     * Applicable options: NVVM compiler options, PTX compiler options
+     */
+    public static final int CU_JIT_INPUT_NVVM = 5;
+    
+    /**
      * Returns the String identifying the given CUjitInputType
      *
      * @param n The CUjitInputType
@@ -76,6 +82,7 @@ public class CUjitInputType
             case CU_JIT_INPUT_FATBINARY: return "CU_JIT_INPUT_FATBINARY";
             case CU_JIT_INPUT_OBJECT: return "CU_JIT_INPUT_OBJECT";
             case CU_JIT_INPUT_LIBRARY: return "CU_JIT_INPUT_LIBRARY";
+            case CU_JIT_INPUT_NVVM: return "CU_JIT_INPUT_NVVM";
         }
         return "INVALID CUjitInputType: "+n;
     }

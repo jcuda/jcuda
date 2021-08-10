@@ -132,6 +132,22 @@ JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetCUBINNative
 
 /*
  * Class:     jcuda_nvrtc_JNvrtc
+ * Method:    nvrtcGetNVVMSizeNative
+ * Signature: (Ljcuda/nvrtc/nvrtcProgram;[J)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetNVVMSizeNative
+  (JNIEnv *, jclass, jobject, jlongArray);
+
+/*
+ * Class:     jcuda_nvrtc_JNvrtc
+ * Method:    nvrtcGetNVVMNative
+ * Signature: (Ljcuda/nvrtc/nvrtcProgram;[B)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetNVVMNative
+  (JNIEnv *, jclass, jobject, jbyteArray);
+
+/*
+ * Class:     jcuda_nvrtc_JNvrtc
  * Method:    nvrtcGetProgramLogSizeNative
  * Signature: (Ljcuda/nvrtc/nvrtcProgram;[J)I
  */

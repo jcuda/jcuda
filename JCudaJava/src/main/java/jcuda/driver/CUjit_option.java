@@ -194,7 +194,51 @@ public class CUjit_option
      * Applies to: dynamic linker only
      */
     public static final int CU_JIT_GLOBAL_SYMBOL_COUNT = 19;
-    
+
+    /**
+     * Enable link-time optimization (-dlto) for device code (0: false, default)
+     * Option type: int
+     * Applies to: compiler and linker
+     */
+    public static final int CU_JIT_LTO = 20;
+
+    /**
+     * Control single-precision denormals (-ftz) support (0: false, default).
+     * 1 : flushes denormal values to zero
+     * 0 : preserves denormal values
+     * Option type: int
+     * Applies to: link-time optimization specified with CU_JIT_LTO
+     */
+    public static final int CU_JIT_FTZ = 21;
+
+    /**
+     * Control single-precision floating-point division and reciprocals
+     * (-prec-div) support (1: true, default).
+     * 1 : Enables the IEEE round-to-nearest mode
+     * 0 : Enables the fast approximation mode
+     * Option type: int
+     * Applies to: link-time optimization specified with CU_JIT_LTO
+     */
+    public static final int CU_JIT_PREC_DIV = 22;
+
+    /**
+     * Control single-precision floating-point square root
+     * (-prec-sqrt) support (1: true, default).
+     * 1 : Enables the IEEE round-to-nearest mode
+     * 0 : Enables the fast approximation mode
+     * Option type: int
+     * Applies to: link-time optimization specified with CU_JIT_LTO
+     */
+    public static final int CU_JIT_PREC_SQRT = 23;
+
+    /**
+     * Enable/Disable the contraction of floating-point multiplies
+     * and adds/subtracts into floating-point multiply-add (-fma)
+     * operations (1: Enable, default; 0: Disable).
+     * Option type: int
+     * Applies to: link-time optimization specified with CU_JIT_LTO
+     */
+    public static final int CU_JIT_FMA = 24;    
 
     /**
      * Returns the String identifying the given CUjit_option
@@ -224,6 +268,11 @@ public class CUjit_option
             case CU_JIT_GLOBAL_SYMBOL_NAMES: return "CU_JIT_GLOBAL_SYMBOL_NAMES";
             case CU_JIT_GLOBAL_SYMBOL_ADDRESSES: return "CU_JIT_GLOBAL_SYMBOL_ADDRESSES";
             case CU_JIT_GLOBAL_SYMBOL_COUNT: return "CU_JIT_GLOBAL_SYMBOL_COUNT";
+            case CU_JIT_LTO: return "CU_JIT_LTO";
+            case CU_JIT_FTZ: return "CU_JIT_FTZ";
+            case CU_JIT_PREC_DIV: return "CU_JIT_PREC_DIV";
+            case CU_JIT_PREC_SQRT: return "CU_JIT_PREC_SQRT";
+            case CU_JIT_FMA: return "CU_JIT_FMA";
         }
         return "INVALID CUjit_option: "+n;
     }

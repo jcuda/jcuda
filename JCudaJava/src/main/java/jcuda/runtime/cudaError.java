@@ -533,6 +533,11 @@ public class cudaError
     public static final int cudaErrorJitCompilationDisabled = 223;
     
     /**
+     * This indicates that the provided execution affinity is not supported by the device.
+     */
+    public static final int cudaErrorUnsupportedExecAffinity = 224;
+        
+    /**
      * This indicates that the device kernel source is invalid.
      */
     public static final int cudaErrorInvalidSource = 300;
@@ -780,6 +785,34 @@ public class cudaError
     public static final int cudaErrorCompatNotSupportedOnDevice = 804;
     
     /**
+     * This error indicates that the MPS client failed to connect to the MPS 
+     * control daemon or the MPS server.
+     */
+    public static final int cudaErrorMpsConnectionFailed          =     805;
+
+    /**
+     * This error indicates that the remote procedural call between the MPS server and the MPS client failed.
+     */
+    public static final int cudaErrorMpsRpcFailure                =     806;
+
+    /**
+     * This error indicates that the MPS server is not ready to accept new MPS client requests.
+     * This error can be returned when the MPS server is in the process of recovering from a fatal failure.
+     */
+    public static final int cudaErrorMpsServerNotReady            =     807;
+
+    /**
+     * This error indicates that the hardware resources required to create MPS client have been exhausted.
+     */
+    public static final int cudaErrorMpsMaxClientsReached         =     808;
+
+    /**
+     * This error indicates the the hardware resources required to device connections have been exhausted.
+     */
+    public static final int cudaErrorMpsMaxConnectionsReached     =     809;
+
+    
+    /**
      * The operation is not permitted when the stream is capturing.
      */
     public static final int cudaErrorStreamCaptureUnsupported = 900;
@@ -843,6 +876,16 @@ public class cudaError
      * changes which violated constraints specific to instantiated graph update.
      */
     public static final int cudaErrorGraphExecUpdateFailure       =    910;
+    
+    /**
+     * This indicates that an async error has occurred in a device outside of CUDA.
+     * If CUDA was waiting for an external device's signal before consuming shared data,
+     * the external device signaled an error indicating that the data is not valid for
+     * consumption. This leaves the process in an inconsistent state and any further CUDA
+     * work will return the same error. To continue using CUDA, the process must be
+     * terminated and relaunched.
+     */
+    public static final int cudaErrorExternalDevice               =    911;
     
     /**
      * This indicates that an unknown internal error has occurred.
@@ -941,6 +984,7 @@ public class cudaError
             case cudaErrorJitCompilerNotFound: return "cudaErrorJitCompilerNotFound";
             case cudaErrorUnsupportedPtxVersion: return "cudaErrorUnsupportedPtxVersion";
             case cudaErrorJitCompilationDisabled: return "cudaErrorJitCompilationDisabled";
+            case cudaErrorUnsupportedExecAffinity: return "cudaErrorUnsupportedExecAffinity";
             case cudaErrorInvalidSource: return "cudaErrorInvalidSource";
             case cudaErrorFileNotFound: return "cudaErrorFileNotFound";
             case cudaErrorSharedObjectSymbolNotFound: return "cudaErrorSharedObjectSymbolNotFound";
@@ -974,6 +1018,11 @@ public class cudaError
             case cudaErrorSystemNotReady: return "cudaErrorSystemNotReady";
             case cudaErrorSystemDriverMismatch: return "cudaErrorSystemDriverMismatch";
             case cudaErrorCompatNotSupportedOnDevice: return "cudaErrorCompatNotSupportedOnDevice";
+            case cudaErrorMpsConnectionFailed: return "cudaErrorMpsConnectionFailed";
+            case cudaErrorMpsRpcFailure: return "cudaErrorMpsRpcFailure";
+            case cudaErrorMpsServerNotReady: return "cudaErrorMpsServerNotReady";
+            case cudaErrorMpsMaxClientsReached: return "cudaErrorMpsMaxClientsReached";
+            case cudaErrorMpsMaxConnectionsReached: return "cudaErrorMpsMaxConnectionsReached";
             case cudaErrorStreamCaptureUnsupported: return "cudaErrorStreamCaptureUnsupported";
             case cudaErrorStreamCaptureInvalidated: return "cudaErrorStreamCaptureInvalidated";
             case cudaErrorStreamCaptureMerge: return "cudaErrorStreamCaptureMerge";
@@ -986,6 +1035,7 @@ public class cudaError
             case cudaErrorTimeout: return "cudaErrorTimeout";
             case cudaErrorGraphExecUpdateFailure: return "cudaErrorGraphExecUpdateFailure";
             case cudaErrorUnknown: return "cudaErrorUnknown";
+            case cudaErrorExternalDevice: return "cudaErrorExternalDevice";
             case cudaErrorApiFailureBase: return "cudaErrorApiFailureBase";
             case jcudaInternalError: return "jcudaInternalError";
         }

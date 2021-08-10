@@ -255,6 +255,12 @@ public class CUresult
     public static final int CUDA_ERROR_JIT_COMPILATION_DISABLED       = 223;
     
     /**
+     * This indicates that the ::CUexecAffinityType passed to the API call is not
+     * supported by the active device.
+     */ 
+    public static final int CUDA_ERROR_UNSUPPORTED_EXEC_AFFINITY      = 224;
+    
+    /**
      * This indicates that the device kernel source is invalid.
      */
     public static final int CUDA_ERROR_INVALID_SOURCE                 = 300;
@@ -520,6 +526,37 @@ public class CUresult
     public static final int CUDA_ERROR_COMPAT_NOT_SUPPORTED_ON_DEVICE = 804;    
     
     /**
+     * This error indicates that the MPS client failed to connect to the MPS 
+     * control daemon or the MPS server.
+     */
+    public static final int CUDA_ERROR_MPS_CONNECTION_FAILED          = 805;
+
+    /**
+     * This error indicates that the remote procedural call between the MPS 
+     * server and the MPS client failed.
+     */
+    public static final int CUDA_ERROR_MPS_RPC_FAILURE                = 806;
+
+    /**
+     * This error indicates that the MPS server is not ready to accept new 
+     * MPS client requests. This error can be returned when the MPS server 
+     * is in the process of recovering from a fatal failure.
+     */
+    public static final int CUDA_ERROR_MPS_SERVER_NOT_READY           = 807;
+
+    /**
+     * This error indicates that the hardware resources required to create 
+     * MPS client have been exhausted.
+     */
+    public static final int CUDA_ERROR_MPS_MAX_CLIENTS_REACHED        = 808;
+
+    /**
+     * This error indicates the the hardware resources required to support 
+     * device connections have been exhausted.
+     */
+    public static final int CUDA_ERROR_MPS_MAX_CONNECTIONS_REACHED    = 809;
+    
+    /**
      * This error indicates that the operation is not permitted when
      * the stream is capturing.
      */
@@ -587,6 +624,16 @@ public class CUresult
     public static final int CUDA_ERROR_GRAPH_EXEC_UPDATE_FAILURE      = 910;
     
     /**
+     * This indicates that an async error has occurred in a device outside of CUDA.
+     * If CUDA was waiting for an external device's signal before consuming shared data,
+     * the external device signaled an error indicating that the data is not valid for
+     * consumption. This leaves the process in an inconsistent state and any further CUDA
+     * work will return the same error. To continue using CUDA, the process must be
+     * terminated and relaunched.
+     */
+    public static final int CUDA_ERROR_EXTERNAL_DEVICE               = 911;
+    
+    /**
      * This indicates that an unknown internal error has occurred.
      */
     public static final int CUDA_ERROR_UNKNOWN                        = 999;
@@ -637,6 +684,7 @@ public class CUresult
             case CUDA_ERROR_JIT_COMPILER_NOT_FOUND         : return "CUDA_ERROR_JIT_COMPILER_NOT_FOUND";
             case CUDA_ERROR_UNSUPPORTED_PTX_VERSION        : return "CUDA_ERROR_UNSUPPORTED_PTX_VERSION";
             case CUDA_ERROR_JIT_COMPILATION_DISABLED       : return "CUDA_ERROR_JIT_COMPILATION_DISABLED";
+            case CUDA_ERROR_UNSUPPORTED_EXEC_AFFINITY      : return "CUDA_ERROR_UNSUPPORTED_EXEC_AFFINITY";
             case CUDA_ERROR_INVALID_SOURCE                 : return "CUDA_ERROR_INVALID_SOURCE";
             case CUDA_ERROR_FILE_NOT_FOUND                 : return "CUDA_ERROR_FILE_NOT_FOUND";
             case CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND : return "CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND";
@@ -672,6 +720,11 @@ public class CUresult
             case CUDA_ERROR_SYSTEM_NOT_READY               : return "CUDA_ERROR_SYSTEM_NOT_READY";
             case CUDA_ERROR_SYSTEM_DRIVER_MISMATCH         : return "CUDA_ERROR_SYSTEM_DRIVER_MISMATCH";
             case CUDA_ERROR_COMPAT_NOT_SUPPORTED_ON_DEVICE : return "CUDA_ERROR_COMPAT_NOT_SUPPORTED_ON_DEVICE";
+            case CUDA_ERROR_MPS_CONNECTION_FAILED          : return "CUDA_ERROR_MPS_CONNECTION_FAILED";
+            case CUDA_ERROR_MPS_RPC_FAILURE                : return "CUDA_ERROR_MPS_RPC_FAILURE";
+            case CUDA_ERROR_MPS_SERVER_NOT_READY           : return "CUDA_ERROR_MPS_SERVER_NOT_READY";
+            case CUDA_ERROR_MPS_MAX_CLIENTS_REACHED        : return "CUDA_ERROR_MPS_MAX_CLIENTS_REACHED";
+            case CUDA_ERROR_MPS_MAX_CONNECTIONS_REACHED    : return "CUDA_ERROR_MPS_MAX_CONNECTIONS_REACHED";
             case CUDA_ERROR_STREAM_CAPTURE_UNSUPPORTED     : return "CUDA_ERROR_STREAM_CAPTURE_UNSUPPORTED";
             case CUDA_ERROR_STREAM_CAPTURE_INVALIDATED     : return "CUDA_ERROR_STREAM_CAPTURE_INVALIDATED";
             case CUDA_ERROR_STREAM_CAPTURE_MERGE           : return "CUDA_ERROR_STREAM_CAPTURE_MERGE";
@@ -683,6 +736,7 @@ public class CUresult
             case CUDA_ERROR_STREAM_CAPTURE_WRONG_THREAD    : return "CUDA_ERROR_STREAM_CAPTURE_WRONG_THREAD";
             case CUDA_ERROR_TIMEOUT                        : return "CUDA_ERROR_TIMEOUT";
             case CUDA_ERROR_GRAPH_EXEC_UPDATE_FAILURE      : return "CUDA_ERROR_GRAPH_EXEC_UPDATE_FAILURE";
+            case CUDA_ERROR_EXTERNAL_DEVICE                : return "CUDA_ERROR_EXTERNAL_DEVICE";
             case CUDA_ERROR_UNKNOWN                        : return "CUDA_ERROR_UNKNOWN";
         }
         return "INVALID CUresult: "+result;

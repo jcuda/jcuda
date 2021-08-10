@@ -45,7 +45,7 @@ import jcuda.runtime.JCuda;
 public class JCudaDriver
 {
     /** The CUDA version */
-    public static final int CUDA_VERSION = 11020;
+    public static final int CUDA_VERSION = 11040;
 
     /**
      * If set, host memory is portable between CUDA contexts.

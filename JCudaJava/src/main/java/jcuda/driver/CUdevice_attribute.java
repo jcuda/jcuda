@@ -667,6 +667,32 @@ public class CUdevice_attribute
     public static final int CU_DEVICE_ATTRIBUTE_MEMORY_POOLS_SUPPORTED = 115;
     
     /**
+     * Device supports GPUDirect RDMA APIs, like nvidia_p2p_get_pages 
+     * (see https://docs.nvidia.com/cuda/gpudirect-rdma for more information) 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_SUPPORTED = 116;
+
+    /**
+     * The returned attribute shall be interpreted as a bitmask, where the 
+     * individual bits are described by the ::CUflushGPUDirectRDMAWritesOptions 
+     * enum
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_FLUSH_WRITES_OPTIONS = 117;
+    
+    /** GPUDirect RDMA writes to the device do not need to be flushed for 
+     * consumers within the scope indicated by the returned attribute. 
+     * See ::CUGPUDirectRDMAWritesOrdering for the numerical values returned 
+     * here. 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_WRITES_ORDERING = 118;
+    
+    /** 
+     * Handle types supported with mempool based IPC 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_MEMPOOL_SUPPORTED_HANDLE_TYPES = 119;
+    
+    
+    /**
      * Returns the String identifying the given CUdevice_attribute
      *
      * @param n The CUdevice_attribute
@@ -791,6 +817,10 @@ public class CUdevice_attribute
             case CU_DEVICE_ATTRIBUTE_READ_ONLY_HOST_REGISTER_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_READ_ONLY_HOST_REGISTER_SUPPORTED";
             case CU_DEVICE_ATTRIBUTE_TIMELINE_SEMAPHORE_INTEROP_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_TIMELINE_SEMAPHORE_INTEROP_SUPPORTED";
             case CU_DEVICE_ATTRIBUTE_MEMORY_POOLS_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_MEMORY_POOLS_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_FLUSH_WRITES_OPTIONS: return "CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_FLUSH_WRITES_OPTIONS";
+            case CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_WRITES_ORDERING: return "CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_WRITES_ORDERING";
+            case CU_DEVICE_ATTRIBUTE_MEMPOOL_SUPPORTED_HANDLE_TYPES: return "CU_DEVICE_ATTRIBUTE_MEMPOOL_SUPPORTED_HANDLE_TYPES";
         }
         return "INVALID CUdevice_attribute: "+n;
     }

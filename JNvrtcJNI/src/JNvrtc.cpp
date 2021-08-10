@@ -467,6 +467,67 @@ JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetCUBINNative
 
 }
 
+/*
+ * Class:     jcuda_nvrtc_JNvrtc
+ * Method:    nvrtcGetNVVMSizeNative
+ * Signature: (Ljcuda/nvrtc/nvrtcProgram;[J)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetNVVMSizeNative
+  (JNIEnv *env, jclass cls, jobject prog, jlongArray nvvmSizeRet) 
+{
+    if (prog == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'prog' is null for nvrtcGetNVVMSize");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (nvvmSizeRet == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'nvvmSizeRet' is null for nvrtcGetNVVMSize");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing nvrtcGetNVVMSize\n");
+
+    nvrtcProgram nativeProg = (nvrtcProgram)(intptr_t)getNativePointerValue(env, prog);
+    size_t nativeNvvmSizeRet = 0;
+    int result = nvrtcGetNVVMSize(nativeProg, &nativeNvvmSizeRet);
+    if (!set(env, nvvmSizeRet, 0, nativeNvvmSizeRet)) return JCUDA_INTERNAL_ERROR;
+    return result;
+}
+
+/*
+ * Class:     jcuda_nvrtc_JNvrtc
+ * Method:    nvrtcGetNVVMNative
+ * Signature: (Ljcuda/nvrtc/nvrtcProgram;[B)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetNVVMNative
+(JNIEnv* env, jclass cls, jobject prog, jbyteArray nvvm)
+{
+    if (prog == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'prog' is null for nvrtcGetNVVM");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (nvvm == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'ptx' is null for nvrtcGetNVVM");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing nvrtcGetNVVM\n");
+
+    int length = env->GetArrayLength(nvvm);
+    nvrtcProgram nativeProg = (nvrtcProgram)(intptr_t)getNativePointerValue(env, prog);
+    char* nativeNvvm = (char*)env->GetPrimitiveArrayCritical(nvvm, NULL);
+    int result = nvrtcGetNVVM(nativeProg, nativeNvvm);
+    env->ReleasePrimitiveArrayCritical(nvvm, nativeNvvm, 0);
+    return result;
+}
+
 
 /*
 * Class:     jcuda_nvrtc_JNvrtc

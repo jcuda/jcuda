@@ -119,6 +119,12 @@ public class CUpointer_attribute
     public static final int CU_POINTER_ATTRIBUTE_ACCESS_FLAGS = 16;
     
     /**
+     * Returns the mempool handle for the allocation if it was allocated from 
+     * a mempool. Otherwise returns NULL. 
+     */
+    public static final int CU_POINTER_ATTRIBUTE_MEMPOOL_HANDLE = 17;
+    
+    /**
      * Returns the String identifying the given CUpointer_attribute
      *
      * @param n The CUpointer_attribute
@@ -144,6 +150,7 @@ public class CUpointer_attribute
             case CU_POINTER_ATTRIBUTE_ALLOWED_HANDLE_TYPES: return "CU_POINTER_ATTRIBUTE_ALLOWED_HANDLE_TYPES";
             case CU_POINTER_ATTRIBUTE_IS_GPU_DIRECT_RDMA_CAPABLE: return "CU_POINTER_ATTRIBUTE_IS_GPU_DIRECT_RDMA_CAPABLE";
             case CU_POINTER_ATTRIBUTE_ACCESS_FLAGS: return "CU_POINTER_ATTRIBUTE_ACCESS_FLAGS";
+            case CU_POINTER_ATTRIBUTE_MEMPOOL_HANDLE: return "CU_POINTER_ATTRIBUTE_MEMPOOL_HANDLE";
         }
         return "INVALID CUpointer_attribute: "+n;
     }
