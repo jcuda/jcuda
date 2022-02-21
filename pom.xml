@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.jcuda</groupId>
         <artifactId>jcuda-parent</artifactId>
-        <version>11.4.1</version>
+        <version>11.5.2</version>
         <relativePath></relativePath>
     </parent>
 

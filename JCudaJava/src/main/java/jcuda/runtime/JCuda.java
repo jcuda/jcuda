@@ -40,7 +40,7 @@ public class JCuda
     /**
      * CUDA runtime version
      */
-    public static final int CUDART_VERSION = 11040;
+    public static final int CUDART_VERSION = 11050;
 
     /**
      * Default page-locked allocation flag

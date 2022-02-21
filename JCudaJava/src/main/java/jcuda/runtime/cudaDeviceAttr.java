@@ -559,8 +559,15 @@ public class cudaDeviceAttr
     
     /**
      * External timeline semaphore interop is supported on the device.
+     * @deprecated As of CUDA 11.5
      */
     public static final int cudaDevAttrMaxTimelineSemaphoreInteropSupported = 114;
+    
+    /**
+     * External timeline semaphore interop is supported on the device.
+     */
+    public static final int cudaDevAttrTimelineSemaphoreInteropSupported = 114;
+    
     
     /**
      * Device supports using the ::cudaMallocAsync and ::cudaMemPool family of APIs 
@@ -682,7 +689,7 @@ public class cudaDeviceAttr
             case cudaDevAttrReservedSharedMemoryPerBlock     : return "cudaDevAttrReservedSharedMemoryPerBlock";
             case cudaDevAttrSparseCudaArraySupported         : return "cudaDevAttrSparseCudaArraySupported";
             case cudaDevAttrHostRegisterReadOnlySupported    : return "cudaDevAttrHostRegisterReadOnlySupported";
-            case cudaDevAttrMaxTimelineSemaphoreInteropSupported    : return "cudaDevAttrMaxTimelineSemaphoreInteropSupported";
+            case cudaDevAttrTimelineSemaphoreInteropSupported    : return "cudaDevAttrTimelineSemaphoreInteropSupported";
             case cudaDevAttrMemoryPoolsSupported    : return "cudaDevAttrMemoryPoolsSupported";
         }
         return "INVALID cudaDeviceAttr: "+n;
