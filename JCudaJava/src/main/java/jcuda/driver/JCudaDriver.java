@@ -45,7 +45,7 @@ import jcuda.runtime.JCuda;
 public class JCudaDriver
 {
     /** The CUDA version */
-    public static final int CUDA_VERSION = 11050;
+    public static final int CUDA_VERSION = 11060;
 
     /**
      * If set, host memory is portable between CUDA contexts.
@@ -198,6 +198,12 @@ public class JCudaDriver
      * is a sparse CUDA array or CUDA mipmapped array respectively
      */
     public static final int CUDA_ARRAY3D_SPARSE = 0x40;
+    
+    /**
+     * This flag if set indicates that the CUDA array or CUDA mipmapped array
+     * will allow deferred memory mapping
+     */
+    public static final int CUDA_ARRAY3D_DEFERRED_MAPPING = 0x80;
     
     /**
      * For texture references loaded into the module, use default
@@ -9030,7 +9036,6 @@ public class JCudaDriver
     }
     private static native int cuMipmappedArrayGetSparsePropertiesNative(CUDA_ARRAY_SPARSE_PROPERTIES sparseProperties, CUmipmappedArray mipmap);
     
-    
     /**
      * <pre><code>
      * \brief Gets a CUDA array plane from a CUDA array
@@ -9070,6 +9075,77 @@ public class JCudaDriver
     }
     private static native int cuArrayGetPlaneNative(CUarray pPlaneArray, CUarray hArray, int planeIdx);
     
+    /**
+     * <pre>
+     * Returns the memory requirements of a CUDA array.
+     *
+     * Returns the memory requirements of a CUDA array in \p memoryRequirements
+     * If the CUDA array is not allocated with flag ::CUDA_ARRAY3D_DEFERRED_MAPPING
+     * ::CUDA_ERROR_INVALID_VALUE will be returned.
+     *
+     * The returned value in ::CUDA_ARRAY_MEMORY_REQUIREMENTS::size 
+     * represents the total size of the CUDA array.
+     * The returned value in ::CUDA_ARRAY_MEMORY_REQUIREMENTS::alignment 
+     * represents the alignment necessary for mapping the CUDA array.
+     *
+     * \return
+     * ::CUDA_SUCCESS
+     * ::CUDA_ERROR_INVALID_VALUE
+     *
+     * @param memoryRequirements (out) - Pointer to ::CUDA_ARRAY_MEMORY_REQUIREMENTS
+     * @param array (in) - CUDA array to get the memory requirements of
+     * @param device (in) - Device to get the memory requirements for
+     * \sa ::cuMipmappedArrayGetMemoryRequirements, ::cuMemMapArrayAsync
+     * </pre>
+     */
+    public static int cuArrayGetMemoryRequirements(
+        CUDA_ARRAY_MEMORY_REQUIREMENTS memoryRequirements, 
+        CUarray array, 
+        CUdevice device)
+    {
+        return checkResult(cuArrayGetMemoryRequirementsNative(memoryRequirements, array, device));
+    }
+    private static native int cuArrayGetMemoryRequirementsNative(
+        CUDA_ARRAY_MEMORY_REQUIREMENTS memoryRequirements, 
+        CUarray array, 
+        CUdevice device);
+
+
+    /**
+     * <pre>
+     * Returns the memory requirements of a CUDA mipmapped array.
+     *
+     * Returns the memory requirements of a CUDA mipmapped array in \p memoryRequirements
+     * If the CUDA mipmapped array is not allocated with flag ::CUDA_ARRAY3D_DEFERRED_MAPPING
+     * ::CUDA_ERROR_INVALID_VALUE will be returned.
+     *
+     * The returned value in ::CUDA_ARRAY_MEMORY_REQUIREMENTS::size 
+     * represents the total size of the CUDA mipmapped array.
+     * The returned value in ::CUDA_ARRAY_MEMORY_REQUIREMENTS::alignment 
+     * represents the alignment necessary for mapping the CUDA mipmapped  
+     * array.
+     *
+     * \return
+     * ::CUDA_SUCCESS
+     * ::CUDA_ERROR_INVALID_VALUE
+     *
+     * @param memoryRequirements (out) - Pointer to ::CUDA_ARRAY_MEMORY_REQUIREMENTS
+     * @param mipmap (in) - CUDA mipmapped array to get the memory requirements of
+     * @param device (in) - Device to get the memory requirements for
+     * \sa ::cuArrayGetMemoryRequirements, ::cuMemMapArrayAsync
+     * </pre>
+     */
+    public static int cuMipmappedArrayGetMemoryRequirements(
+        CUDA_ARRAY_MEMORY_REQUIREMENTS memoryRequirements, 
+        CUmipmappedArray mipmap, 
+        CUdevice device)
+    {
+        return checkResult(cuMipmappedArrayGetMemoryRequirementsNative(memoryRequirements, mipmap, device));
+    }
+    private static native int cuMipmappedArrayGetMemoryRequirementsNative(
+        CUDA_ARRAY_MEMORY_REQUIREMENTS memoryRequirements, 
+        CUmipmappedArray mipmap, 
+        CUdevice device);
     
     /**
      * Destroys a CUDA array.

@@ -1,7 +1,7 @@
 /*
  * JCuda - Java bindings for NVIDIA CUDA driver and runtime API
  *
- * Copyright (c) 2009-2015 Marco Hutter - http://www.jcuda.org
+ * Copyright (c) 2009-2020 Marco Hutter - http://www.jcuda.org
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -24,55 +24,37 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-package jcuda;
-
-import jcuda.driver.JCudaDriver;
+package jcuda.driver;
 
 /**
- * Utility methods for determining the JCuda version. This class is not 
- * part of the public API. 
+ * CUDA array memory requirements
  */
-public class JCudaVersion
+public class CUDA_ARRAY_MEMORY_REQUIREMENTS
 {
     /**
-     * Returns an unspecified string that will be appended to native 
-     * library names for disambiguation
-     * 
-     * @return The JCuda version  
+     * Total required memory size 
      */
-    public static String get()
-    {
-        return "11.6.1";
-    }
-    
+    public long size;
     /**
-     * Tests whether JCuda is available on this platform. 
-     * 
-     * This method can be used to check whether the native libraries for 
-     * accessing CUDA via JCuda can be loaded on this platform, and the
-     * driver library can be initialized.
-     *  
-     * @return Whether JCuda is available.
+     * alignment requirement 
      */
-    public static boolean isAvailable()
-    {
-        try
-        {
-            JCudaDriver.cuInit(0);
-            return true;
-        }
-        catch (Throwable t)
-        {
-            return false;
-        }
-        
-    }
-    
+    public long alignment;
+
     /**
-     * Private constructor to prevent instantiation 
+     * Creates a new, uninitialized CUDA_ARRAY_MEMORY_REQUIREMENTS
      */
-    private JCudaVersion()
+    public CUDA_ARRAY_MEMORY_REQUIREMENTS()
     {
+        // Default constructor
     }
-    
+
+    @Override
+    public String toString()
+    {
+        return "CUDA_ARRAY_MEMORY_REQUIREMENTS["+
+            "size="+size+","+
+            "alignment="+alignment+"]";
+    }
 }
+
+

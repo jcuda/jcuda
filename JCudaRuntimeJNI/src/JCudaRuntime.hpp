@@ -35,7 +35,7 @@
 extern "C" {
 #endif
 #undef jcuda_runtime_JCuda_CUDART_VERSION
-#define jcuda_runtime_JCuda_CUDART_VERSION 11020L
+#define jcuda_runtime_JCuda_CUDART_VERSION 11060L
 #undef jcuda_runtime_JCuda_cudaHostAllocDefault
 #define jcuda_runtime_JCuda_cudaHostAllocDefault 0L
 #undef jcuda_runtime_JCuda_cudaHostAllocPortable
@@ -368,6 +368,22 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaArrayGetInfoNative
  * Signature: (Ljcuda/runtime/cudaArray;Ljcuda/runtime/cudaArray;I)I
  */
 JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaArrayGetPlaneNative
+  (JNIEnv *, jclass, jobject, jobject, jint);
+
+/*
+ * Class:     jcuda_runtime_JCuda
+ * Method:    cudaArrayGetMemoryRequirementsNative
+ * Signature: (Ljcuda/runtime/cudaArrayMemoryRequirements;Ljcuda/runtime/cudaArray;I)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaArrayGetMemoryRequirementsNative
+  (JNIEnv *, jclass, jobject, jobject, jint);
+
+/*
+ * Class:     jcuda_runtime_JCuda
+ * Method:    cudaMipmappedArrayGetMemoryRequirementsNative
+ * Signature: (Ljcuda/runtime/cudaArrayMemoryRequirements;Ljcuda/runtime/cudaMipmappedArray;I)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMipmappedArrayGetMemoryRequirementsNative
   (JNIEnv *, jclass, jobject, jobject, jint);
 
 /*

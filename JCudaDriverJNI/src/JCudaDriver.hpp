@@ -35,7 +35,7 @@
 extern "C" {
 #endif
 #undef jcuda_driver_JCudaDriver_CUDA_VERSION
-#define jcuda_driver_JCudaDriver_CUDA_VERSION 11020L
+#define jcuda_driver_JCudaDriver_CUDA_VERSION 11060L
 #undef jcuda_driver_JCudaDriver_CU_MEMHOSTALLOC_PORTABLE
 #define jcuda_driver_JCudaDriver_CU_MEMHOSTALLOC_PORTABLE 1L
 #undef jcuda_driver_JCudaDriver_CU_MEMHOSTALLOC_DEVICEMAP
@@ -995,6 +995,22 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMipmappedArrayGetSparsePr
  */
 JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuArrayGetPlaneNative
   (JNIEnv *, jclass, jobject, jobject, jint);
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuArrayGetMemoryRequirementsNative
+ * Signature: (Ljcuda/driver/CUDA_ARRAY_MEMORY_REQUIREMENTS;Ljcuda/driver/CUarray;Ljcuda/driver/CUdevice;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuArrayGetMemoryRequirementsNative
+  (JNIEnv *, jclass, jobject, jobject, jobject);
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuMipmappedArrayGetMemoryRequirementsNative
+ * Signature: (Ljcuda/driver/CUDA_ARRAY_MEMORY_REQUIREMENTS;Ljcuda/driver/CUmipmappedArray;Ljcuda/driver/CUdevice;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMipmappedArrayGetMemoryRequirementsNative
+  (JNIEnv *, jclass, jobject, jobject, jobject);
 
 /*
  * Class:     jcuda_driver_JCudaDriver

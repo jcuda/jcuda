@@ -40,7 +40,7 @@ public class JCuda
     /**
      * CUDA runtime version
      */
-    public static final int CUDART_VERSION = 11050;
+    public static final int CUDART_VERSION = 11060;
 
     /**
      * Default page-locked allocation flag
@@ -3636,6 +3636,67 @@ public class JCuda
         return checkResult(cudaArrayGetPlaneNative(pPlaneArray, hArray, planeIdx));
     }
     private static native int cudaArrayGetPlaneNative(cudaArray pPlaneArray, cudaArray hArray, int planeIdx);
+    
+    /**
+     * <pre>
+     * \brief Returns the memory requirements of a CUDA array
+     *
+     * Returns the memory requirements of a CUDA array in \p memoryRequirements
+     * If the CUDA array is not allocated with flag ::cudaArrayDeferredMapping
+     * ::cudaErrorInvalidValue will be returned.
+     *
+     * The returned value in ::cudaArrayMemoryRequirements::size
+     * represents the total size of the CUDA array.
+     * The returned value in ::cudaArrayMemoryRequirements::alignment
+     * represents the alignment necessary for mapping the CUDA array.
+     *
+     * \return
+     * ::cudaSuccess
+     * ::cudaErrorInvalidValue
+     *
+     * \param[out] memoryRequirements - Pointer to ::cudaArrayMemoryRequirements
+     * \param[in] array - CUDA array to get the memory requirements of
+     * \param[in] device - Device to get the memory requirements for
+     * \sa ::cudaMipmappedArrayGetMemoryRequirements
+     * </pre>
+     */
+    public static int cudaArrayGetMemoryRequirements(cudaArrayMemoryRequirements memoryRequirements, cudaArray array, int device)
+    {
+        return checkResult(cudaArrayGetMemoryRequirementsNative(memoryRequirements, array, device));
+    }
+    private static native int cudaArrayGetMemoryRequirementsNative(cudaArrayMemoryRequirements memoryRequirements, cudaArray array, int device);
+
+    /**
+     * <pre>
+     * \brief Returns the memory requirements of a CUDA mipmapped array
+     *
+     * Returns the memory requirements of a CUDA mipmapped array in \p memoryRequirements
+     * If the CUDA mipmapped array is not allocated with flag ::cudaArrayDeferredMapping
+     * ::cudaErrorInvalidValue will be returned.
+     *
+     * The returned value in ::cudaArrayMemoryRequirements::size
+     * represents the total size of the CUDA mipmapped array.
+     * The returned value in ::cudaArrayMemoryRequirements::alignment
+     * represents the alignment necessary for mapping the CUDA mipmapped
+     * array.
+     *
+     * \return
+     * ::cudaSuccess
+     * ::cudaErrorInvalidValue
+     *
+     * \param[out] memoryRequirements - Pointer to ::cudaArrayMemoryRequirements
+     * \param[in] mipmap - CUDA mipmapped array to get the memory requirements of
+     * \param[in] device - Device to get the memory requirements for
+     * \sa ::cudaArrayGetMemoryRequirements
+     * </pre>
+     */
+    public static int cudaMipmappedArrayGetMemoryRequirements(cudaArrayMemoryRequirements memoryRequirements, cudaMipmappedArray mipmap, int device)
+    {
+        return checkResult(cudaMipmappedArrayGetMemoryRequirementsNative(memoryRequirements, mipmap, device));
+    }
+    private static native int cudaMipmappedArrayGetMemoryRequirementsNative(cudaArrayMemoryRequirements memoryRequirements, cudaMipmappedArray mipmap, int device);
+
+    
     
     /**
      * Returns the layout properties of a sparse CUDA array.<br>

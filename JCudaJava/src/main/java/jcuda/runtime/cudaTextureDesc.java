@@ -97,6 +97,16 @@ public class cudaTextureDesc
     public float maxMipmapLevelClamp;
 
     /**
+     * Disable any trilinear filtering optimizations.
+     */
+    public int disableTrilinearOptimization;
+    
+    /**
+     * Enable seamless cube map filtering.
+     */
+    public int seamlessCubemap;
+    
+    /**
      * Creates a new, uninitialized cudaTextureDesc
      */
     public cudaTextureDesc()
@@ -150,6 +160,8 @@ public class cudaTextureDesc
         sb.append("mipmapLevelBias="+mipmapLevelBias+f);
         sb.append("minMipmapLevelClamp="+minMipmapLevelClamp+f);
         sb.append("maxMipmapLevelClamp="+maxMipmapLevelClamp+f);
+        sb.append("disableTrilinearOptimization="+disableTrilinearOptimization+f);
+        sb.append("seamlessCubemap="+seamlessCubemap+f);
         return sb.toString();
     }
 

@@ -271,6 +271,10 @@ jfieldID CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_width; // unsigned int
 jfieldID CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_height; // unsigned int
 jfieldID CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_depth; // unsigned int
 
+// Field IDs for the CUDA_ARRAY_MEMORY_REQUIREMENTS class
+jfieldID CUDA_ARRAY_MEMORY_REQUIREMENTS_size; // size_t
+jfieldID CUDA_ARRAY_MEMORY_REQUIREMENTS_alignment; // size_t
+
 
 /**
  * Called when the library is loaded. Will initialize all
@@ -633,6 +637,10 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_height, "height", "I")) return JNI_ERR;
     if (!init(env, cls, CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_depth,  "depth",  "I")) return JNI_ERR;
 
+    // Initialize the field IDs for the CUDA_ARRAY_MEMORY_REQUIREMENTS class
+    if (!init(env, cls, "jcuda/driver/CUDA_ARRAY_MEMORY_REQUIREMENTS")) return JNI_ERR;
+    if (!init(env, cls, CUDA_ARRAY_MEMORY_REQUIREMENTS_size      , "size"     , "J" )) return JNI_ERR;
+    if (!init(env, cls, CUDA_ARRAY_MEMORY_REQUIREMENTS_alignment , "alignment", "J" )) return JNI_ERR;
 
     return JNI_VERSION_1_4;
 }
@@ -851,6 +859,29 @@ void setCUDA_ARRAY3D_DESCRIPTOR(JNIEnv *env, jobject pArrayDescriptor, CUDA_ARRA
     env->SetIntField( pArrayDescriptor, CUDA_ARRAY3D_DESCRIPTOR_NumChannels, (jint) nativePArrayDescriptor.NumChannels);
     env->SetIntField( pArrayDescriptor, CUDA_ARRAY3D_DESCRIPTOR_Flags,       (jint) nativePArrayDescriptor.Flags);
 }
+
+/**
+ * Returns the native representation of the given Java object
+ */
+CUDA_ARRAY_MEMORY_REQUIREMENTS getCUDA_ARRAY_MEMORY_REQUIREMENTS(JNIEnv *env, jobject javaObject)
+{
+    CUDA_ARRAY_MEMORY_REQUIREMENTS nativeObject;
+    nativeObject.size       = (size_t)        env->GetLongField(javaObject, CUDA_ARRAY_MEMORY_REQUIREMENTS_size);
+    nativeObject.alignment  = (size_t)        env->GetLongField(javaObject, CUDA_ARRAY_MEMORY_REQUIREMENTS_alignment);
+    return nativeObject;
+}
+
+/**
+ * Assigns the properties of the given native structure to the given
+ * Java Object
+ */
+void setCUDA_ARRAY_MEMORY_REQUIREMENTS(JNIEnv *env, jobject javaObject, CUDA_ARRAY_MEMORY_REQUIREMENTS &nativeObject)
+{
+    env->SetLongField(javaObject, CUDA_ARRAY_MEMORY_REQUIREMENTS_size,       (jlong)nativeObject.size);
+    env->SetLongField(javaObject, CUDA_ARRAY_MEMORY_REQUIREMENTS_alignment,  (jlong)nativeObject.alignment);
+}
+
+
 
 
 /**
@@ -5931,6 +5962,80 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMipmappedArrayGetSparsePr
     int result = cuMipmappedArrayGetSparseProperties(&nativeSparseProperties, nativeMipmap);
 
     setCUDA_ARRAY_SPARSE_PROPERTIES(env, sparseProperties, nativeSparseProperties);
+
+    return result;
+}
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuArrayGetMemoryRequirementsNative
+ * Signature: (Ljcuda/driver/CUDA_ARRAY_MEMORY_REQUIREMENTS;Ljcuda/driver/CUarray;Ljcuda/driver/CUdevice;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuArrayGetMemoryRequirementsNative(JNIEnv *env, jclass cls, jobject memoryRequirements, jobject array, jobject device)
+{
+    if (memoryRequirements == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'memoryRequirements' is null for cuArrayGetMemoryRequirements");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (array == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'array' is null for cuArrayGetMemoryRequirements");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (device == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'device' is null for cuArrayGetMemoryRequirements");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing cuArrayGetMemoryRequirements(memoryRequirements=%p, array=%p, device=%p)\n",
+        memoryRequirements, array, device);
+
+    CUDA_ARRAY_MEMORY_REQUIREMENTS nativeMemoryRequirements;
+    CUarray nativeArray = (CUarray)getNativePointerValue(env, array);
+    CUdevice nativeDevice = (CUdevice)(intptr_t)getNativePointerValue(env, device);
+
+    int result = cuArrayGetMemoryRequirements(&nativeMemoryRequirements, nativeArray, nativeDevice);
+
+    setCUDA_ARRAY_MEMORY_REQUIREMENTS(env, memoryRequirements, nativeMemoryRequirements);
+
+    return result;
+}
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuMipmappedArrayGetMemoryRequirementsNative
+ * Signature: (Ljcuda/driver/CUDA_ARRAY_MEMORY_REQUIREMENTS;Ljcuda/driver/CUmipmappedArray;Ljcuda/driver/CUdevice;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMipmappedArrayGetMemoryRequirementsNative(JNIEnv *env, jclass cls, jobject memoryRequirements, jobject mipmap, jobject device)
+{
+    if (memoryRequirements == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'memoryRequirements' is null for cuMipmappedArrayGetMemoryRequirements");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (mipmap == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'mipmap' is null for cuMipmappedArrayGetMemoryRequirements");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (device == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'device' is null for cuMipmappedArrayGetMemoryRequirements");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing cuMipmappedArrayGetMemoryRequirements(memoryRequirements=%p, mipmap=%p, device=%p)\n",
+        memoryRequirements, mipmap, device);
+
+    CUDA_ARRAY_MEMORY_REQUIREMENTS nativeMemoryRequirements;
+    CUdevice nativeDevice = (CUdevice)(intptr_t)getNativePointerValue(env, device);
+    CUmipmappedArray nativeMipmap = (CUmipmappedArray)getNativePointerValue(env, mipmap);
+
+    int result = cuMipmappedArrayGetMemoryRequirements(&nativeMemoryRequirements, nativeMipmap, nativeDevice);
+
+    setCUDA_ARRAY_MEMORY_REQUIREMENTS(env, memoryRequirements, nativeMemoryRequirements);
 
     return result;
 }

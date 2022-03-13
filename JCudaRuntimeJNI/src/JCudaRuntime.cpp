@@ -222,6 +222,8 @@ jfieldID cudaTextureDesc_mipmapFilterMode; // cudaTextureFilterMode
 jfieldID cudaTextureDesc_mipmapLevelBias; // float
 jfieldID cudaTextureDesc_minMipmapLevelClamp; // float
 jfieldID cudaTextureDesc_maxMipmapLevelClamp; // float
+jfieldID cudaTextureDesc_disableTrilinearOptimization; // int
+jfieldID cudaTextureDesc_seamlessCubemap; // int
 
 // Static method ID for the cudaStreamCallback#call function
 static jmethodID cudaStreamCallback_call; // (Ljcuda/runtime/cudaStream_t;ILjava/lang/Object;)V
@@ -252,6 +254,10 @@ jfieldID cudaArraySparseProperties_tileExtent_width; // unsigned int
 jfieldID cudaArraySparseProperties_tileExtent_height; // unsigned int
 jfieldID cudaArraySparseProperties_tileExtent_depth; // unsigned int
 
+// Field IDs for the cudaArrayMemoryRequirements class
+jfieldID cudaArrayMemoryRequirements_size; // size_t
+jfieldID cudaArrayMemoryRequirements_alignment; // size_t
+
 
 /**
  * Called when the library is loaded. Will initialize all
@@ -279,10 +285,10 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     // Obtain the fieldIDs of the cudaDeviceProp class
     if (!init(env, cls, "jcuda/runtime/cudaDeviceProp")) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_name,                        "name",                        "[B")) return JNI_ERR;
-	if (!init(env, cls, cudaDeviceProp_uuid,                        "uuid",                        "Ljcuda/runtime/cudaUUID;")) return JNI_ERR;
-	if (!init(env, cls, cudaDeviceProp_luid,                        "luid",                        "[B")) return JNI_ERR;
-	if (!init(env, cls, cudaDeviceProp_luidDeviceNodeMask,          "luidDeviceNodeMask",          "I" )) return JNI_ERR;
-	if (!init(env, cls, cudaDeviceProp_totalGlobalMem,              "totalGlobalMem",              "J" )) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_uuid,                        "uuid",                        "Ljcuda/runtime/cudaUUID;")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_luid,                        "luid",                        "[B")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_luidDeviceNodeMask,          "luidDeviceNodeMask",          "I" )) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_totalGlobalMem,              "totalGlobalMem",              "J" )) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_sharedMemPerBlock,           "sharedMemPerBlock",           "J" )) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_regsPerBlock,                "regsPerBlock",                "I" )) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_warpSize,                    "warpSize",                    "I" )) return JNI_ERR;
@@ -343,15 +349,15 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, cudaDeviceProp_managedMemory,               "managedMemory",               "I" )) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_isMultiGpuBoard,             "isMultiGpuBoard",             "I" )) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_multiGpuBoardGroupID,        "multiGpuBoardGroupID",        "I" )) return JNI_ERR;
-	if (!init(env, cls, cudaDeviceProp_hostNativeAtomicSupported,         "hostNativeAtomicSupported",         "I")) return JNI_ERR;
-	if (!init(env, cls, cudaDeviceProp_singleToDoublePrecisionPerfRatio,  "singleToDoublePrecisionPerfRatio",  "I")) return JNI_ERR;
-	if (!init(env, cls, cudaDeviceProp_pageableMemoryAccess,              "pageableMemoryAccess",              "I")) return JNI_ERR;
-	if (!init(env, cls, cudaDeviceProp_concurrentManagedAccess,           "concurrentManagedAccess",           "I")) return JNI_ERR;
-	if (!init(env, cls, cudaDeviceProp_computePreemptionSupported,        "computePreemptionSupported",        "I")) return JNI_ERR;
-	if (!init(env, cls, cudaDeviceProp_canUseHostPointerForRegisteredMem, "canUseHostPointerForRegisteredMem", "I")) return JNI_ERR;
-	if (!init(env, cls, cudaDeviceProp_cooperativeLaunch,                 "cooperativeLaunch",                 "I")) return JNI_ERR;
-	if (!init(env, cls, cudaDeviceProp_cooperativeMultiDeviceLaunch,      "cooperativeMultiDeviceLaunch",      "I")) return JNI_ERR;
-	if (!init(env, cls, cudaDeviceProp_sharedMemPerBlockOptin,            "sharedMemPerBlockOptin",            "J")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_hostNativeAtomicSupported,         "hostNativeAtomicSupported",         "I")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_singleToDoublePrecisionPerfRatio,  "singleToDoublePrecisionPerfRatio",  "I")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_pageableMemoryAccess,              "pageableMemoryAccess",              "I")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_concurrentManagedAccess,           "concurrentManagedAccess",           "I")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_computePreemptionSupported,        "computePreemptionSupported",        "I")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_canUseHostPointerForRegisteredMem, "canUseHostPointerForRegisteredMem", "I")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_cooperativeLaunch,                 "cooperativeLaunch",                 "I")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_cooperativeMultiDeviceLaunch,      "cooperativeMultiDeviceLaunch",      "I")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_sharedMemPerBlockOptin,            "sharedMemPerBlockOptin",            "J")) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_pageableMemoryAccessUsesHostPageTables, "pageableMemoryAccessUsesHostPageTables", "I")) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_directManagedMemAccessFromHost,         "directManagedMemAccessFromHost",         "I")) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_maxBlocksPerMultiProcessor,             "maxBlocksPerMultiProcessor",             "I")) return JNI_ERR;
@@ -456,14 +462,14 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, cudaFuncAttributes_numRegs,                   "numRegs",                   "I")) return JNI_ERR;
     if (!init(env, cls, cudaFuncAttributes_ptxVersion,                "ptxVersion",                "I")) return JNI_ERR;
     if (!init(env, cls, cudaFuncAttributes_binaryVersion,             "binaryVersion",             "I")) return JNI_ERR;
-	if (!init(env, cls, cudaFuncAttributes_cacheModeCA,               "cacheModeCA",               "I")) return JNI_ERR;
-	if (!init(env, cls, cudaFuncAttributes_maxDynamicSharedSizeBytes, "maxDynamicSharedSizeBytes", "I")) return JNI_ERR;
-	if (!init(env, cls, cudaFuncAttributes_preferredShmemCarveout,    "preferredShmemCarveout",    "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_cacheModeCA,               "cacheModeCA",               "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_maxDynamicSharedSizeBytes, "maxDynamicSharedSizeBytes", "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_preferredShmemCarveout,    "preferredShmemCarveout",    "I")) return JNI_ERR;
 
     // Obtain the fieldIDs of the cudaPointerAttributes class
     if (!init(env, cls, "jcuda/runtime/cudaPointerAttributes")) return JNI_ERR;
-	if (!init(env, cls, cudaPointerAttributes_type,          "type",          "I"              )) return JNI_ERR;
-	if (!init(env, cls, cudaPointerAttributes_device,        "device",        "I"              )) return JNI_ERR;
+    if (!init(env, cls, cudaPointerAttributes_type,          "type",          "I"              )) return JNI_ERR;
+    if (!init(env, cls, cudaPointerAttributes_device,        "device",        "I"              )) return JNI_ERR;
     if (!init(env, cls, cudaPointerAttributes_devicePointer, "devicePointer", "Ljcuda/Pointer;")) return JNI_ERR;
     if (!init(env, cls, cudaPointerAttributes_hostPointer,   "hostPointer",   "Ljcuda/Pointer;")) return JNI_ERR;
 
@@ -513,19 +519,21 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, cudaTextureDesc_maxAnisotropy,       "maxAnisotropy",       "I")) return JNI_ERR;
     if (!init(env, cls, cudaTextureDesc_minMipmapLevelClamp, "minMipmapLevelClamp", "F")) return JNI_ERR;
     if (!init(env, cls, cudaTextureDesc_maxMipmapLevelClamp, "maxMipmapLevelClamp", "F")) return JNI_ERR;
+    if (!init(env, cls, cudaTextureDesc_disableTrilinearOptimization, "disableTrilinearOptimization", "I")) return JNI_ERR;
+    if (!init(env, cls, cudaTextureDesc_seamlessCubemap, "seamlessCubemap", "I")) return JNI_ERR;
 
     // Obtain the methodID for jcuda.runtime.cudaStreamCallback#call
     if (!init(env, cls, "jcuda/runtime/cudaStreamCallback")) return JNI_ERR;
     if (!init(env, cls, cudaStreamCallback_call, "call", "(Ljcuda/runtime/cudaStream_t;ILjava/lang/Object;)V")) return JNI_ERR;
 
-	// Obtain the methodID for jcuda.runtime.cudaHostFn#call
-	if (!init(env, cls, "jcuda/runtime/cudaHostFn")) return JNI_ERR;
-	if (!init(env, cls, cudaHostFn_call, "call", "(Ljava/lang/Object;)V")) return JNI_ERR;
+    // Obtain the methodID for jcuda.runtime.cudaHostFn#call
+    if (!init(env, cls, "jcuda/runtime/cudaHostFn")) return JNI_ERR;
+    if (!init(env, cls, cudaHostFn_call, "call", "(Ljava/lang/Object;)V")) return JNI_ERR;
 
 
-	// Obtain the fieldIDs of the cudaUUID class
-	if (!init(env, cls, "jcuda/runtime/cudaUUID")) return JNI_ERR;
-	if (!init(env, cls, cudaUUID_bytes, "bytes", "[B")) return JNI_ERR;
+    // Obtain the fieldIDs of the cudaUUID class
+    if (!init(env, cls, "jcuda/runtime/cudaUUID")) return JNI_ERR;
+    if (!init(env, cls, cudaUUID_bytes, "bytes", "[B")) return JNI_ERR;
 
     // Initialize the field IDs for the cudaStreamAttrValue class
     if (!init(env, cls, "jcuda/runtime/cudaStreamAttrValue")) return JNI_ERR;
@@ -562,6 +570,11 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, cudaArraySparseProperties_tileExtent_width,  "width",  "I")) return JNI_ERR;
     if (!init(env, cls, cudaArraySparseProperties_tileExtent_height, "height", "I")) return JNI_ERR;
     if (!init(env, cls, cudaArraySparseProperties_tileExtent_depth,  "depth",  "I")) return JNI_ERR;
+
+    // Initialize the field IDs for the cudaArrayMemoryRequirements class
+    if (!init(env, cls, "jcuda/runtime/cudaArrayMemoryRequirements")) return JNI_ERR;
+    if (!init(env, cls, cudaArrayMemoryRequirements_size      , "size"     , "J"                      )) return JNI_ERR;
+    if (!init(env, cls, cudaArrayMemoryRequirements_alignment , "alignment", "J"                      )) return JNI_ERR;
 
     return JNI_VERSION_1_4;
 }
@@ -621,34 +634,34 @@ void CUDART_CB cudaStreamAddCallback_NativeCallback(cudaStream_t stream, cudaErr
 */
 void CUDART_CB cudaLaunchHostFunc_NativeCall(void *callbackInfoUserData)
 {
-	Logger::log(LOG_DEBUGTRACE, "Executing cudaLaunchHostFunc_NativeCall\n");
+    Logger::log(LOG_DEBUGTRACE, "Executing cudaLaunchHostFunc_NativeCall\n");
 
-	CallbackInfo *callbackInfo = (CallbackInfo*)callbackInfoUserData;
+    CallbackInfo *callbackInfo = (CallbackInfo*)callbackInfoUserData;
 
-	jobject javaCallbackObject = callbackInfo->globalJavaCallbackObject;
-	if (javaCallbackObject == NULL)
-	{
-		return;
-	}
-	jobject userData = callbackInfo->globalUserData;
+    jobject javaCallbackObject = callbackInfo->globalJavaCallbackObject;
+    if (javaCallbackObject == NULL)
+    {
+        return;
+    }
+    jobject userData = callbackInfo->globalUserData;
 
-	JNIEnv *env = NULL;
-	jint attached = globalJvm->GetEnv((void**)&env, JNI_VERSION_1_4);
-	if (attached != JNI_OK)
-	{
-		globalJvm->AttachCurrentThread((void**)&env, NULL);
-	}
+    JNIEnv *env = NULL;
+    jint attached = globalJvm->GetEnv((void**)&env, JNI_VERSION_1_4);
+    if (attached != JNI_OK)
+    {
+        globalJvm->AttachCurrentThread((void**)&env, NULL);
+    }
 
-	Logger::log(LOG_DEBUGTRACE, "Calling Java call method\n");
-	env->CallVoidMethod(javaCallbackObject, cudaHostFn_call, userData);
-	Logger::log(LOG_DEBUGTRACE, "Calling Java call method done\n");
+    Logger::log(LOG_DEBUGTRACE, "Calling Java call method\n");
+    env->CallVoidMethod(javaCallbackObject, cudaHostFn_call, userData);
+    Logger::log(LOG_DEBUGTRACE, "Calling Java call method done\n");
 
-	finishCallback(env);
-	deleteCallbackInfo(env, callbackInfo);
-	if (attached != JNI_OK)
-	{
-		globalJvm->DetachCurrentThread();
-	}
+    finishCallback(env);
+    deleteCallbackInfo(env, callbackInfo);
+    if (attached != JNI_OK)
+    {
+        globalJvm->DetachCurrentThread();
+    }
 }
 
 /*
@@ -699,22 +712,22 @@ cudaDeviceProp getCudaDeviceProp(JNIEnv *env, jobject prop)
     cudaDeviceProp nativeProp;
 
     jbyteArray propName = (jbyteArray)env->GetObjectField(prop, cudaDeviceProp_name);
-	char *propNameMemory = (char*)env->GetPrimitiveArrayCritical(propName, NULL);
-	memcpy(nativeProp.name, propNameMemory, 256);
-	env->ReleasePrimitiveArrayCritical(propName, propNameMemory, 0);
+    char *propNameMemory = (char*)env->GetPrimitiveArrayCritical(propName, NULL);
+    memcpy(nativeProp.name, propNameMemory, 256);
+    env->ReleasePrimitiveArrayCritical(propName, propNameMemory, 0);
 
-	jobject propUuid = env->GetObjectField(prop, cudaDeviceProp_uuid);
-	jbyteArray propUuidBytes = (jbyteArray)env->GetObjectField(propUuid, cudaUUID_bytes);
-	char *propUuidBytesMemory = (char*)env->GetPrimitiveArrayCritical(propUuidBytes, NULL);
-	memcpy(nativeProp.uuid.bytes, propUuidBytesMemory, 16);
-	env->ReleasePrimitiveArrayCritical(propUuidBytes, propUuidBytesMemory, 0);
+    jobject propUuid = env->GetObjectField(prop, cudaDeviceProp_uuid);
+    jbyteArray propUuidBytes = (jbyteArray)env->GetObjectField(propUuid, cudaUUID_bytes);
+    char *propUuidBytesMemory = (char*)env->GetPrimitiveArrayCritical(propUuidBytes, NULL);
+    memcpy(nativeProp.uuid.bytes, propUuidBytesMemory, 16);
+    env->ReleasePrimitiveArrayCritical(propUuidBytes, propUuidBytesMemory, 0);
 
-	jbyteArray propLuid = (jbyteArray)env->GetObjectField(prop, cudaDeviceProp_luid);
-	char *propLuidMemory = (char*)env->GetPrimitiveArrayCritical(propLuid, NULL);
-	memcpy(nativeProp.luid, propLuidMemory, 8);
-	env->ReleasePrimitiveArrayCritical(propLuid, propLuidMemory, 0);
+    jbyteArray propLuid = (jbyteArray)env->GetObjectField(prop, cudaDeviceProp_luid);
+    char *propLuidMemory = (char*)env->GetPrimitiveArrayCritical(propLuid, NULL);
+    memcpy(nativeProp.luid, propLuidMemory, 8);
+    env->ReleasePrimitiveArrayCritical(propLuid, propLuidMemory, 0);
 
-	nativeProp.luidDeviceNodeMask  = (int)env->GetIntField(prop, cudaDeviceProp_luidDeviceNodeMask);
+    nativeProp.luidDeviceNodeMask  = (int)env->GetIntField(prop, cudaDeviceProp_luidDeviceNodeMask);
 
     nativeProp.totalGlobalMem      = (size_t)env->GetLongField(prop, cudaDeviceProp_totalGlobalMem);
     nativeProp.sharedMemPerBlock   = (size_t)env->GetLongField(prop, cudaDeviceProp_sharedMemPerBlock);
@@ -791,12 +804,12 @@ cudaDeviceProp getCudaDeviceProp(JNIEnv *env, jobject prop)
     nativeProp.hostNativeAtomicSupported        = (int)env->GetIntField(prop, cudaDeviceProp_hostNativeAtomicSupported);
     nativeProp.singleToDoublePrecisionPerfRatio = (int)env->GetIntField(prop, cudaDeviceProp_singleToDoublePrecisionPerfRatio);
     nativeProp.pageableMemoryAccess             = (int)env->GetIntField(prop, cudaDeviceProp_pageableMemoryAccess);
-	nativeProp.concurrentManagedAccess          = (int)env->GetIntField(prop, cudaDeviceProp_concurrentManagedAccess);
+    nativeProp.concurrentManagedAccess          = (int)env->GetIntField(prop, cudaDeviceProp_concurrentManagedAccess);
     nativeProp.computePreemptionSupported        = (int)env->GetIntField(prop, cudaDeviceProp_computePreemptionSupported);
-	nativeProp.canUseHostPointerForRegisteredMem = (int)env->GetIntField(prop, cudaDeviceProp_canUseHostPointerForRegisteredMem);
-	nativeProp.cooperativeLaunch                 = (int)env->GetIntField(prop, cudaDeviceProp_cooperativeLaunch);
-	nativeProp.cooperativeMultiDeviceLaunch      = (int)env->GetIntField(prop, cudaDeviceProp_cooperativeMultiDeviceLaunch);
-	nativeProp.sharedMemPerBlockOptin = (size_t)env->GetLongField(prop, cudaDeviceProp_sharedMemPerBlockOptin);
+    nativeProp.canUseHostPointerForRegisteredMem = (int)env->GetIntField(prop, cudaDeviceProp_canUseHostPointerForRegisteredMem);
+    nativeProp.cooperativeLaunch                 = (int)env->GetIntField(prop, cudaDeviceProp_cooperativeLaunch);
+    nativeProp.cooperativeMultiDeviceLaunch      = (int)env->GetIntField(prop, cudaDeviceProp_cooperativeMultiDeviceLaunch);
+    nativeProp.sharedMemPerBlockOptin = (size_t)env->GetLongField(prop, cudaDeviceProp_sharedMemPerBlockOptin);
     nativeProp.pageableMemoryAccessUsesHostPageTables = (int)env->GetIntField(prop, cudaDeviceProp_pageableMemoryAccessUsesHostPageTables);
     nativeProp.directManagedMemAccessFromHost         = (int)env->GetIntField(prop, cudaDeviceProp_directManagedMemAccessFromHost);
     nativeProp.maxBlocksPerMultiProcessor             = (int)env->GetIntField(prop, cudaDeviceProp_maxBlocksPerMultiProcessor);
@@ -843,30 +856,30 @@ void setCudaDeviceProp(JNIEnv *env, jobject prop, cudaDeviceProp &nativeProp)
     memcpy(propNameMemory, nativeProp.name, 256);
     env->ReleasePrimitiveArrayCritical(propName, propNameMemory, JNI_ABORT);
 
-	jobject propUuid = env->GetObjectField(prop, cudaDeviceProp_uuid);
-	if (propUuid == NULL)
-	{
-		return;
-	}
-	jbyteArray propUuidBytes = (jbyteArray)env->GetObjectField(propUuid, cudaUUID_bytes);
-	char *propUuidBytesMemory = (char*)env->GetPrimitiveArrayCritical(propUuidBytes, NULL);
-	if (propUuidBytesMemory == NULL)
-	{
-		return;
-	}
-	memcpy(propUuidBytesMemory, nativeProp.uuid.bytes, 16);
-	env->ReleasePrimitiveArrayCritical(propUuidBytes, propUuidBytesMemory, JNI_ABORT);
+    jobject propUuid = env->GetObjectField(prop, cudaDeviceProp_uuid);
+    if (propUuid == NULL)
+    {
+        return;
+    }
+    jbyteArray propUuidBytes = (jbyteArray)env->GetObjectField(propUuid, cudaUUID_bytes);
+    char *propUuidBytesMemory = (char*)env->GetPrimitiveArrayCritical(propUuidBytes, NULL);
+    if (propUuidBytesMemory == NULL)
+    {
+        return;
+    }
+    memcpy(propUuidBytesMemory, nativeProp.uuid.bytes, 16);
+    env->ReleasePrimitiveArrayCritical(propUuidBytes, propUuidBytesMemory, JNI_ABORT);
 
-	jbyteArray propLuid = (jbyteArray)env->GetObjectField(prop, cudaDeviceProp_luid);
-	char *propLuidMemory = (char*)env->GetPrimitiveArrayCritical(propLuid, NULL);
-	if (propLuidMemory == NULL)
-	{
-		return;
-	}
-	memcpy(propLuidMemory, nativeProp.luid, 8);
-	env->ReleasePrimitiveArrayCritical(propLuid, propLuidMemory, JNI_ABORT);
+    jbyteArray propLuid = (jbyteArray)env->GetObjectField(prop, cudaDeviceProp_luid);
+    char *propLuidMemory = (char*)env->GetPrimitiveArrayCritical(propLuid, NULL);
+    if (propLuidMemory == NULL)
+    {
+        return;
+    }
+    memcpy(propLuidMemory, nativeProp.luid, 8);
+    env->ReleasePrimitiveArrayCritical(propLuid, propLuidMemory, JNI_ABORT);
 
-	env->SetIntField(prop, cudaDeviceProp_luidDeviceNodeMask,   (jint)nativeProp.luidDeviceNodeMask);
+    env->SetIntField(prop, cudaDeviceProp_luidDeviceNodeMask,   (jint)nativeProp.luidDeviceNodeMask);
 
     env->SetLongField(prop, cudaDeviceProp_totalGlobalMem,      (jlong)nativeProp.totalGlobalMem);
     env->SetLongField(prop, cudaDeviceProp_sharedMemPerBlock,   (jlong)nativeProp.sharedMemPerBlock);
@@ -948,12 +961,12 @@ void setCudaDeviceProp(JNIEnv *env, jobject prop, cudaDeviceProp &nativeProp)
     env->SetIntField(prop, cudaDeviceProp_pageableMemoryAccess            , (jint)nativeProp.pageableMemoryAccess);
     env->SetIntField(prop, cudaDeviceProp_concurrentManagedAccess         , (jint)nativeProp.concurrentManagedAccess);
 
-	env->SetIntField(prop, cudaDeviceProp_computePreemptionSupported       , (jint)nativeProp.computePreemptionSupported);
-	env->SetIntField(prop, cudaDeviceProp_canUseHostPointerForRegisteredMem, (jint)nativeProp.canUseHostPointerForRegisteredMem);
-	env->SetIntField(prop, cudaDeviceProp_cooperativeLaunch                , (jint)nativeProp.cooperativeLaunch);
-	env->SetIntField(prop, cudaDeviceProp_cooperativeMultiDeviceLaunch     , (jint)nativeProp.cooperativeMultiDeviceLaunch);
+    env->SetIntField(prop, cudaDeviceProp_computePreemptionSupported       , (jint)nativeProp.computePreemptionSupported);
+    env->SetIntField(prop, cudaDeviceProp_canUseHostPointerForRegisteredMem, (jint)nativeProp.canUseHostPointerForRegisteredMem);
+    env->SetIntField(prop, cudaDeviceProp_cooperativeLaunch                , (jint)nativeProp.cooperativeLaunch);
+    env->SetIntField(prop, cudaDeviceProp_cooperativeMultiDeviceLaunch     , (jint)nativeProp.cooperativeMultiDeviceLaunch);
 
-	env->SetLongField(prop, cudaDeviceProp_sharedMemPerBlockOptin, (jlong)nativeProp.sharedMemPerBlockOptin);
+    env->SetLongField(prop, cudaDeviceProp_sharedMemPerBlockOptin, (jlong)nativeProp.sharedMemPerBlockOptin);
 
     env->SetIntField(prop,  cudaDeviceProp_pageableMemoryAccessUsesHostPageTables, (jint)nativeProp.pageableMemoryAccessUsesHostPageTables);
     env->SetIntField(prop,  cudaDeviceProp_directManagedMemAccessFromHost,         (jint)nativeProp.directManagedMemAccessFromHost);
@@ -1251,8 +1264,8 @@ void setCudaFuncAttributes(JNIEnv *env, jobject attr, cudaFuncAttributes &native
     env->SetIntField( attr, cudaFuncAttributes_binaryVersion,      (jint) nativeAttr.binaryVersion);
     env->SetIntField( attr, cudaFuncAttributes_cacheModeCA,        (jint) nativeAttr.cacheModeCA);
 
-	env->SetIntField(attr, cudaFuncAttributes_maxDynamicSharedSizeBytes, (jint)nativeAttr.maxDynamicSharedSizeBytes);
-	env->SetIntField(attr, cudaFuncAttributes_preferredShmemCarveout,    (jint)nativeAttr.preferredShmemCarveout);
+    env->SetIntField(attr, cudaFuncAttributes_maxDynamicSharedSizeBytes, (jint)nativeAttr.maxDynamicSharedSizeBytes);
+    env->SetIntField(attr, cudaFuncAttributes_preferredShmemCarveout,    (jint)nativeAttr.preferredShmemCarveout);
 
 }
 
@@ -1265,8 +1278,8 @@ void setCudaFuncAttributes(JNIEnv *env, jobject attr, cudaFuncAttributes &native
  */
 bool setCudaPointerAttributes(JNIEnv *env, jobject attributes, cudaPointerAttributes &nativeAttributes)
 {
-	env->SetIntField(attributes, cudaPointerAttributes_type, (jint)nativeAttributes.type);
-	env->SetIntField(attributes, cudaPointerAttributes_device, (jint)nativeAttributes.device);
+    env->SetIntField(attributes, cudaPointerAttributes_type, (jint)nativeAttributes.type);
+    env->SetIntField(attributes, cudaPointerAttributes_device, (jint)nativeAttributes.device);
 
     jobject devicePointerObject = env->GetObjectField(attributes, cudaPointerAttributes_devicePointer);
     if (devicePointerObject == NULL)
@@ -1575,6 +1588,8 @@ cudaTextureDesc getCudaTextureDesc(JNIEnv *env, jobject texDesc)
     nativeTexDesc.mipmapLevelBias = (float)env->GetFloatField(texDesc, cudaTextureDesc_mipmapLevelBias);
     nativeTexDesc.minMipmapLevelClamp = (float)env->GetFloatField(texDesc, cudaTextureDesc_minMipmapLevelClamp);
     nativeTexDesc.maxMipmapLevelClamp = (float)env->GetFloatField(texDesc, cudaTextureDesc_maxMipmapLevelClamp);
+    nativeTexDesc.disableTrilinearOptimization = (int)env->GetIntField(texDesc, cudaTextureDesc_disableTrilinearOptimization);
+    nativeTexDesc.seamlessCubemap = (int)env->GetIntField(texDesc, cudaTextureDesc_seamlessCubemap);
 
     return nativeTexDesc;
 }
@@ -1620,6 +1635,8 @@ void setCudaTextureDesc(JNIEnv *env, jobject texDesc, cudaTextureDesc &nativeTex
     env->SetFloatField(texDesc, cudaTextureDesc_mipmapLevelBias, (jfloat)nativeTexDesc.mipmapLevelBias);
     env->SetFloatField(texDesc, cudaTextureDesc_minMipmapLevelClamp, (jfloat)nativeTexDesc.minMipmapLevelClamp);
     env->SetFloatField(texDesc, cudaTextureDesc_maxMipmapLevelClamp, (jfloat)nativeTexDesc.maxMipmapLevelClamp);
+    env->SetIntField(texDesc, cudaTextureDesc_disableTrilinearOptimization, (jint)nativeTexDesc.disableTrilinearOptimization);
+    env->SetIntField(texDesc, cudaTextureDesc_seamlessCubemap, (jint)nativeTexDesc.seamlessCubemap);
 }
 
 
@@ -1748,6 +1765,16 @@ void setCudaArraySparseProperties(JNIEnv* env, jobject javaObject, cudaArraySpar
     env->SetIntField(javaObject, cudaArraySparseProperties_flags, (jint)nativeObject.flags);
 }
 
+
+/**
+ * Assigns the properties of the given native structure to the given
+ * Java Object
+ */
+void setCudaArrayMemoryRequirements(JNIEnv *env, jobject javaObject, cudaArrayMemoryRequirements &nativeObject)
+{
+    env->SetLongField(javaObject, cudaArrayMemoryRequirements_size, (jlong)nativeObject.size);
+    env->SetLongField(javaObject, cudaArrayMemoryRequirements_alignment, (jlong)nativeObject.alignment);
+}
 
 
 //=== CUDA functions =========================================================
@@ -3200,6 +3227,65 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaArrayGetPlaneNative
     return result;
 }
 
+/*
+ * Class:     jcuda_runtime_JCuda
+ * Method:    cudaArrayGetMemoryRequirementsNative
+ * Signature: (Ljcuda/runtime/cudaArrayMemoryRequirements;Ljcuda/runtime/cudaArray;I)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaArrayGetMemoryRequirementsNative
+  (JNIEnv *env, jclass cls, jobject memoryRequirements, jobject array, jint device)
+{
+    if (memoryRequirements == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'memoryRequirements' is null for cudaArrayGetMemoryRequirements");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (array == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'array' is null for cudaArrayGetMemoryRequirements");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cudaArrayGetPlane\n");
+
+    cudaArrayMemoryRequirements nativeMemoryRequirements;
+    cudaArray_t nativeArray = (cudaArray_t)getNativePointerValue(env, array);
+
+    int result = cudaArrayGetMemoryRequirements(&nativeMemoryRequirements, nativeArray, (int)device);
+
+    setCudaArrayMemoryRequirements(env, memoryRequirements, nativeMemoryRequirements);
+
+    return result;
+}
+
+/*
+ * Class:     jcuda_runtime_JCuda
+ * Method:    cudaMipmappedArrayGetMemoryRequirementsNative
+ * Signature: (Ljcuda/runtime/cudaArrayMemoryRequirements;Ljcuda/runtime/cudaMipmappedArray;I)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMipmappedArrayGetMemoryRequirementsNative
+  (JNIEnv *env, jclass cls, jobject memoryRequirements, jobject mipmap, jint device) 
+{
+    if (memoryRequirements == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'memoryRequirements' is null for cudaMipmappedArrayGetMemoryRequirements");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (mipmap == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'mipmap' is null for cudaMipmappedArrayGetMemoryRequirements");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cudaArrayGetPlane\n");
+
+    cudaArrayMemoryRequirements nativeMemoryRequirements;
+    cudaMipmappedArray_t nativeMipmap = (cudaMipmappedArray_t)getNativePointerValue(env, mipmap);
+
+    int result = cudaMipmappedArrayGetMemoryRequirements(&nativeMemoryRequirements, nativeMipmap, (int)device);
+
+    setCudaArrayMemoryRequirements(env, memoryRequirements, nativeMemoryRequirements);
+
+    return result;
+}
 
 
 /*
@@ -5526,30 +5612,30 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGetSurfaceObjectResourceDesc
 JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaLaunchHostFuncNative
   (JNIEnv *env, jclass cls, jobject stream, jobject fn, jobject userData)
 {
-	// stream may be null
-	if (fn == NULL)
-	{
-		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'fn' is null for cudaLaunchHostFunc");
-		return JCUDA_INTERNAL_ERROR;
-	}
-	// userData may be null
+    // stream may be null
+    if (fn == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'fn' is null for cudaLaunchHostFunc");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    // userData may be null
 
-	Logger::log(LOG_TRACE, "Executing cudaLaunchHostFunc\n");
+    Logger::log(LOG_TRACE, "Executing cudaLaunchHostFunc\n");
 
-	cudaStream_t nativeStream = (cudaStream_t)getNativePointerValue(env, stream);
+    cudaStream_t nativeStream = (cudaStream_t)getNativePointerValue(env, stream);
 
-	CallbackInfo *callbackInfo = NULL;
-	void* nativeUserData = NULL;
+    CallbackInfo *callbackInfo = NULL;
+    void* nativeUserData = NULL;
 
-	callbackInfo = initCallbackInfo(env, stream, fn, userData);
-	if (callbackInfo == NULL)
-	{
-		return JCUDA_INTERNAL_ERROR;
-	}
-	nativeUserData = (void*)callbackInfo;
+    callbackInfo = initCallbackInfo(env, stream, fn, userData);
+    if (callbackInfo == NULL)
+    {
+        return JCUDA_INTERNAL_ERROR;
+    }
+    nativeUserData = (void*)callbackInfo;
 
-	int result = cudaLaunchHostFunc(nativeStream, cudaLaunchHostFunc_NativeCall, nativeUserData);
-	return result;
+    int result = cudaLaunchHostFunc(nativeStream, cudaLaunchHostFunc_NativeCall, nativeUserData);
+    return result;
 
 }
 
