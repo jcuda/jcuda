@@ -52,6 +52,11 @@ public class CUstreamBatchMemOpType
     public static final int CU_STREAM_MEM_OP_WRITE_VALUE_64 = 5;
     
     /**
+     * Insert a memory barrier of the specified type 
+     */
+    public static final int CU_STREAM_MEM_OP_BARRIER = 6; 
+        
+    /**
      * This has the same effect as ::CU_STREAM_WAIT_VALUE_FLUSH, but as a
      * standalone operation. 
      */

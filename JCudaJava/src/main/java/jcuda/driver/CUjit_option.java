@@ -165,6 +165,16 @@ public class CUjit_option
     public static final int CU_JIT_CACHE_MODE = 14;
 
     /**
+     * This jit option is deprecated and should not be used.
+     */
+    public static final int CU_JIT_NEW_SM3X_OPT = 15;
+
+    /**
+     * This jit option is used for internal purpose only.
+     */
+    public static final int CU_JIT_FAST_COMPILE = 16;
+    
+    /**
      * Array of device symbol names that will be relocated to the corresponding
      * host addresses stored in ::CU_JIT_GLOBAL_SYMBOL_ADDRESSES.\n
      * Must contain ::CU_JIT_GLOBAL_SYMBOL_COUNT entries.\n
@@ -241,6 +251,67 @@ public class CUjit_option
     public static final int CU_JIT_FMA = 24;    
 
     /**
+     * Array of kernel names that should be preserved at link time while others
+     * can be removed.\n
+     * Must contain ::CU_JIT_REFERENCED_KERNEL_COUNT entries.\n
+     * Note that kernel names can be mangled by the compiler in which case the
+     * mangled name needs to be specified.\n
+     * Wildcard "*" can be used to represent zero or more characters instead of
+     * specifying the full or mangled name.\n
+     * It is important to note that the wildcard "*" is also added implicitly.
+     * For example, specifying "foo" will match "foobaz", "barfoo", "barfoobaz" and
+     * thus preserve all kernels with those names. This can be avoided by providing
+     * a more specific name like "barfoobaz".\n
+     * Option type: const char **\n
+     * Applies to: dynamic linker only
+     */
+    public static final int CU_JIT_REFERENCED_KERNEL_NAMES = 25;
+
+    /**
+     * Number of entries in ::CU_JIT_REFERENCED_KERNEL_NAMES array.\n
+     * Option type: unsigned int\n
+     * Applies to: dynamic linker only
+     */
+    public static final int CU_JIT_REFERENCED_KERNEL_COUNT = 26;
+
+    /**
+     * Array of variable names (__device__ and/or __constant__) that should be
+     * preserved at link time while others can be removed.\n
+     * Must contain ::CU_JIT_REFERENCED_VARIABLE_COUNT entries.\n
+     * Note that variable names can be mangled by the compiler in which case the
+     * mangled name needs to be specified.\n
+     * Wildcard "*" can be used to represent zero or more characters instead of
+     * specifying the full or mangled name.\n
+     * It is important to note that the wildcard "*" is also added implicitly.
+     * For example, specifying "foo" will match "foobaz", "barfoo", "barfoobaz" and
+     * thus preserve all variables with those names. This can be avoided by providing
+     * a more specific name like "barfoobaz".\n
+     * Option type: const char **\n
+     * Applies to: link-time optimization specified with CU_JIT_LTO
+     */
+    public static final int CU_JIT_REFERENCED_VARIABLE_NAMES = 27;
+
+    /**
+     * Number of entries in ::CU_JIT_REFERENCED_VARIABLE_NAMES array.\n
+     * Option type: unsigned int\n
+     * Applies to: link-time optimization specified with CU_JIT_LTO
+     */
+    public static final int CU_JIT_REFERENCED_VARIABLE_COUNT = 28;
+
+    /**
+     * This option serves as a hint to enable the JIT compiler/linker
+     * to remove constant (__constant__) and device (__device__) variables
+     * unreferenced in device code (Disabled by default).\n
+     * Note that host references to constant and device variables using APIs like
+     * ::cuModuleGetGlobal() with this option specified may result in undefined behavior unless
+     * the variables are explicitly specified using ::CU_JIT_REFERENCED_VARIABLE_NAMES.\n
+     * Option type: int\n
+     * Applies to: link-time optimization specified with CU_JIT_LTO
+     */
+    public static final int CU_JIT_OPTIMIZE_UNUSED_DEVICE_VARIABLES = 29;
+    
+    
+    /**
      * Returns the String identifying the given CUjit_option
      *
      * @param n The CUjit_option
@@ -273,6 +344,11 @@ public class CUjit_option
             case CU_JIT_PREC_DIV: return "CU_JIT_PREC_DIV";
             case CU_JIT_PREC_SQRT: return "CU_JIT_PREC_SQRT";
             case CU_JIT_FMA: return "CU_JIT_FMA";
+            case CU_JIT_REFERENCED_KERNEL_NAMES: return "CU_JIT_REFERENCED_KERNEL_NAMES";
+            case CU_JIT_REFERENCED_KERNEL_COUNT: return "CU_JIT_REFERENCED_KERNEL_COUNT";
+            case CU_JIT_REFERENCED_VARIABLE_NAMES: return "CU_JIT_REFERENCED_VARIABLE_NAMES";
+            case CU_JIT_REFERENCED_VARIABLE_COUNT: return "CU_JIT_REFERENCED_VARIABLE_COUNT";
+            case CU_JIT_OPTIMIZE_UNUSED_DEVICE_VARIABLES: return "CU_JIT_OPTIMIZE_UNUSED_DEVICE_VARIABLES";
         }
         return "INVALID CUjit_option: "+n;
     }

@@ -125,6 +125,21 @@ public class CUpointer_attribute
     public static final int CU_POINTER_ATTRIBUTE_MEMPOOL_HANDLE = 17;
     
     /**
+     * Size of the actual underlying mapping that the pointer belongs to 
+     */
+    public static final int CU_POINTER_ATTRIBUTE_MAPPING_SIZE = 18;
+    
+    /**
+     * The start address of the mapping that the pointer belongs to 
+     */
+    public static final int CU_POINTER_ATTRIBUTE_MAPPING_BASE_ADDR = 19;          
+    
+    /**
+     * A process-wide unique id corresponding to the physical allocation the pointer belongs to 
+     */
+    public static final int CU_POINTER_ATTRIBUTE_MEMORY_BLOCK_ID = 20;
+    
+    /**
      * Returns the String identifying the given CUpointer_attribute
      *
      * @param n The CUpointer_attribute
@@ -151,6 +166,9 @@ public class CUpointer_attribute
             case CU_POINTER_ATTRIBUTE_IS_GPU_DIRECT_RDMA_CAPABLE: return "CU_POINTER_ATTRIBUTE_IS_GPU_DIRECT_RDMA_CAPABLE";
             case CU_POINTER_ATTRIBUTE_ACCESS_FLAGS: return "CU_POINTER_ATTRIBUTE_ACCESS_FLAGS";
             case CU_POINTER_ATTRIBUTE_MEMPOOL_HANDLE: return "CU_POINTER_ATTRIBUTE_MEMPOOL_HANDLE";
+            case CU_POINTER_ATTRIBUTE_MAPPING_SIZE: return "CU_POINTER_ATTRIBUTE_MAPPING_SIZE";
+            case CU_POINTER_ATTRIBUTE_MAPPING_BASE_ADDR: return "CU_POINTER_ATTRIBUTE_MAPPING_BASE_ADDR";
+            case CU_POINTER_ATTRIBUTE_MEMORY_BLOCK_ID: return "CU_POINTER_ATTRIBUTE_MEMORY_BLOCK_ID";
         }
         return "INVALID CUpointer_attribute: "+n;
     }

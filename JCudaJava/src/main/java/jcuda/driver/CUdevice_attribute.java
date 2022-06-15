@@ -691,6 +691,25 @@ public class CUdevice_attribute
      */
     public static final int CU_DEVICE_ATTRIBUTE_MEMPOOL_SUPPORTED_HANDLE_TYPES = 119;
     
+    /**
+     * Device supports deferred mapping CUDA arrays and CUDA mipmapped arrays 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_DEFERRED_MAPPING_CUDA_ARRAY_SUPPORTED = 121;
+    
+    /**
+     * 64-bit operations are supported in ::cuStreamBatchMemOp_v2 and related v2 MemOp APIs. 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS_V2 = 122;
+    
+    /** 
+     * ::CU_STREAM_WAIT_VALUE_NOR is supported by v2 MemOp APIs. 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR_V2 = 123;
+
+    /**
+     * Device supports buffer sharing with dma_buf mechanism. 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_DMA_BUF_SUPPORTED = 124; 
     
     /**
      * Returns the String identifying the given CUdevice_attribute
@@ -821,6 +840,10 @@ public class CUdevice_attribute
             case CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_FLUSH_WRITES_OPTIONS: return "CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_FLUSH_WRITES_OPTIONS";
             case CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_WRITES_ORDERING: return "CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_WRITES_ORDERING";
             case CU_DEVICE_ATTRIBUTE_MEMPOOL_SUPPORTED_HANDLE_TYPES: return "CU_DEVICE_ATTRIBUTE_MEMPOOL_SUPPORTED_HANDLE_TYPES";
+            case CU_DEVICE_ATTRIBUTE_DEFERRED_MAPPING_CUDA_ARRAY_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_DEFERRED_MAPPING_CUDA_ARRAY_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS_V2: return "CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS_V2";
+            case CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR_V2: return "CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR_V2";
+            case CU_DEVICE_ATTRIBUTE_DMA_BUF_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_DMA_BUF_SUPPORTED";
         }
         return "INVALID CUdevice_attribute: "+n;
     }

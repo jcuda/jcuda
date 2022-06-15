@@ -105,6 +105,13 @@ public class CUresult
      */
     public static final int CUDA_ERROR_STUB_LIBRARY                   = 34;
     
+    /**  
+     * This indicates that requested CUDA device is unavailable at the current
+     * time. Devices are often unavailable due to use of
+     * ::CU_COMPUTEMODE_EXCLUSIVE_PROCESS or ::CU_COMPUTEMODE_PROHIBITED.
+     */
+    public static final int CUDA_ERROR_DEVICE_UNAVAILABLE            = 46;
+    
     /**
      * This indicates that no CUDA-capable devices were detected by the installed
      * CUDA driver.
@@ -659,6 +666,7 @@ public class CUresult
             case CUDA_ERROR_PROFILER_ALREADY_STARTED       : return "CUDA_ERROR_PROFILER_ALREADY_STARTED";
             case CUDA_ERROR_PROFILER_ALREADY_STOPPED       : return "CUDA_ERROR_PROFILER_ALREADY_STOPPED";
             case CUDA_ERROR_STUB_LIBRARY                   : return "CUDA_ERROR_STUB_LIBRARY";
+            case CUDA_ERROR_DEVICE_UNAVAILABLE             : return "CUDA_ERROR_DEVICE_UNAVAILABLE"; 
             case CUDA_ERROR_NO_DEVICE                      : return "CUDA_ERROR_NO_DEVICE";
             case CUDA_ERROR_INVALID_DEVICE                 : return "CUDA_ERROR_INVALID_DEVICE";
             case CUDA_ERROR_DEVICE_NOT_LICENSED            : return "CUDA_ERROR_DEVICE_NOT_LICENSED";
