@@ -35,7 +35,7 @@
 extern "C" {
 #endif
 #undef jcuda_driver_JCudaDriver_CUDA_VERSION
-#define jcuda_driver_JCudaDriver_CUDA_VERSION 11060L
+#define jcuda_driver_JCudaDriver_CUDA_VERSION 11070L
 #undef jcuda_driver_JCudaDriver_CU_MEMHOSTALLOC_PORTABLE
 #define jcuda_driver_JCudaDriver_CU_MEMHOSTALLOC_PORTABLE 1L
 #undef jcuda_driver_JCudaDriver_CU_MEMHOSTALLOC_DEVICEMAP
@@ -76,6 +76,8 @@ extern "C" {
 #define jcuda_driver_JCudaDriver_CUDA_ARRAY3D_COLOR_ATTACHMENT 32L
 #undef jcuda_driver_JCudaDriver_CUDA_ARRAY3D_SPARSE
 #define jcuda_driver_JCudaDriver_CUDA_ARRAY3D_SPARSE 64L
+#undef jcuda_driver_JCudaDriver_CUDA_ARRAY3D_DEFERRED_MAPPING
+#define jcuda_driver_JCudaDriver_CUDA_ARRAY3D_DEFERRED_MAPPING 128L
 #undef jcuda_driver_JCudaDriver_CU_PARAM_TR_DEFAULT
 #define jcuda_driver_JCudaDriver_CU_PARAM_TR_DEFAULT -1L
 #undef jcuda_driver_JCudaDriver_CU_TRSA_OVERRIDE_FORMAT
@@ -355,6 +357,14 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuCtxSynchronizeNative
  */
 JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuModuleLoadNative
   (JNIEnv *, jclass, jobject, jstring);
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuModuleGetLoadingModeNative
+ * Signature: ([I)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuModuleGetLoadingModeNative
+  (JNIEnv *, jclass, jintArray);
 
 /*
  * Class:     jcuda_driver_JCudaDriver

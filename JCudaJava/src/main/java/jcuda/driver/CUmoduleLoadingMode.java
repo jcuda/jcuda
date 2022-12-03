@@ -24,55 +24,45 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-package jcuda;
 
-import jcuda.driver.JCudaDriver;
+package jcuda.driver;
 
 /**
- * Utility methods for determining the JCuda version. This class is not 
- * part of the public API. 
+ * CUDA Lazy Loading status
  */
-public class JCudaVersion
+public class CUmoduleLoadingMode
 {
     /**
-     * Returns an unspecified string that will be appended to native 
-     * library names for disambiguation
-     * 
-     * @return The JCuda version  
+     * Lazy Kernel Loading is not enabled 
      */
-    public static String get()
-    {
-        return "11.8.0";
-    }
+    public static final int CU_MODULE_EAGER_LOADING = 0x1;
     
     /**
-     * Tests whether JCuda is available on this platform. 
-     * 
-     * This method can be used to check whether the native libraries for 
-     * accessing CUDA via JCuda can be loaded on this platform, and the
-     * driver library can be initialized.
-     *  
-     * @return Whether JCuda is available.
+     * Lazy Kernel Loading is enabled 
      */
-    public static boolean isAvailable()
-    {
-        try
-        {
-            JCudaDriver.cuInit(0);
-            return true;
-        }
-        catch (Throwable t)
-        {
-            return false;
-        }
-        
-    }
+    public static final int CU_MODULE_LAZY_LOADING  = 0x2;    
     
     /**
-     * Private constructor to prevent instantiation 
+     * Returns the String identifying the given CUmoduleLoadingMode
+     *
+     * @param n The CUstreamCaptureMode
+     * @return The String identifying the given CUmoduleLoadingMode
      */
-    private JCudaVersion()
+    public static String stringFor(int n)
+    {
+        switch (n)
+        {
+            case CU_MODULE_EAGER_LOADING: return "CU_MODULE_EAGER_LOADING";
+            case CU_MODULE_LAZY_LOADING: return "CU_MODULE_LAZY_LOADING";
+        }
+        return "INVALID CUmoduleLoadingMode: "+n;
+    }
+
+    /**
+     * Private constructor to prevent instantiation.
+     */
+    private CUmoduleLoadingMode()
     {
     }
-    
+
 }

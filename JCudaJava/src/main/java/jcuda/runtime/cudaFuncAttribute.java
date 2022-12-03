@@ -39,8 +39,37 @@ public class cudaFuncAttribute
     /** 
      * Preferred shared memory-L1 cache split ratio 
      */
-    
     public static final int cudaFuncAttributePreferredSharedMemoryCarveout = 9;
+    
+    /**
+     * Indicator to enforce valid cluster dimension specification on kernel launch 
+     */
+    public static final int cudaFuncAttributeClusterDimMustBeSet = 10;
+    
+    /**
+     * Required cluster width 
+     */
+    public static final int cudaFuncAttributeRequiredClusterWidth = 11; 
+    
+    /**
+     * Required cluster height 
+     */
+    public static final int cudaFuncAttributeRequiredClusterHeight = 12;
+    
+    /**
+     * Required cluster depth 
+     */
+    public static final int cudaFuncAttributeRequiredClusterDepth = 13; 
+    
+    /**
+     * Whether non-portable cluster scheduling policy is supported 
+     */
+    public static final int cudaFuncAttributeNonPortableClusterSizeAllowed = 14;
+    
+    /**
+     * Required cluster scheduling policy preference 
+     */
+    public static final int cudaFuncAttributeClusterSchedulingPolicyPreference = 15; 
     
     /**
      * Returns the String identifying the given cudaFuncAttribute
@@ -54,6 +83,12 @@ public class cudaFuncAttribute
         {
             case cudaFuncAttributeMaxDynamicSharedMemorySize     : return "cudaFuncAttributeMaxDynamicSharedMemorySize";
             case cudaFuncAttributePreferredSharedMemoryCarveout  : return "cudaFuncAttributePreferredSharedMemoryCarveout";
+            case cudaFuncAttributeClusterDimMustBeSet: return "cudaFuncAttributeClusterDimMustBeSet";
+            case cudaFuncAttributeRequiredClusterWidth: return "cudaFuncAttributeRequiredClusterWidth";
+            case cudaFuncAttributeRequiredClusterHeight: return "cudaFuncAttributeRequiredClusterHeight";
+            case cudaFuncAttributeRequiredClusterDepth: return "cudaFuncAttributeRequiredClusterDepth";
+            case cudaFuncAttributeNonPortableClusterSizeAllowed: return "cudaFuncAttributeNonPortableClusterSizeAllowed";
+            case cudaFuncAttributeClusterSchedulingPolicyPreference: return "cudaFuncAttributeClusterSchedulingPolicyPreference";
         }
         return "INVALID cudaFuncAttribute: "+n;
     }

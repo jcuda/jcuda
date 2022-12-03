@@ -498,81 +498,114 @@ public class cudaDeviceAttr
      * Reserved
      */
     public static final int cudaDevAttrReserved94                     = 94;
-    
+
     /** 
      * Device supports launching cooperative kernels via ::cudaLaunchCooperativeKernel
      */
     public static final int cudaDevAttrCooperativeLaunch              = 95; 
-    
+
     /**
      * Device can participate in cooperative kernels launched via 
      * ::cudaLaunchCooperativeKernelMultiDevice 
      */
     public static final int cudaDevAttrCooperativeMultiDeviceLaunch   = 96;
-    
+
     /**
      * The maximum optin shared memory per block. This value may vary by 
      * chip. See ::cudaFuncSetAttribute 
      */
     public static final int cudaDevAttrMaxSharedMemoryPerBlockOptin   = 97; 
-    
+
     /**
      * Device supports flushing of outstanding remote writes. 
      */
     public static final int cudaDevAttrCanFlushRemoteWrites           = 98;
-    
+
     /**
      * Device supports host memory registration via ::cudaHostRegister. 
      */
     public static final int cudaDevAttrHostRegisterSupported          = 99;
-    
+
     /**
      * Device accesses pageable memory via the host's page tables. 
      */
     public static final int cudaDevAttrPageableMemoryAccessUsesHostPageTables = 100;
-    
+
     /**
      * Host can directly access managed memory on the device without migration. 
      */
     public static final int cudaDevAttrDirectManagedMemAccessFromHost = 101;
-    
+
     /**
      * Maximum number of blocks per multiprocessor 
      */
     public static final int cudaDevAttrMaxBlocksPerMultiprocessor     = 106;
-    
+
     /**
      * Shared memory reserved by CUDA driver per block in bytes 
      */
     public static final int cudaDevAttrReservedSharedMemoryPerBlock   = 111;
-    
+
     /**
      * Device supports sparse CUDA arrays and sparse CUDA mipmapped arrays 
      */
     public static final int cudaDevAttrSparseCudaArraySupported       = 112;
-    
+
     /**
      * Device supports using the ::cuMemHostRegister flag 
      * CU_MEMHOSTERGISTER_READ_ONLY to register memory that must be mapped 
      * as read-only to the GPU */
     public static final int cudaDevAttrHostRegisterReadOnlySupported  = 113;
-    
+
     /**
      * External timeline semaphore interop is supported on the device.
      * @deprecated As of CUDA 11.5
      */
     public static final int cudaDevAttrMaxTimelineSemaphoreInteropSupported = 114;
-    
+
     /**
      * External timeline semaphore interop is supported on the device.
      */
     public static final int cudaDevAttrTimelineSemaphoreInteropSupported = 114;
-    
-    
+
     /**
      * Device supports using the ::cudaMallocAsync and ::cudaMemPool family of APIs 
      */
     public static final int cudaDevAttrMemoryPoolsSupported           = 115;  
+
+    /**
+     * Device supports GPUDirect RDMA APIs, like nvidia_p2p_get_pages 
+     * (see https://docs.nvidia.com/cuda/gpudirect-rdma for more information) 
+     */
+    public static final int cudaDevAttrGPUDirectRDMASupported         = 116;
+
+    /**
+     * The returned attribute shall be interpreted as a bitmask, where the 
+     * individual bits are listed in the ::cudaFlushGPUDirectRDMAWritesOptions enum 
+     */
+    public static final int cudaDevAttrGPUDirectRDMAFlushWritesOptions = 117;
+
+    /**
+     * GPUDirect RDMA writes to the device do not need to be flushed for 
+     * consumers within the scope indicated by the returned attribute. 
+     * See ::cudaGPUDirectRDMAWritesOrdering for the numerical values returned here. 
+     */
+    public static final int cudaDevAttrGPUDirectRDMAWritesOrdering    = 118;
+
+    /**
+     * Handle types supported with mempool based IPC 
+     */
+    public static final int cudaDevAttrMemoryPoolSupportedHandleTypes = 119;
+
+    /**
+     * Indicates device supports cluster launch 
+     */
+    public static final int cudaDevAttrClusterLaunch                  = 120;
+
+    /**
+     * Device supports deferred mapping CUDA arrays and CUDA mipmapped arrays 
+     */
+    public static final int cudaDevAttrDeferredMappingCudaArraySupported = 121;
     
     /**
      * Returns the String identifying the given cudaDeviceAttr
@@ -691,6 +724,12 @@ public class cudaDeviceAttr
             case cudaDevAttrHostRegisterReadOnlySupported    : return "cudaDevAttrHostRegisterReadOnlySupported";
             case cudaDevAttrTimelineSemaphoreInteropSupported    : return "cudaDevAttrTimelineSemaphoreInteropSupported";
             case cudaDevAttrMemoryPoolsSupported    : return "cudaDevAttrMemoryPoolsSupported";
+            case cudaDevAttrGPUDirectRDMASupported         : return "cudaDevAttrGPUDirectRDMASupported";
+            case cudaDevAttrGPUDirectRDMAFlushWritesOptions : return "cudaDevAttrGPUDirectRDMAFlushWritesOptions";
+            case cudaDevAttrGPUDirectRDMAWritesOrdering    : return "cudaDevAttrGPUDirectRDMAWritesOrdering";
+            case cudaDevAttrMemoryPoolSupportedHandleTypes : return "cudaDevAttrMemoryPoolSupportedHandleTypes";
+            case cudaDevAttrClusterLaunch                  : return "cudaDevAttrClusterLaunch";
+            case cudaDevAttrDeferredMappingCudaArraySupported : return "cudaDevAttrDeferredMappingCudaArraySupported";
         }
         return "INVALID cudaDeviceAttr: "+n;
     }

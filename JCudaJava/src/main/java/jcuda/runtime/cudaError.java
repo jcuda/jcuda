@@ -811,6 +811,13 @@ public class cudaError
      */
     public static final int cudaErrorMpsMaxConnectionsReached     =     809;
 
+    /**
+     * This error indicates that the MPS client has been terminated by the server. 
+     * To continue using CUDA, the process must be terminated and relaunched.
+     */
+    public static final int cudaErrorMpsClientTerminated          =     810;
+
+      
     
     /**
      * The operation is not permitted when the stream is capturing.
@@ -886,6 +893,12 @@ public class cudaError
      * terminated and relaunched.
      */
     public static final int cudaErrorExternalDevice               =    911;
+    
+    /**
+     * This indicates that a kernel launch error has occurred due to cluster
+     * misconfiguration.
+     */
+    public static final int cudaErrorInvalidClusterSize           =    912;
     
     /**
      * This indicates that an unknown internal error has occurred.
@@ -1023,6 +1036,7 @@ public class cudaError
             case cudaErrorMpsServerNotReady: return "cudaErrorMpsServerNotReady";
             case cudaErrorMpsMaxClientsReached: return "cudaErrorMpsMaxClientsReached";
             case cudaErrorMpsMaxConnectionsReached: return "cudaErrorMpsMaxConnectionsReached";
+            case cudaErrorMpsClientTerminated: return "cudaErrorMpsClientTerminated";
             case cudaErrorStreamCaptureUnsupported: return "cudaErrorStreamCaptureUnsupported";
             case cudaErrorStreamCaptureInvalidated: return "cudaErrorStreamCaptureInvalidated";
             case cudaErrorStreamCaptureMerge: return "cudaErrorStreamCaptureMerge";
@@ -1036,6 +1050,7 @@ public class cudaError
             case cudaErrorGraphExecUpdateFailure: return "cudaErrorGraphExecUpdateFailure";
             case cudaErrorUnknown: return "cudaErrorUnknown";
             case cudaErrorExternalDevice: return "cudaErrorExternalDevice";
+            case cudaErrorInvalidClusterSize: return "cudaErrorInvalidClusterSize";
             case cudaErrorApiFailureBase: return "cudaErrorApiFailureBase";
             case jcudaInternalError: return "jcudaInternalError";
         }

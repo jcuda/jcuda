@@ -3129,6 +3129,25 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuModuleLoadNative
     return result;
 }
 
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuModuleGetLoadingModeNative
+ * Signature: ([I)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuModuleGetLoadingModeNative
+  (JNIEnv *env, jclass cls, jintArray mode) {
+    if (mode == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'mode' is null for cuModuleGetLoadingMode");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuModuleGetLoadingMode\n");
+
+    CUmoduleLoadingMode nativeMode;
+    int result = cuModuleGetLoadingMode(&nativeMode);
+    if (!set(env, mode, 0, (int)nativeMode)) return JCUDA_INTERNAL_ERROR;
+    return result;
+}
 
 
 

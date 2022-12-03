@@ -1549,9 +1549,9 @@ void setCudaResourceViewDesc(JNIEnv *env, jobject resourceViewDesc, cudaResource
 /**
  * Returns the native representation of the given Java object
  */
-cudaTextureDesc getCudaTextureDesc(JNIEnv *env, jobject texDesc)
+cudaTextureDesc_v2 getCudaTextureDesc(JNIEnv *env, jobject texDesc)
 {
-    cudaTextureDesc nativeTexDesc;
+    cudaTextureDesc_v2 nativeTexDesc;
     memset(&nativeTexDesc,0,sizeof(cudaTextureDesc));
 
     jintArray addressMode = (jintArray)env->GetObjectField(texDesc, cudaTextureDesc_addressMode);
@@ -1599,7 +1599,7 @@ cudaTextureDesc getCudaTextureDesc(JNIEnv *env, jobject texDesc)
  * Assigns the properties of the given native structure to the given
  * Java Object
  */
-void setCudaTextureDesc(JNIEnv *env, jobject texDesc, cudaTextureDesc &nativeTexDesc)
+void setCudaTextureDesc(JNIEnv *env, jobject texDesc, cudaTextureDesc_v2 &nativeTexDesc)
 {
     jintArray addressMode = (jintArray)env->GetObjectField(texDesc, cudaTextureDesc_addressMode);
     jint *nativeAddressMode = (jint*)env->GetPrimitiveArrayCritical(addressMode, NULL);
@@ -5412,7 +5412,7 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaCreateTextureObjectNative
 
     cudaTextureObject_t nativePTexObject;
     cudaResourceDesc nativePResDesc = getCudaResourceDesc(env, pResDesc);
-    cudaTextureDesc nativePTexDesc = getCudaTextureDesc(env, pTexDesc);
+    cudaTextureDesc_v2 nativePTexDesc = getCudaTextureDesc(env, pTexDesc);
     cudaResourceViewDesc nativePResViewDesc;
     cudaResourceViewDesc *nativePResViewDescPointer = NULL;
     if (pResViewDesc != NULL)
@@ -5421,7 +5421,7 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaCreateTextureObjectNative
         nativePResViewDescPointer = &nativePResViewDesc;
     }
 
-    int result = cudaCreateTextureObject(&nativePTexObject, &nativePResDesc, &nativePTexDesc, nativePResViewDescPointer);
+    int result = cudaCreateTextureObject_v2(&nativePTexObject, &nativePResDesc, &nativePTexDesc, nativePResViewDescPointer);
 
     setNativePointerValue(env, pTexObject, (jlong)nativePTexObject);
     return result;
@@ -5496,8 +5496,8 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGetTextureObjectTextureDescN
     Logger::log(LOG_TRACE, "Executing cudaGetTextureObjectTextureDesc\n");
 
     cudaTextureObject_t nativeTexObject = (cudaTextureObject_t)getNativePointerValue(env, texObject);
-    cudaTextureDesc nativePTexDesc;
-    int result = cudaGetTextureObjectTextureDesc(&nativePTexDesc, nativeTexObject);
+    cudaTextureDesc_v2 nativePTexDesc;
+    int result = cudaGetTextureObjectTextureDesc_v2(&nativePTexDesc, nativeTexObject);
     setCudaTextureDesc(env, pTexDesc, nativePTexDesc);
     return result;
 }

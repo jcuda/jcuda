@@ -146,6 +146,16 @@ public class cudaDataType
      */
     public static final int CUDA_C_64U = 27;
 
+    /** 
+     * real as a nv_fp8_e4m3 
+     */
+    public static final int CUDA_R_8F_E4M3 = 28;
+    
+    /** 
+     * real as a nv_fp8_e5m2 
+     */
+    public static final int CUDA_R_8F_E5M2 = 29;
+    
     /**
      * Private constructor to prevent instantiation
      */
@@ -191,6 +201,8 @@ public class cudaDataType
             case CUDA_C_64I: return "CUDA_C_64I";
             case CUDA_R_64U: return "CUDA_R_64U";
             case CUDA_C_64U: return "CUDA_C_64U";
+            case CUDA_R_8F_E4M3: return "CUDA_R_8F_E4M3";
+            case CUDA_R_8F_E5M2: return "CUDA_R_8F_E5M2";
         }
         return "INVALID cudaDataType: "+n;
     }

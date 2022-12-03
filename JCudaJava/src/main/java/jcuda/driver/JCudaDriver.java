@@ -45,7 +45,7 @@ import jcuda.runtime.JCuda;
 public class JCudaDriver
 {
     /** The CUDA version */
-    public static final int CUDA_VERSION = 11070;
+    public static final int CUDA_VERSION = 11080;
 
     /**
      * If set, host memory is portable between CUDA contexts.
@@ -2488,6 +2488,25 @@ public class JCudaDriver
 
     private static native int cuModuleLoadNative(CUmodule module, String fname);
 
+    
+    /**
+     * Query lazy loading mode
+     *
+     * Returns lazy loading mode
+     * Module loading mode is controlled by CUDA_MODULE_LOADING env variable
+     *
+     * @param mode      - Returns the lazy loading mode
+     *
+     * @return CUDA_SUCCESS, CUDA_ERROR_INVALID_VALUE
+     * 
+     * @see JCudaDriver#cuModuleLoad
+     */
+    public static int cuModuleGetLoadingMode(int mode[]) 
+    {
+        return checkResult(cuModuleGetLoadingModeNative(mode));
+    }
+    private static native int cuModuleGetLoadingModeNative(int mode[]);
+    
 
     /**
      * Load a module's data.

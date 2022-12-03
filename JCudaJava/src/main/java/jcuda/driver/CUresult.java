@@ -564,6 +564,13 @@ public class CUresult
     public static final int CUDA_ERROR_MPS_MAX_CONNECTIONS_REACHED    = 809;
     
     /**
+     * This error indicates that the MPS client has been terminated by the 
+     * server. To continue using CUDA, the process must be terminated and 
+     * relaunched.
+     */
+    public static final int CUDA_ERROR_MPS_CLIENT_TERMINATED          = 810;
+     
+    /**
      * This error indicates that the operation is not permitted when
      * the stream is capturing.
      */
@@ -639,6 +646,11 @@ public class CUresult
      * terminated and relaunched.
      */
     public static final int CUDA_ERROR_EXTERNAL_DEVICE               = 911;
+    
+    /**
+     * Indicates a kernel launch error due to cluster misconfiguration.
+     */
+    public static final int CUDA_ERROR_INVALID_CLUSTER_SIZE           = 912;
     
     /**
      * This indicates that an unknown internal error has occurred.
@@ -733,6 +745,7 @@ public class CUresult
             case CUDA_ERROR_MPS_SERVER_NOT_READY           : return "CUDA_ERROR_MPS_SERVER_NOT_READY";
             case CUDA_ERROR_MPS_MAX_CLIENTS_REACHED        : return "CUDA_ERROR_MPS_MAX_CLIENTS_REACHED";
             case CUDA_ERROR_MPS_MAX_CONNECTIONS_REACHED    : return "CUDA_ERROR_MPS_MAX_CONNECTIONS_REACHED";
+            case CUDA_ERROR_MPS_CLIENT_TERMINATED          : return "CUDA_ERROR_MPS_CLIENT_TERMINATED";
             case CUDA_ERROR_STREAM_CAPTURE_UNSUPPORTED     : return "CUDA_ERROR_STREAM_CAPTURE_UNSUPPORTED";
             case CUDA_ERROR_STREAM_CAPTURE_INVALIDATED     : return "CUDA_ERROR_STREAM_CAPTURE_INVALIDATED";
             case CUDA_ERROR_STREAM_CAPTURE_MERGE           : return "CUDA_ERROR_STREAM_CAPTURE_MERGE";
@@ -745,6 +758,7 @@ public class CUresult
             case CUDA_ERROR_TIMEOUT                        : return "CUDA_ERROR_TIMEOUT";
             case CUDA_ERROR_GRAPH_EXEC_UPDATE_FAILURE      : return "CUDA_ERROR_GRAPH_EXEC_UPDATE_FAILURE";
             case CUDA_ERROR_EXTERNAL_DEVICE                : return "CUDA_ERROR_EXTERNAL_DEVICE";
+            case CUDA_ERROR_INVALID_CLUSTER_SIZE           : return "CUDA_ERROR_INVALID_CLUSTER_SIZE";
             case CUDA_ERROR_UNKNOWN                        : return "CUDA_ERROR_UNKNOWN";
         }
         return "INVALID CUresult: "+result;

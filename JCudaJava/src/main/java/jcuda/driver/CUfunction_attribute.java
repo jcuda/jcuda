@@ -98,6 +98,75 @@ public class CUfunction_attribute
     public static final int CU_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT = 9;
 
     /**
+     * If this attribute is set, the kernel must launch with a valid cluster
+     * size specified.
+     * See ::cuFuncSetAttribute
+     */
+    public static final int CU_FUNC_ATTRIBUTE_CLUSTER_SIZE_MUST_BE_SET = 10;
+
+    /**
+     * The required cluster width in blocks. The values must either all be 0 or
+     * all be positive. The validity of the cluster dimensions is otherwise
+     * checked at launch time.
+     *
+     * If the value is set during compile time, it cannot be set at runtime.
+     * Setting it at runtime will return CUDA_ERROR_NOT_PERMITTED.
+     * See ::cuFuncSetAttribute
+     */
+    public static final int CU_FUNC_ATTRIBUTE_REQUIRED_CLUSTER_WIDTH = 11;
+
+    /**
+     * The required cluster height in blocks. The values must either all be 0 or
+     * all be positive. The validity of the cluster dimensions is otherwise
+     * checked at launch time.
+     *
+     * If the value is set during compile time, it cannot be set at runtime.
+     * Setting it at runtime should return CUDA_ERROR_NOT_PERMITTED.
+     * See ::cuFuncSetAttribute
+     */
+    public static final int CU_FUNC_ATTRIBUTE_REQUIRED_CLUSTER_HEIGHT = 12;
+
+    /**
+     * The required cluster depth in blocks. The values must either all be 0 or
+     * all be positive. The validity of the cluster dimensions is otherwise
+     * checked at launch time.
+     *
+     * If the value is set during compile time, it cannot be set at runtime.
+     * Setting it at runtime should return CUDA_ERROR_NOT_PERMITTED.
+     * See ::cuFuncSetAttribute
+     */
+    public static final int CU_FUNC_ATTRIBUTE_REQUIRED_CLUSTER_DEPTH = 13;
+
+    /**
+     * Whether the function can be launched with non-portable cluster size. 1 is
+     * allowed, 0 is disallowed. A non-portable cluster size may only function
+     * on the specific SKUs the program is tested on. The launch might fail if
+     * the program is run on a different hardware platform.
+     *
+     * CUDA API provides cudaOccupancyMaxActiveClusters to assist with checking
+     * whether the desired size can be launched on the current device.
+     *
+     * Portable Cluster Size
+     *
+     * A portable cluster size is guaranteed to be functional on all compute
+     * capabilities higher than the target compute capability. The portable
+     * cluster size for sm_90 is 8 blocks per cluster. This value may increase
+     * for future compute capabilities.
+     *
+     * The specific hardware unit may support higher cluster sizes that’s not
+     * guaranteed to be portable.
+     * See ::cuFuncSetAttribute
+     */
+    public static final int CU_FUNC_ATTRIBUTE_NON_PORTABLE_CLUSTER_SIZE_ALLOWED = 14;
+
+    /**
+     * The block scheduling policy of a function. The value type is
+     * CUclusterSchedulingPolicy / cudaClusterSchedulingPolicy.
+     * See ::cuFuncSetAttribute
+     */
+    public static final int CU_FUNC_ATTRIBUTE_CLUSTER_SCHEDULING_POLICY_PREFERENCE = 15;
+    
+    /**
      * Returns the String identifying the given CUfunction_attribute
      *
      * @param n The CUfunction_attribute
@@ -117,6 +186,12 @@ public class CUfunction_attribute
             case CU_FUNC_ATTRIBUTE_CACHE_MODE_CA: return "CU_FUNC_ATTRIBUTE_CACHE_MODE_CA";
             case CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES: return "CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES";
             case CU_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT: return "CU_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT";
+            case CU_FUNC_ATTRIBUTE_CLUSTER_SIZE_MUST_BE_SET: return "CU_FUNC_ATTRIBUTE_CLUSTER_SIZE_MUST_BE_SET";
+            case CU_FUNC_ATTRIBUTE_REQUIRED_CLUSTER_WIDTH: return "CU_FUNC_ATTRIBUTE_REQUIRED_CLUSTER_WIDTH";
+            case CU_FUNC_ATTRIBUTE_REQUIRED_CLUSTER_HEIGHT: return "CU_FUNC_ATTRIBUTE_REQUIRED_CLUSTER_HEIGHT";
+            case CU_FUNC_ATTRIBUTE_REQUIRED_CLUSTER_DEPTH: return "CU_FUNC_ATTRIBUTE_REQUIRED_CLUSTER_DEPTH";
+            case CU_FUNC_ATTRIBUTE_NON_PORTABLE_CLUSTER_SIZE_ALLOWED: return "CU_FUNC_ATTRIBUTE_NON_PORTABLE_CLUSTER_SIZE_ALLOWED";
+            case CU_FUNC_ATTRIBUTE_CLUSTER_SCHEDULING_POLICY_PREFERENCE: return "CU_FUNC_ATTRIBUTE_CLUSTER_SCHEDULING_POLICY_PREFERENCE";
         }
         return "INVALID CUfunction_attribute: "+n;
     }
