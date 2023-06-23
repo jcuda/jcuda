@@ -607,6 +607,20 @@ public class cudaDeviceAttr
      */
     public static final int cudaDevAttrDeferredMappingCudaArraySupported = 121;
     
+    public static final int cudaDevAttrReserved122                    = 122;
+    public static final int cudaDevAttrReserved123                    = 123;
+    public static final int cudaDevAttrReserved124                    = 124;
+
+    /**
+     * Device supports IPC Events. 
+     */
+    public static final int cudaDevAttrIpcEventSupport                = 125; 
+
+    /**
+     * Number of memory synchronization domains the device supports. 
+     */
+    public static final int cudaDevAttrMemSyncDomainCount             = 126; 
+    
     /**
      * Returns the String identifying the given cudaDeviceAttr
      *
@@ -730,6 +744,8 @@ public class cudaDeviceAttr
             case cudaDevAttrMemoryPoolSupportedHandleTypes : return "cudaDevAttrMemoryPoolSupportedHandleTypes";
             case cudaDevAttrClusterLaunch                  : return "cudaDevAttrClusterLaunch";
             case cudaDevAttrDeferredMappingCudaArraySupported : return "cudaDevAttrDeferredMappingCudaArraySupported";
+            case cudaDevAttrIpcEventSupport : return "cudaDevAttrIpcEventSupport";
+            case cudaDevAttrMemSyncDomainCount : return "cudaDevAttrMemSyncDomainCount";
         }
         return "INVALID cudaDeviceAttr: "+n;
     }

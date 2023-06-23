@@ -209,6 +209,8 @@ public class CUjit_option
      * Enable link-time optimization (-dlto) for device code (0: false, default)
      * Option type: int
      * Applies to: compiler and linker
+     * 
+     * @deprecated As of CUDA 12
      */
     public static final int CU_JIT_LTO = 20;
 
@@ -218,6 +220,8 @@ public class CUjit_option
      * 0 : preserves denormal values
      * Option type: int
      * Applies to: link-time optimization specified with CU_JIT_LTO
+     * 
+     * @deprecated As of CUDA 12
      */
     public static final int CU_JIT_FTZ = 21;
 
@@ -228,6 +232,8 @@ public class CUjit_option
      * 0 : Enables the fast approximation mode
      * Option type: int
      * Applies to: link-time optimization specified with CU_JIT_LTO
+     * 
+     * @deprecated As of CUDA 12
      */
     public static final int CU_JIT_PREC_DIV = 22;
 
@@ -238,6 +244,8 @@ public class CUjit_option
      * 0 : Enables the fast approximation mode
      * Option type: int
      * Applies to: link-time optimization specified with CU_JIT_LTO
+     * 
+     * @deprecated As of CUDA 12
      */
     public static final int CU_JIT_PREC_SQRT = 23;
 
@@ -247,6 +255,8 @@ public class CUjit_option
      * operations (1: Enable, default; 0: Disable).
      * Option type: int
      * Applies to: link-time optimization specified with CU_JIT_LTO
+     * 
+     * @deprecated As of CUDA 12
      */
     public static final int CU_JIT_FMA = 24;    
 
@@ -264,6 +274,8 @@ public class CUjit_option
      * a more specific name like "barfoobaz".\n
      * Option type: const char **\n
      * Applies to: dynamic linker only
+     * 
+     * @deprecated As of CUDA 12
      */
     public static final int CU_JIT_REFERENCED_KERNEL_NAMES = 25;
 
@@ -271,6 +283,8 @@ public class CUjit_option
      * Number of entries in ::CU_JIT_REFERENCED_KERNEL_NAMES array.\n
      * Option type: unsigned int\n
      * Applies to: dynamic linker only
+     * 
+     * @deprecated As of CUDA 12
      */
     public static final int CU_JIT_REFERENCED_KERNEL_COUNT = 26;
 
@@ -288,6 +302,8 @@ public class CUjit_option
      * a more specific name like "barfoobaz".\n
      * Option type: const char **\n
      * Applies to: link-time optimization specified with CU_JIT_LTO
+     * 
+     * @deprecated As of CUDA 12
      */
     public static final int CU_JIT_REFERENCED_VARIABLE_NAMES = 27;
 
@@ -295,6 +311,8 @@ public class CUjit_option
      * Number of entries in ::CU_JIT_REFERENCED_VARIABLE_NAMES array.\n
      * Option type: unsigned int\n
      * Applies to: link-time optimization specified with CU_JIT_LTO
+     * 
+     * @deprecated As of CUDA 12
      */
     public static final int CU_JIT_REFERENCED_VARIABLE_COUNT = 28;
 
@@ -307,9 +325,17 @@ public class CUjit_option
      * the variables are explicitly specified using ::CU_JIT_REFERENCED_VARIABLE_NAMES.\n
      * Option type: int\n
      * Applies to: link-time optimization specified with CU_JIT_LTO
+     * 
+     * @deprecated As of CUDA 12
      */
     public static final int CU_JIT_OPTIMIZE_UNUSED_DEVICE_VARIABLES = 29;
     
+    /**
+     * Generate position independent code (0: false)\n
+     * Option type: int\n
+     * Applies to: compiler only
+     */
+    public static final int CU_JIT_POSITION_INDEPENDENT_CODE = 30;    
     
     /**
      * Returns the String identifying the given CUjit_option
@@ -349,6 +375,7 @@ public class CUjit_option
             case CU_JIT_REFERENCED_VARIABLE_NAMES: return "CU_JIT_REFERENCED_VARIABLE_NAMES";
             case CU_JIT_REFERENCED_VARIABLE_COUNT: return "CU_JIT_REFERENCED_VARIABLE_COUNT";
             case CU_JIT_OPTIMIZE_UNUSED_DEVICE_VARIABLES: return "CU_JIT_OPTIMIZE_UNUSED_DEVICE_VARIABLES";
+            case CU_JIT_POSITION_INDEPENDENT_CODE: return "CU_JIT_POSITION_INDEPENDENT_CODE";
         }
         return "INVALID CUjit_option: "+n;
     }

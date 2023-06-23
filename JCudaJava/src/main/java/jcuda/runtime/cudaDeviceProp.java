@@ -111,6 +111,8 @@ public class cudaDeviceProp
 
     /**
      * The clock frequency in kilohertz;
+     * 
+     * @deprecated As of CUDA 12
      */
     public int clockRate;
 
@@ -156,6 +158,8 @@ public class cudaDeviceProp
 
     /**
      * Specified whether there is a run time limit on kernels
+     * 
+     * @deprecated As of CUDA 12
      */
     public int kernelExecTimeoutEnabled;
 
@@ -171,6 +175,8 @@ public class cudaDeviceProp
 
     /**
      * Compute mode (See ::cudaComputeMode)
+     * 
+     * @deprecated As of CUDA 12
      */
     public int computeMode;
 
@@ -326,6 +332,8 @@ public class cudaDeviceProp
 
     /**
      * The peak memory clock frequency in kilohertz.
+     * 
+     * @deprecated As of CUDA 12
      */
     public int memoryClockRate;
 
@@ -398,6 +406,8 @@ public class cudaDeviceProp
     /**
      * Ratio of single precision performance (in floating-point operations
      * per second) to double precision performance
+     * 
+     * @deprecated As of CUDA 12
      */
     public int singleToDoublePrecisionPerfRatio;
 
@@ -464,6 +474,76 @@ public class cudaDeviceProp
      * Shared memory reserved by CUDA driver per block in bytes 
      */
     public long reservedSharedMemPerBlock;  
+    
+    /**
+     * Device supports host memory registration via ::cudaHostRegister. 
+     */
+    public int hostRegisterSupported;      
+    
+    /**
+     * 1 if the device supports sparse CUDA arrays and sparse CUDA mipmapped arrays, 0 otherwise 
+     */
+    public int sparseCudaArraySupported;   
+
+    /**
+     * Device supports using the ::cudaHostRegister flag
+     * cudaHostRegisterReadOnly to register memory that must be mapped as
+     * read-only to the GPU
+     */
+    public int hostRegisterReadOnlySupported;
+
+    /**
+     * External timeline semaphore interop is supported on the device
+     */
+    public int timelineSemaphoreInteropSupported;
+
+    /**
+     * 1 if the device supports using the cudaMallocAsync and cudaMemPool family
+     * of APIs, 0 otherwise
+     */
+    public int memoryPoolsSupported;
+
+    /**
+     * 1 if the device supports GPUDirect RDMA APIs, 0 otherwise
+     */
+    public int gpuDirectRDMASupported;
+
+    /**
+     * Bitmask to be interpreted according to the
+     * ::cudaFlushGPUDirectRDMAWritesOptions enum
+     */
+    public int gpuDirectRDMAFlushWritesOptions;
+
+    /**
+     * See the ::cudaGPUDirectRDMAWritesOrdering enum for numerical values
+     */
+    public int gpuDirectRDMAWritesOrdering;
+
+    /**
+     * Bitmask of handle types supported with mempool-based IPC
+     */
+    public int memoryPoolSupportedHandleTypes;
+
+    /**
+     * 1 if the device supports deferred mapping CUDA arrays and CUDA mipmapped
+     * arrays
+     */
+    public int deferredMappingCudaArraySupported;
+
+    /**
+     * Device supports IPC Events.
+     */
+    public int ipcEventSupported;
+
+    /**
+     * Indicates device supports cluster launch
+     */
+    public int clusterLaunch;
+
+    /**
+     * Indicates device supports unified pointers
+     */
+    public int unifiedFunctionPointers;
     
     /**
      * Returns the String describing the name of this cudaDeviceProp
@@ -598,7 +678,21 @@ public class cudaDeviceProp
             "directManagedMemAccessFromHost="+directManagedMemAccessFromHost+f+
             "maxBlocksPerMultiProcessor="+maxBlocksPerMultiProcessor+f+
             "accessPolicyMaxWindowSize="+accessPolicyMaxWindowSize+f+
-            "reservedSharedMemPerBlock="+reservedSharedMemPerBlock+f;
+            "reservedSharedMemPerBlock="+reservedSharedMemPerBlock+f+
+            "hostRegisterSupported="+hostRegisterSupported+f+
+            "sparseCudaArraySupported="+sparseCudaArraySupported+f+
+            "hostRegisterReadOnlySupported="+hostRegisterReadOnlySupported+f+
+            "timelineSemaphoreInteropSupported="+timelineSemaphoreInteropSupported+f+
+            "memoryPoolsSupported="+memoryPoolsSupported+f+
+            "gpuDirectRDMASupported="+gpuDirectRDMASupported+f+
+            "gpuDirectRDMAFlushWritesOptions="+gpuDirectRDMAFlushWritesOptions+f+
+            "gpuDirectRDMAWritesOrdering="+gpuDirectRDMAWritesOrdering+f+
+            "memoryPoolSupportedHandleTypes="+memoryPoolSupportedHandleTypes+f+
+            "deferredMappingCudaArraySupported="+deferredMappingCudaArraySupported+f+
+            "ipcEventSupported="+ipcEventSupported+f+
+            "ipcEventSupported="+ipcEventSupported+f+
+            "clusterLaunch="+clusterLaunch+f+
+            "unifiedFunctionPointers="+unifiedFunctionPointers+f;
     }
 
     /**

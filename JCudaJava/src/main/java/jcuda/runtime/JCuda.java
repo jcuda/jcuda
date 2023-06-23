@@ -40,7 +40,7 @@ public class JCuda
     /**
      * CUDA runtime version
      */
-    public static final int CUDART_VERSION = 11080;
+    public static final int CUDART_VERSION = 12000;
 
     /**
      * Default page-locked allocation flag
@@ -370,6 +370,11 @@ public class JCuda
      */
     public static final int cudaInvalidDeviceId = -2;
 
+    /**
+     * Tell the CUDA runtime that DeviceFlags is being set in cudaInitDevice call
+     */
+    public static final int cudaInitDeviceFlagsAreValid = 0x01;
+    
     /**
      * If set, each kernel launched as part of
      * ::cudaLaunchCooperativeKernelMultiDevice only waits for prior work in the
@@ -1830,7 +1835,40 @@ public class JCuda
     }
     private static native int cudaChooseDeviceNative(int device[], cudaDeviceProp prop);
 
-
+    /**
+     * Initialize device to be used for GPU executions
+     *
+     * This function will initialize the CUDA Runtime structures and primary context on \p device when called,
+     * but the context will not be made current to \p device.
+     *
+     * When ::cudaInitDeviceFlagsAreValid is set in \p flags, deviceFlags are applied to the requested device.
+     * The values of deviceFlags match those of the flags parameters in ::cudaSetDeviceFlags. 
+     * The effect may be verified by ::cudaGetDeviceFlags.
+     *
+     * This function will return an error if the device is in ::cudaComputeModeExclusiveProcess
+     * and is occupied by another process or if the device is in ::cudaComputeModeProhibited.
+     *
+     * @param device - Device on which the runtime will initialize itself.
+     * @param deviceFlags - Parameters for device operation.
+     * @param flags - Flags for controlling the device initialization.
+     *
+     * @return
+     * cudaSuccess,
+     * cudaErrorInvalidDevice,
+     *
+     * @see JCuda#cudaGetDeviceCount
+     * @see JCuda#cudaGetDevice
+     * @see JCuda#cudaGetDeviceProperties
+     * @see JCuda#cudaChooseDevice
+     * @see JCuda#cudaSetDevice
+     * @see JCuda#cuCtxSetCurrent     
+     */
+    public static int cudaInitDevice(int device, int deviceFlags, int flags) 
+    {
+        return checkResult(cudaInitDeviceNative(device, deviceFlags, flags));
+    }
+    private static native int cudaInitDeviceNative(int device, int deviceFlags, int flags); 
+    
 
     /**
      * Allocates logical 1D, 2D, or 3D memory objects on the device.
@@ -6833,6 +6871,47 @@ public class JCuda
 
     /**
      * <pre><code>
+     * \brief Query the Id of a stream
+     *
+     * Query the Id of a stream. The Id is returned in \p streamId.
+     * The stream handle \p hStream can refer to any of the following:
+     * <ul>
+     *   <li>a stream created via any of the CUDA runtime APIs such as ::cudaStreamCreate, 
+     *   ::cudaStreamCreateWithFlags and ::cudaStreamCreateWithPriority, or their driver 
+     *   API equivalents such as ::cuStreamCreate or ::cuStreamCreateWithPriority.
+     *   Passing an invalid handle will result in undefined behavior.</li>
+     *   <li>any of the special streams such as the NULL stream, ::cudaStreamLegacy 
+     *   and ::cudaStreamPerThread respectively.  The driver API equivalents of these 
+     *   are also accepted which are NULL, ::CU_STREAM_LEGACY and ::CU_STREAM_PER_THREAD.</li>
+     * </ul>
+     * 
+     * \param hStream    - Handle to the stream to be queried
+     * \param streamId   - Pointer to an unsigned long long in which the stream Id is returned
+     *
+     * \return
+     * ::cudaSuccess,
+     * ::cudaErrorInvalidValue,
+     * ::cudaErrorInvalidResourceHandle
+     * \note_null_stream
+     * \notefnerr
+     * \note_init_rt
+     * \note_callback
+     *
+     * \sa ::cudaStreamCreateWithPriority,
+     * ::cudaStreamCreateWithFlags,
+     * ::cudaStreamGetPriority,
+     * ::cudaStreamGetFlags,
+     * ::cuStreamGetId
+     * </code></pre>
+     */
+    public static int cudaStreamGetId(cudaStream_t hStream, long streamId[]) 
+    {
+        return checkResult(cudaStreamGetIdNative(hStream, streamId));
+    }
+    private static native int cudaStreamGetIdNative(cudaStream_t hStream, long streamId[]);
+    
+    /**
+     * <pre><code>
      * \brief Resets all persisting lines in cache to normal status.
      *
      * Resets all persisting lines in cache to normal status.
@@ -9379,903 +9458,7 @@ public class JCuda
         return checkResult(cudaMemRangeGetAttributesNative(data, dataSizes, attributes, numAttributes, devPtr, count));
     }
     private static native int cudaMemRangeGetAttributesNative(Pointer data[], long dataSizes[], int attributes[], long numAttributes, Pointer devPtr, long count);
-    
-    /**
-     * [C++ API] Binds a memory area to a texture
-     *
-     * <pre>
-     * template < class T, int dim, enum cudaTextureReadMode readMode >
-     * cudaError_t cudaBindTexture (
-     *      size_t* offset,
-     *      const texture < T,
-     *      dim,
-     *      readMode > & tex,
-     *      const void* devPtr,
-     *      const cudaChannelFormatDesc& desc,
-     *      size_t size = UINT_MAX ) [inline]
-     * </pre>
-     * <div>
-     *   <p>[C++ API] Binds a memory area to a
-     *     texture  Binds <tt>size</tt> bytes of the memory area pointed to by
-     *     <tt>devPtr</tt> to texture reference <tt>tex</tt>. <tt>desc</tt>
-     *     describes how the memory is interpreted when fetching values from the
-     *     texture. The <tt>offset</tt> parameter is an optional byte offset as
-     *     with the low-level cudaBindTexture() function. Any memory previously
-     *     bound to <tt>tex</tt> is unbound.
-     *   </p>
-     *   <div>
-     *     <span>Note:</span>
-     *     <p>Note that this
-     *       function may also return error codes from previous, asynchronous
-     *       launches.
-     *     </p>
-     *   </div>
-     *   </p>
-     * </div>
-     *
-     * @param offset Offset in bytes
-     * @param texref Texture to bind
-     * @param devPtr Memory area on device
-     * @param desc Channel format
-     * @param size Size of the memory area pointed to by devPtr
-     * @param offset Offset in bytes
-     * @param tex Texture to bind
-     * @param devPtr Memory area on device
-     * @param size Size of the memory area pointed to by devPtr
-     * @param offset Offset in bytes
-     * @param tex Texture to bind
-     * @param devPtr Memory area on device
-     * @param desc Channel format
-     * @param size Size of the memory area pointed to by devPtr
-     *
-     * @return cudaSuccess, cudaErrorInvalidValue, cudaErrorInvalidDevicePointer,
-     * cudaErrorInvalidTexture
-     *
-     * @see JCuda#cudaCreateChannelDesc
-     * @see JCuda#cudaGetChannelDesc
-     * @see JCuda#cudaGetTextureReference
-     * @see JCuda#cudaBindTexture
-     * @see JCuda#cudaBindTexture2D
-     * @see JCuda#cudaBindTextureToArray
-     * @see JCuda#cudaUnbindTexture
-     * @see JCuda#cudaGetTextureAlignmentOffset
-     * 
-     * @deprecated Deprecated as of CUDA 10.1
-     */
-    public static int cudaBindTexture(long offset[], textureReference texref, Pointer devPtr, cudaChannelFormatDesc desc, long size)
-    {
-        return checkResult(cudaBindTextureNative(offset, texref, devPtr, desc, size));
-    }
-    private static native int cudaBindTextureNative(long offset[], textureReference texref, Pointer devPtr, cudaChannelFormatDesc desc, long size);
 
-
-
-    /**
-     * [C++ API] Binds a 2D memory area to a texture
-     *
-     * <pre>
-     * template < class T, int dim, enum cudaTextureReadMode readMode >
-     * cudaError_t cudaBindTexture2D (
-     *      size_t* offset,
-     *      const texture < T,
-     *      dim,
-     *      readMode > & tex,
-     *      const void* devPtr,
-     *      const cudaChannelFormatDesc& desc,
-     *      size_t width,
-     *      size_t height,
-     *      size_t pitch ) [inline]
-     * </pre>
-     * <div>
-     *   <p>[C++ API] Binds a 2D memory area to a
-     *     texture  Binds the 2D memory area pointed to by <tt>devPtr</tt> to
-     *     the texture reference <tt>tex</tt>. The size of the area is constrained
-     *     by <tt>width</tt> in texel units, <tt>height</tt> in texel units,
-     *     and <tt>pitch</tt> in byte units. <tt>desc</tt> describes how the
-     *     memory is interpreted when fetching values from the texture. Any memory
-     *     previously bound to <tt>tex</tt> is unbound.
-     *   </p>
-     *   <p>Since the hardware enforces an alignment
-     *     requirement on texture base addresses, cudaBindTexture2D() returns in
-     *     <tt>*offset</tt> a byte offset that must be applied to texture fetches
-     *     in order to read from the desired memory. This offset must be divided
-     *     by the texel size and passed to kernels
-     *     that read from the texture so they can be applied to the tex2D()
-     *     function. If the
-     *     device memory pointer was returned from
-     *     cudaMalloc(), the offset is guaranteed to be 0 and NULL may be passed
-     *     as the <tt>offset</tt> parameter.
-     *   </p>
-     *   <div>
-     *     <span>Note:</span>
-     *     <p>Note that this
-     *       function may also return error codes from previous, asynchronous
-     *       launches.
-     *     </p>
-     *   </div>
-     *   </p>
-     * </div>
-     *
-     * @param offset Offset in bytes
-     * @param texref Texture reference to bind
-     * @param devPtr 2D memory area on device
-     * @param desc Channel format
-     * @param width Width in texel units
-     * @param height Height in texel units
-     * @param pitch Pitch in bytes
-     * @param offset Offset in bytes
-     * @param tex Texture reference to bind
-     * @param devPtr 2D memory area on device
-     * @param width Width in texel units
-     * @param height Height in texel units
-     * @param pitch Pitch in bytes
-     * @param offset Offset in bytes
-     * @param tex Texture reference to bind
-     * @param devPtr 2D memory area on device
-     * @param desc Channel format
-     * @param width Width in texel units
-     * @param height Height in texel units
-     * @param pitch Pitch in bytes
-     *
-     * @return cudaSuccess, cudaErrorInvalidValue, cudaErrorInvalidDevicePointer,
-     * cudaErrorInvalidTexture
-     *
-     * @see JCuda#cudaCreateChannelDesc
-     * @see JCuda#cudaGetChannelDesc
-     * @see JCuda#cudaGetTextureReference
-     * @see JCuda#cudaBindTexture
-     * @see JCuda#cudaBindTexture2D
-     * @see JCuda#cudaBindTextureToArray
-     * @see JCuda#cudaUnbindTexture
-     * @see JCuda#cudaGetTextureAlignmentOffset
-     * 
-     * @deprecated Deprecated as of CUDA 10.1
-     */
-    public static int cudaBindTexture2D (long offset[], textureReference texref, Pointer devPtr, cudaChannelFormatDesc desc, long width, long height, long pitch)
-    {
-        return checkResult(cudaBindTexture2DNative(offset, texref, devPtr, desc, width, height, pitch));
-    }
-    private static native int cudaBindTexture2DNative(long offset[], textureReference texref, Pointer devPtr, cudaChannelFormatDesc desc, long width, long height, long pitch);
-
-
-
-    /**
-     * [C++ API] Binds an array to a texture
-     *
-     * <pre>
-     * template < class T, int dim, enum cudaTextureReadMode readMode >
-     * cudaError_t cudaBindTextureToArray (
-     *      const texture < T,
-     *      dim,
-     *      readMode > & tex,
-     *      cudaArray_const_t array,
-     *      const cudaChannelFormatDesc& desc ) [inline]
-     * </pre>
-     * <div>
-     *   <p>[C++ API] Binds an array to a texture
-     *     Binds the CUDA array <tt>array</tt> to the texture reference <tt>tex</tt>. <tt>desc</tt> describes how the memory is interpreted when
-     *     fetching values from the texture. Any CUDA array previously bound to
-     *     <tt>tex</tt> is unbound.
-     *   </p>
-     *   <div>
-     *     <span>Note:</span>
-     *     <p>Note that this
-     *       function may also return error codes from previous, asynchronous
-     *       launches.
-     *     </p>
-     *   </div>
-     *   </p>
-     * </div>
-     *
-     * @param texref Texture to bind
-     * @param array Memory array on device
-     * @param desc Channel format
-     * @param tex Texture to bind
-     * @param array Memory array on device
-     * @param tex Texture to bind
-     * @param array Memory array on device
-     * @param desc Channel format
-     *
-     * @return cudaSuccess, cudaErrorInvalidValue, cudaErrorInvalidDevicePointer,
-     * cudaErrorInvalidTexture
-     *
-     * @see JCuda#cudaCreateChannelDesc
-     * @see JCuda#cudaGetChannelDesc
-     * @see JCuda#cudaGetTextureReference
-     * @see JCuda#cudaBindTexture
-     * @see JCuda#cudaBindTexture2D
-     * @see JCuda#cudaBindTextureToArray
-     * @see JCuda#cudaUnbindTexture
-     * @see JCuda#cudaGetTextureAlignmentOffset
-     * 
-     * @deprecated Deprecated as of CUDA 10.1
-     */
-    public static int cudaBindTextureToArray(textureReference texref, cudaArray array, cudaChannelFormatDesc desc)
-    {
-        return checkResult(cudaBindTextureToArrayNative(texref, array, desc));
-    }
-    private static native int cudaBindTextureToArrayNative(textureReference texref, cudaArray array, cudaChannelFormatDesc desc);
-
-
-    /**
-     * [C++ API] Binds a mipmapped array to a texture
-     *
-     * <pre>
-     * template < class T, int dim, enum cudaTextureReadMode readMode >
-     * cudaError_t cudaBindTextureToMipmappedArray (
-     *      const texture < T,
-     *      dim,
-     *      readMode > & tex,
-     *      cudaMipmappedArray_const_t mipmappedArray,
-     *      const cudaChannelFormatDesc& desc ) [inline]
-     * </pre>
-     * <div>
-     *   <p>[C++ API] Binds a mipmapped array to a
-     *     texture  Binds the CUDA mipmapped array <tt>mipmappedArray</tt> to
-     *     the texture reference <tt>tex</tt>. <tt>desc</tt> describes how the
-     *     memory is interpreted when fetching values from the texture. Any CUDA
-     *     mipmapped array previously bound
-     *     to <tt>tex</tt> is unbound.
-     *   </p>
-     *   <div>
-     *     <span>Note:</span>
-     *     <p>Note that this
-     *       function may also return error codes from previous, asynchronous
-     *       launches.
-     *     </p>
-     *   </div>
-     *   </p>
-     * </div>
-     *
-     * @param texref Texture to bind
-     * @param mipmappedArray Memory mipmapped array on device
-     * @param desc Channel format
-     * @param tex Texture to bind
-     * @param mipmappedArray Memory mipmapped array on device
-     * @param tex Texture to bind
-     * @param mipmappedArray Memory mipmapped array on device
-     * @param desc Channel format
-     *
-     * @return cudaSuccess, cudaErrorInvalidValue, cudaErrorInvalidDevicePointer,
-     * cudaErrorInvalidTexture
-     *
-     * @see JCuda#cudaCreateChannelDesc
-     * @see JCuda#cudaGetChannelDesc
-     * @see JCuda#cudaGetTextureReference
-     * @see JCuda#cudaBindTexture
-     * @see JCuda#cudaBindTexture2D
-     * @see JCuda#cudaBindTextureToArray
-     * @see JCuda#cudaUnbindTexture
-     * @see JCuda#cudaGetTextureAlignmentOffset
-     * 
-     * @deprecated Deprecated as of CUDA 10.1
-     */
-    public static int cudaBindTextureToMipmappedArray(textureReference texref, cudaMipmappedArray mipmappedArray, cudaChannelFormatDesc desc)
-    {
-        return checkResult(cudaBindTextureToMipmappedArrayNative(texref, mipmappedArray, desc));
-    }
-    private static native int cudaBindTextureToMipmappedArrayNative(textureReference texref, cudaMipmappedArray mipmappedArray, cudaChannelFormatDesc desc);
-
-    /**
-     * [C++ API] Unbinds a texture
-     *
-     * <pre>
-     * template < class T, int dim, enum cudaTextureReadMode readMode >
-     * cudaError_t cudaUnbindTexture (
-     *      const texture < T,
-     *      dim,
-     *      readMode > & tex ) [inline]
-     * </pre>
-     * <div>
-     *   <p>[C++ API] Unbinds a texture  Unbinds the
-     *     texture bound to <tt>tex</tt>.
-     *   </p>
-     *   <div>
-     *     <span>Note:</span>
-     *     <p>Note that this
-     *       function may also return error codes from previous, asynchronous
-     *       launches.
-     *     </p>
-     *   </div>
-     *   </p>
-     * </div>
-     *
-     * @param texref Texture to unbind
-     * @param tex Texture to unbind
-     *
-     * @return cudaSuccess
-     *
-     * @see JCuda#cudaCreateChannelDesc
-     * @see JCuda#cudaGetChannelDesc
-     * @see JCuda#cudaGetTextureReference
-     * @see JCuda#cudaBindTexture
-     * @see JCuda#cudaBindTexture2D
-     * @see JCuda#cudaBindTextureToArray
-     * @see JCuda#cudaUnbindTexture
-     * @see JCuda#cudaGetTextureAlignmentOffset
-     * 
-     * @deprecated Deprecated as of CUDA 10.1
-     */
-    public static int cudaUnbindTexture(textureReference texref)
-    {
-        return checkResult(cudaUnbindTextureNative(texref));
-    }
-    private static native int cudaUnbindTextureNative(textureReference texref);
-
-    /**
-     * [C++ API] Get the alignment offset of a texture
-     *
-     * <pre>
-     * template < class T, int dim, enum cudaTextureReadMode readMode >
-     * cudaError_t cudaGetTextureAlignmentOffset (
-     *      size_t* offset,
-     *      const texture < T,
-     *      dim,
-     *      readMode > & tex ) [inline]
-     * </pre>
-     * <div>
-     *   <p>[C++ API] Get the alignment offset of a
-     *     texture  Returns in <tt>*offset</tt> the offset that was returned when
-     *     texture reference <tt>tex</tt> was bound.
-     *   </p>
-     *   <div>
-     *     <span>Note:</span>
-     *     <p>Note that this
-     *       function may also return error codes from previous, asynchronous
-     *       launches.
-     *     </p>
-     *   </div>
-     *   </p>
-     * </div>
-     *
-     * @param offset Offset of texture reference in bytes
-     * @param texref Texture to get offset of
-     * @param offset Offset of texture reference in bytes
-     * @param tex Texture to get offset of
-     *
-     * @return cudaSuccess, cudaErrorInvalidTexture,
-     * cudaErrorInvalidTextureBinding
-     *
-     * @see JCuda#cudaCreateChannelDesc
-     * @see JCuda#cudaGetChannelDesc
-     * @see JCuda#cudaGetTextureReference
-     * @see JCuda#cudaBindTexture
-     * @see JCuda#cudaBindTexture2D
-     * @see JCuda#cudaBindTextureToArray
-     * @see JCuda#cudaUnbindTexture
-     * @see JCuda#cudaGetTextureAlignmentOffset
-     * 
-     * @deprecated Deprecated as of CUDA 10.1
-     */
-    public static int cudaGetTextureAlignmentOffset(long offset[], textureReference texref)
-    {
-        return checkResult(cudaGetTextureAlignmentOffsetNative(offset, texref));
-    }
-    private static native int cudaGetTextureAlignmentOffsetNative(long offset[], textureReference texref);
-
-    /**
-     * Get the texture reference associated with a symbol.
-     *
-     * <pre>
-     * cudaError_t cudaGetTextureReference (
-     *      const textureReference** texref,
-     *      const void* symbol )
-     * </pre>
-     * <div>
-     *   <p>Get the texture reference associated with
-     *     a symbol.  Returns in <tt>*texref</tt> the structure associated to
-     *     the texture reference defined by symbol <tt>symbol</tt>.
-     *   </p>
-     *   <div>
-     *     <span>Note:</span>
-     *     <ul>
-     *       <li>
-     *         <p>Note that this function may
-     *           also return error codes from previous, asynchronous launches.
-     *         </p>
-     *       </li>
-     *       <li>
-     *         <p>Use of a string naming a
-     *           variable as the <tt>symbol</tt> paramater was removed in CUDA 5.0.
-     *         </p>
-     *       </li>
-     *     </ul>
-     *   </div>
-     *   </p>
-     * </div>
-     *
-     * @param texref Texture reference associated with symbol
-     * @param symbol Texture to get reference for
-     *
-     * @return cudaSuccess, cudaErrorInvalidTexture
-     *
-     * @see JCuda#cudaCreateChannelDesc
-     * @see JCuda#cudaGetChannelDesc
-     * @see JCuda#cudaGetTextureAlignmentOffset
-     * @see JCuda#cudaBindTexture
-     * @see JCuda#cudaBindTexture2D
-     * @see JCuda#cudaBindTextureToArray
-     * @see JCuda#cudaUnbindTexture
-     *
-     * @deprecated This function is no longer supported as of CUDA 5.0
-     */
-    public static int cudaGetTextureReference(textureReference texref, String symbol)
-    {
-        throw new UnsupportedOperationException(
-            "This function is no longer supported as of CUDA 5.0");
-    }
-
-
-    /**
-     * [C++ API] Binds an array to a surface
-     *
-     * <pre>
-     * template < class T, int dim > cudaError_t cudaBindSurfaceToArray (
-     *      const surface < T,
-     *      dim > & surf,
-     *      cudaArray_const_t array,
-     *      const cudaChannelFormatDesc& desc ) [inline]
-     * </pre>
-     * <div>
-     *   <p>[C++ API] Binds an array to a surface
-     *     Binds the CUDA array <tt>array</tt> to the surface reference <tt>surf</tt>. <tt>desc</tt> describes how the memory is interpreted when
-     *     dealing with the surface. Any CUDA array previously bound to <tt>surf</tt> is unbound.
-     *   </p>
-     *   <div>
-     *     <span>Note:</span>
-     *     <p>Note that this
-     *       function may also return error codes from previous, asynchronous
-     *       launches.
-     *     </p>
-     *   </div>
-     *   </p>
-     * </div>
-     *
-     * @param surfref Surface to bind
-     * @param array Memory array on device
-     * @param desc Channel format
-     * @param surf Surface to bind
-     * @param array Memory array on device
-     * @param surf Surface to bind
-     * @param array Memory array on device
-     * @param desc Channel format
-     *
-     * @return cudaSuccess, cudaErrorInvalidValue, cudaErrorInvalidSurface
-     *
-     * @see JCuda#cudaBindSurfaceToArray
-     * @see JCuda#cudaBindSurfaceToArray
-     * 
-     * @deprecated Deprecated as of CUDA 10.1
-     */
-    public static int cudaBindSurfaceToArray(surfaceReference surfref, cudaArray array, cudaChannelFormatDesc desc)
-    {
-        return checkResult(cudaBindSurfaceToArrayNative(surfref, array, desc));
-    }
-    private static native int cudaBindSurfaceToArrayNative(surfaceReference surfref, cudaArray array, cudaChannelFormatDesc desc);
-
-
-    /**
-     * Get the surface reference associated with a symbol.
-     *
-     * <pre>
-     * cudaError_t cudaGetSurfaceReference (
-     *      const surfaceReference** surfref,
-     *      const void* symbol )
-     * </pre>
-     * <div>
-     *   <p>Get the surface reference associated with
-     *     a symbol.  Returns in <tt>*surfref</tt> the structure associated to
-     *     the surface reference defined by symbol <tt>symbol</tt>.
-     *   </p>
-     *   <div>
-     *     <span>Note:</span>
-     *     <ul>
-     *       <li>
-     *         <p>Note that this function may
-     *           also return error codes from previous, asynchronous launches.
-     *         </p>
-     *       </li>
-     *       <li>
-     *         <p>Use of a string naming a
-     *           variable as the <tt>symbol</tt> paramater was removed in CUDA 5.0.
-     *         </p>
-     *       </li>
-     *     </ul>
-     *   </div>
-     *   </p>
-     * </div>
-     *
-     * @param surfref Surface reference associated with symbol
-     * @param symbol Surface to get reference for
-     *
-     * @return cudaSuccess, cudaErrorInvalidSurface
-     *
-     * @see JCuda#cudaBindSurfaceToArray
-     *
-     * @deprecated This function is no longer supported as of CUDA 5.0
-     */
-    public static int cudaGetSurfaceReference(surfaceReference surfref, String symbol)
-    {
-        throw new UnsupportedOperationException(
-            "This function is no longer supported as of CUDA 5.0");
-    }
-
-
-
-
-    /**
-     * Creates a texture object.
-     *
-     * <pre>
-     * cudaError_t cudaCreateTextureObject (
-     *      cudaTextureObject_t* pTexObject,
-     *      const cudaResourceDesc* pResDesc,
-     *      const cudaTextureDesc* pTexDesc,
-     *      const cudaResourceViewDesc* pResViewDesc )
-     * </pre>
-     * <div>
-     *   <p>Creates a texture object.  Creates a
-     *     texture object and returns it in <tt>pTexObject</tt>. <tt>pResDesc</tt>
-     *     describes the data to texture from. <tt>pTexDesc</tt> describes how
-     *     the data should be sampled. <tt>pResViewDesc</tt> is an optional
-     *     argument that specifies an alternate format for the data described by
-     *     <tt>pResDesc</tt>, and also describes the subresource region to
-     *     restrict access to when texturing. <tt>pResViewDesc</tt> can only be
-     *     specified if the type of resource is a CUDA array or a CUDA mipmapped
-     *     array.
-     *   </p>
-     *   <p>Texture objects are only supported on
-     *     devices of compute capability 3.0 or higher.
-     *   </p>
-     *   <p>The cudaResourceDesc structure is
-     *     defined as:
-     *   <pre>        struct cudaResourceDesc {
-     *             enum cudaResourceType
-     *                   resType;
-     *
-     *             union {
-     *                 struct {
-     *                     cudaArray_t
-     *                   array;
-     *                 } array;
-     *                 struct {
-     *                     cudaMipmappedArray_t
-     *                   mipmap;
-     *                 } mipmap;
-     *                 struct {
-     *                     void *devPtr;
-     *                     struct cudaChannelFormatDesc
-     *                   desc;
-     *                     size_t sizeInBytes;
-     *                 } linear;
-     *                 struct {
-     *                     void *devPtr;
-     *                     struct cudaChannelFormatDesc
-     *                   desc;
-     *                     size_t width;
-     *                     size_t height;
-     *                     size_t pitchInBytes;
-     *                 } pitch2D;
-     *             } res;
-     *         };</pre>
-     *   where:
-     *   <ul>
-     *     <li>
-     *       <div>
-     *         cudaResourceDesc::resType
-     *         specifies the type of resource to texture from. CUresourceType is
-     *         defined as:
-     *         <pre>        enum cudaResourceType {
-     *             cudaResourceTypeArray          = 0x00,
-     *             cudaResourceTypeMipmappedArray = 0x01,
-     *             cudaResourceTypeLinear         = 0x02,
-     *             cudaResourceTypePitch2D        = 0x03
-     *         };</pre>
-     *       </div>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <p>If cudaResourceDesc::resType is set to
-     *     cudaResourceTypeArray, cudaResourceDesc::res::array::array must be set
-     *     to a valid CUDA array handle.
-     *   </p>
-     *   <p>If cudaResourceDesc::resType is set to
-     *     cudaResourceTypeMipmappedArray, cudaResourceDesc::res::mipmap::mipmap
-     *     must be set to a valid CUDA mipmapped array handle.
-     *   </p>
-     *   <p>If cudaResourceDesc::resType is set to
-     *     cudaResourceTypeLinear, cudaResourceDesc::res::linear::devPtr must be
-     *     set to a valid device pointer, that is aligned to
-     *     cudaDeviceProp::textureAlignment. cudaResourceDesc::res::linear::desc
-     *     describes the format and the number of components per array element.
-     *     cudaResourceDesc::res::linear::sizeInBytes
-     *     specifies the size of the array in bytes.
-     *     The total number of elements in the linear address range cannot exceed
-     *     cudaDeviceProp::maxTexture1DLinear. The number of elements is computed
-     *     as (sizeInBytes / sizeof(desc)).
-     *   </p>
-     *   <p>If cudaResourceDesc::resType is set to
-     *     cudaResourceTypePitch2D, cudaResourceDesc::res::pitch2D::devPtr must
-     *     be set to a valid device pointer, that is aligned to
-     *     cudaDeviceProp::textureAlignment. cudaResourceDesc::res::pitch2D::desc
-     *     describes the format and the number of components per array element.
-     *     cudaResourceDesc::res::pitch2D::width
-     *     and cudaResourceDesc::res::pitch2D::height
-     *     specify the width and height of the array in elements, and cannot
-     *     exceed cudaDeviceProp::maxTexture2DLinear[0] and
-     *     cudaDeviceProp::maxTexture2DLinear[1] respectively.
-     *     cudaResourceDesc::res::pitch2D::pitchInBytes specifies the pitch
-     *     between two rows in bytes and has to be
-     *     aligned to cudaDeviceProp::texturePitchAlignment.
-     *     Pitch cannot exceed cudaDeviceProp::maxTexture2DLinear[2].
-     *   </p>
-     *   <p>
-     *     The cudaTextureDesc struct is defined as
-     *   <pre>        struct cudaTextureDesc {
-     *             enum cudaTextureAddressMode
-     *                   addressMode[3];
-     *             enum cudaTextureFilterMode
-     *                   filterMode;
-     *             enum cudaTextureReadMode
-     *                   readMode;
-     *             int                         sRGB;
-     *             int                         normalizedCoords;
-     *             unsigned int                maxAnisotropy;
-     *             enum cudaTextureFilterMode
-     *                   mipmapFilterMode;
-     *             float                       mipmapLevelBias;
-     *             float                       minMipmapLevelClamp;
-     *             float                       maxMipmapLevelClamp;
-     *         };</pre>
-     *   where
-     *   <ul>
-     *     <li>
-     *       <div>
-     *         cudaTextureDesc::addressMode
-     *         specifies the addressing mode for each dimension of the texture data.
-     *         cudaTextureAddressMode is defined as:
-     *         <pre>        enum
-     * cudaTextureAddressMode {
-     *             cudaAddressModeWrap   = 0,
-     *             cudaAddressModeClamp  = 1,
-     *             cudaAddressModeMirror = 2,
-     *             cudaAddressModeBorder = 3
-     *         };</pre>
-     *         This is ignored if cudaResourceDesc::resType is
-     *         cudaResourceTypeLinear. Also, if cudaTextureDesc::normalizedCoords is
-     *         set to zero, the only supported address mode is cudaAddressModeClamp.
-     *       </div>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <ul>
-     *     <li>
-     *       <div>
-     *         cudaTextureDesc::filterMode
-     *         specifies the filtering mode to be used when fetching from the texture.
-     *         cudaTextureFilterMode is defined as:
-     *         <pre>        enum
-     * cudaTextureFilterMode {
-     *             cudaFilterModePoint  = 0,
-     *             cudaFilterModeLinear = 1
-     *         };</pre>
-     *         This is ignored if cudaResourceDesc::resType is
-     *         cudaResourceTypeLinear.
-     *       </div>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <ul>
-     *     <li>
-     *       <div>
-     *         cudaTextureDesc::readMode
-     *         specifies whether integer data should be converted to floating point
-     *         or not. cudaTextureReadMode is defined as:
-     *         <pre>        enum
-     * cudaTextureReadMode {
-     *             cudaReadModeElementType     = 0,
-     *             cudaReadModeNormalizedFloat = 1
-     *         };</pre>
-     *         Note that this applies only to 8-bit and 16-bit
-     *         integer formats. 32-bit integer format would not be promoted,
-     *         regardless
-     *         of whether or not this
-     *         cudaTextureDesc::readMode is set cudaReadModeNormalizedFloat is
-     *         specified.
-     *       </div>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <ul>
-     *     <li>
-     *       <p>cudaTextureDesc::sRGB specifies
-     *         whether sRGB to linear conversion should be performed during texture
-     *         fetch.
-     *       </p>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <ul>
-     *     <li>
-     *       <p>cudaTextureDesc::normalizedCoords
-     *         specifies whether the texture coordinates will be normalized or not.
-     *       </p>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <ul>
-     *     <li>
-     *       <p>cudaTextureDesc::maxAnisotropy
-     *         specifies the maximum anistropy ratio to be used when doing anisotropic
-     *         filtering. This value will be clamped to the range
-     *         [1,16].
-     *       </p>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <ul>
-     *     <li>
-     *       <p>cudaTextureDesc::mipmapFilterMode
-     *         specifies the filter mode when the calculated mipmap level lies between
-     *         two defined mipmap levels.
-     *       </p>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <ul>
-     *     <li>
-     *       <p>cudaTextureDesc::mipmapLevelBias
-     *         specifies the offset to be applied to the calculated mipmap level.
-     *       </p>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <ul>
-     *     <li>
-     *       <p>cudaTextureDesc::minMipmapLevelClamp
-     *         specifies the lower end of the mipmap level range to clamp access to.
-     *       </p>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <ul>
-     *     <li>
-     *       <p>cudaTextureDesc::maxMipmapLevelClamp
-     *         specifies the upper end of the mipmap level range to clamp access to.
-     *       </p>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <p>The cudaResourceViewDesc struct is
-     *     defined as
-     *   <pre>        struct cudaResourceViewDesc {
-     *             enum cudaResourceViewFormat
-     *                   format;
-     *             size_t                      width;
-     *             size_t                      height;
-     *             size_t                      depth;
-     *             unsigned int                firstMipmapLevel;
-     *             unsigned int                lastMipmapLevel;
-     *             unsigned int                firstLayer;
-     *             unsigned int                lastLayer;
-     *         };</pre>
-     *   where:
-     *   <ul>
-     *     <li>
-     *       <p>cudaResourceViewDesc::format
-     *         specifies how the data contained in the CUDA array or CUDA mipmapped
-     *         array should be interpreted. Note that this can incur
-     *         a change in size of the texture
-     *         data. If the resource view format is a block compressed format, then
-     *         the underlying CUDA array
-     *         or CUDA mipmapped array has to
-     *         have a 32-bit unsigned integer format with 2 or 4 channels, depending
-     *         on the block compressed
-     *         format. For ex., BC1 and BC4
-     *         require the underlying CUDA array to have a 32-bit unsigned int with 2
-     *         channels. The other BC
-     *         formats require the underlying
-     *         resource to have the same 32-bit unsigned int format but with 4
-     *         channels.
-     *       </p>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <ul>
-     *     <li>
-     *       <p>cudaResourceViewDesc::width
-     *         specifies the new width of the texture data. If the resource view
-     *         format is a block compressed format, this value has to
-     *         be 4 times the original width
-     *         of the resource. For non block compressed formats, this value has to
-     *         be equal to that of the
-     *         original resource.
-     *       </p>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <ul>
-     *     <li>
-     *       <p>cudaResourceViewDesc::height
-     *         specifies the new height of the texture data. If the resource view
-     *         format is a block compressed format, this value has to
-     *         be 4 times the original height
-     *         of the resource. For non block compressed formats, this value has to
-     *         be equal to that of the
-     *         original resource.
-     *       </p>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <ul>
-     *     <li>
-     *       <p>cudaResourceViewDesc::depth
-     *         specifies the new depth of the texture data. This value has to be equal
-     *         to that of the original resource.
-     *       </p>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <ul>
-     *     <li>
-     *       <p>cudaResourceViewDesc::firstMipmapLevel
-     *         specifies the most detailed mipmap level. This will be the new mipmap
-     *         level zero. For non-mipmapped resources, this value
-     *         has to be
-     *         zero.cudaTextureDesc::minMipmapLevelClamp and
-     *         cudaTextureDesc::maxMipmapLevelClamp will be relative to this value.
-     *         For ex., if the firstMipmapLevel is set to 2, and a minMipmapLevelClamp
-     *         of 1.2 is specified,
-     *         then the actual minimum mipmap
-     *         level clamp will be 3.2.
-     *       </p>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <ul>
-     *     <li>
-     *       <p>cudaResourceViewDesc::lastMipmapLevel
-     *         specifies the least detailed mipmap level. For non-mipmapped resources,
-     *         this value has to be zero.
-     *       </p>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <ul>
-     *     <li>
-     *       <p>cudaResourceViewDesc::firstLayer
-     *         specifies the first layer index for layered textures. This will be the
-     *         new layer zero. For non-layered resources, this value
-     *         has to be zero.
-     *       </p>
-     *     </li>
-     *   </ul>
-     *   </p>
-     *   <ul>
-     *     <li>
-     *       <p>cudaResourceViewDesc::lastLayer
-     *         specifies the last layer index for layered textures. For non-layered
-     *         resources, this value has to be zero.
-     *       </p>
-     *     </li>
-     *   </ul>
-     *   </p>
-     * </div>
-     *
-     * @param pTexObject Texture object to create
-     * @param pResDesc Resource descriptor
-     * @param pTexDesc Texture descriptor
-     * @param pResViewDesc Resource view descriptor
-     *
-     * @return cudaSuccess, cudaErrorInvalidValue
-     *
-     * @see JCuda#cudaDestroyTextureObject
-     */
-    public static int cudaCreateTextureObject(cudaTextureObject pTexObject, cudaResourceDesc pResDesc, cudaTextureDesc pTexDesc, cudaResourceViewDesc pResViewDesc)
-    {
-        return checkResult(cudaCreateTextureObjectNative(pTexObject, pResDesc, pTexDesc, pResViewDesc));
-    }
-    private static native int cudaCreateTextureObjectNative(cudaTextureObject pTexObject, cudaResourceDesc pResDesc, cudaTextureDesc pTexDesc, cudaResourceViewDesc pResViewDesc);
 
     /**
      * Destroys a texture object.
@@ -10329,34 +9512,6 @@ public class JCuda
         return checkResult(cudaGetTextureObjectResourceDescNative(pResDesc, texObject));
     }
     private static native int cudaGetTextureObjectResourceDescNative(cudaResourceDesc pResDesc, cudaTextureObject texObject);
-
-    /**
-     * Returns a texture object's texture descriptor.
-     *
-     * <pre>
-     * cudaError_t cudaGetTextureObjectTextureDesc (
-     *      cudaTextureDesc* pTexDesc,
-     *      cudaTextureObject_t texObject )
-     * </pre>
-     * <div>
-     *   <p>Returns a texture object's texture
-     *     descriptor.  Returns the texture descriptor for the texture object
-     *     specified by <tt>texObject</tt>.
-     *   </p>
-     * </div>
-     *
-     * @param pTexDesc Texture descriptor
-     * @param texObject Texture object
-     *
-     * @return cudaSuccess, cudaErrorInvalidValue
-     *
-     * @see JCuda#cudaCreateTextureObject
-     */
-    public static int cudaGetTextureObjectTextureDesc(cudaTextureDesc pTexDesc, cudaTextureObject texObject)
-    {
-        return checkResult(cudaGetTextureObjectTextureDescNative(pTexDesc, texObject));
-    }
-    private static native int cudaGetTextureObjectTextureDescNative(cudaTextureDesc pTexDesc, cudaTextureObject texObject);
 
     /**
      * Returns a texture object's resource view descriptor.
@@ -12076,80 +11231,6 @@ public class JCuda
         return checkResult(cudaGraphicsResourceGetMappedMipmappedArrayNative(mipmappedArray, resource));
     }
     private static native int cudaGraphicsResourceGetMappedMipmappedArrayNative(cudaMipmappedArray mipmappedArray, cudaGraphicsResource resource);
-
-
-    /**
-     * Initialize the CUDA profiler.
-     *
-     * <pre>
-     * cudaError_t cudaProfilerInitialize (
-     *      const char* configFile,
-     *      const char* outputFile,
-     *      cudaOutputMode_t outputMode )
-     * </pre>
-     * <div>
-     *   <p>Initialize the CUDA profiler.  Using this
-     *     API user can initialize the CUDA profiler by specifying the configuration
-     *     file,
-     *     output file and output file format. This
-     *     API is generally used to profile different set of counters by looping
-     *     the kernel
-     *     launch. The <tt>configFile</tt> parameter
-     *     can be used to select profiling options including profiler counters.
-     *     Refer to the "Compute Command Line Profiler
-     *     User Guide" for supported profiler
-     *     options and counters.
-     *   </p>
-     *   <p>Limitation: The CUDA profiler cannot be
-     *     initialized with this API if another profiling tool is already active,
-     *     as indicated
-     *     by the cudaErrorProfilerDisabled return
-     *     code.
-     *   </p>
-     *   <p>Typical usage of the profiling APIs is
-     *     as follows:
-     *   </p>
-     *   <p>for each set of counters/options
-     *     {
-     *     cudaProfilerInitialize(); //Initialize
-     *     profiling,set the counters/options in the config file
-     *     ...
-     *     cudaProfilerStart();
-     *     // code to be profiled
-     *     cudaProfilerStop();
-     *     ...
-     *     cudaProfilerStart();
-     *     // code to be profiled
-     *     cudaProfilerStop();
-     *     ...
-     *     }
-     *   </p>
-     *   <div>
-     *     <span>Note:</span>
-     *     <p>Note that this
-     *       function may also return error codes from previous, asynchronous
-     *       launches.
-     *     </p>
-     *   </div>
-     *   </p>
-     * </div>
-     *
-     * @param configFile Name of the config file that lists the counters/options for profiling.
-     * @param outputFile Name of the outputFile where the profiling results will be stored.
-     * @param outputMode outputMode, can be cudaKeyValuePair OR cudaCSV.
-     *
-     * @return cudaSuccess, cudaErrorInvalidValue, cudaErrorProfilerDisabled
-     *
-     * @see JCuda#cudaProfilerStart
-     * @see JCuda#cudaProfilerStop
-     * 
-     * @deprecated As of CUDA 11.0
-     */
-    public static int cudaProfilerInitialize(String configFile, String outputFile, int outputMode)
-    {
-        return checkResult(cudaProfilerInitializeNative(configFile, outputFile, outputMode));
-    }
-    private static native int cudaProfilerInitializeNative(String configFile, String outputFile, int outputMode);
 
     /**
      * Enable profiling.

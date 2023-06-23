@@ -30,6 +30,8 @@ import java.util.Arrays;
 
 /**
  * CUDA texture descriptor
+ * 
+ * @deprecated As of CUDA 12
  */
 public class cudaTextureDesc
 {

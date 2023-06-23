@@ -99,6 +99,54 @@ public class cudaFuncAttributes
      */
     public int preferredShmemCarveout;
     
+
+    /**
+     * If this attribute is set, the kernel must launch with a valid cluster dimension
+     * specified.
+     */
+    public int clusterDimMustBeSet;
+
+    /**
+     * The required cluster width/height/depth in blocks. The values must either
+     * all be 0 or all be positive. The validity of the cluster dimensions is
+     * otherwise checked at launch time.
+     *
+     * If the value is set during compile time, it cannot be set at runtime.
+     * Setting it at runtime should return cudaErrorNotPermitted.
+     * See ::cudaFuncSetAttribute
+     */
+    public int requiredClusterWidth;
+    public int requiredClusterHeight;
+    public int requiredClusterDepth;
+
+    /**
+     * The block scheduling policy of a function.
+     * See ::cudaFuncSetAttribute
+     */
+    public int clusterSchedulingPolicyPreference;
+
+    /**
+     * Whether the function can be launched with non-portable cluster size. 1 is
+     * allowed, 0 is disallowed. A non-portable cluster size may only function
+     * on the specific SKUs the program is tested on. The launch might fail if
+     * the program is run on a different hardware platform.
+     *
+     * CUDA API provides ::cudaOccupancyMaxActiveClusters to assist with checking
+     * whether the desired size can be launched on the current device.
+     *
+     * Portable Cluster Size
+     *
+     * A portable cluster size is guaranteed to be functional on all compute
+     * capabilities higher than the target compute capability. The portable
+     * cluster size for sm_90 is 8 blocks per cluster. This value may increase
+     * for future compute capabilities.
+     *
+     * The specific hardware unit may support higher cluster sizes that’s not
+     * guaranteed to be portable.
+     * See ::cudaFuncSetAttribute
+     */
+    public int nonPortableClusterSizeAllowed;
+    
     /**
      * Creates new, uninitialized cudaFuncAttributes
      */
@@ -124,7 +172,13 @@ public class cudaFuncAttributes
             "binaryVersion="+binaryVersion+"," +
             "cacheModeCA="+cacheModeCA+","+
             "maxDynamicSharedSizeBytes="+maxDynamicSharedSizeBytes+","+
-            "preferredShmemCarveout="+preferredShmemCarveout+"]";
+            "preferredShmemCarveout="+preferredShmemCarveout+","+
+            "clusterDimMustBeSet="+clusterDimMustBeSet+","+
+            "requiredClusterWidth="+requiredClusterWidth+","+
+            "requiredClusterHeight="+requiredClusterHeight+","+
+            "requiredClusterDepth="+requiredClusterDepth+","+
+            "clusterSchedulingPolicyPreference="+clusterSchedulingPolicyPreference+","+
+            "nonPortableClusterSizeAllowed="+nonPortableClusterSizeAllowed+"]";
     }
 
 

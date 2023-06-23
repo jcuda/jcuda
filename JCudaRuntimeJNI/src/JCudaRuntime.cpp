@@ -110,6 +110,20 @@ jfieldID cudaDeviceProp_directManagedMemAccessFromHost; // int
 jfieldID cudaDeviceProp_maxBlocksPerMultiProcessor; // int
 jfieldID cudaDeviceProp_accessPolicyMaxWindowSize; // int
 jfieldID cudaDeviceProp_reservedSharedMemPerBlock; // size_t
+jfieldID cudaDeviceProp_hostRegisterSupported; // int
+jfieldID cudaDeviceProp_sparseCudaArraySupported; // int
+jfieldID cudaDeviceProp_hostRegisterReadOnlySupported; // int
+jfieldID cudaDeviceProp_timelineSemaphoreInteropSupported; // int
+jfieldID cudaDeviceProp_memoryPoolsSupported; // int
+jfieldID cudaDeviceProp_gpuDirectRDMASupported; // int
+jfieldID cudaDeviceProp_gpuDirectRDMAFlushWritesOptions; // unsigned int
+jfieldID cudaDeviceProp_gpuDirectRDMAWritesOrdering; // int
+jfieldID cudaDeviceProp_memoryPoolSupportedHandleTypes; // unsigned int
+jfieldID cudaDeviceProp_deferredMappingCudaArraySupported; // int
+jfieldID cudaDeviceProp_ipcEventSupported; // int
+jfieldID cudaDeviceProp_clusterLaunch; // int
+jfieldID cudaDeviceProp_unifiedFunctionPointers; // int
+jfieldID cudaDeviceProp_reserved; // int[63]
 
 
 jfieldID cudaPitchedPtr_ptr; // jcuda.Pointer
@@ -181,6 +195,13 @@ jfieldID cudaFuncAttributes_binaryVersion; // int
 jfieldID cudaFuncAttributes_cacheModeCA; // int
 jfieldID cudaFuncAttributes_maxDynamicSharedSizeBytes; // int
 jfieldID cudaFuncAttributes_preferredShmemCarveout; // int
+jfieldID cudaFuncAttributes_clusterDimMustBeSet; // int
+jfieldID cudaFuncAttributes_requiredClusterWidth; // int
+jfieldID cudaFuncAttributes_requiredClusterHeight; // int
+jfieldID cudaFuncAttributes_requiredClusterDepth; // int
+jfieldID cudaFuncAttributes_clusterSchedulingPolicyPreference; // int
+jfieldID cudaFuncAttributes_nonPortableClusterSizeAllowed; // int
+
 
 jfieldID cudaPointerAttributes_type; // cudaMemoryType
 jfieldID cudaPointerAttributes_device; // int
@@ -363,6 +384,19 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, cudaDeviceProp_maxBlocksPerMultiProcessor,             "maxBlocksPerMultiProcessor",             "I")) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_accessPolicyMaxWindowSize,              "accessPolicyMaxWindowSize",              "I")) return JNI_ERR;
     if (!init(env, cls, cudaDeviceProp_reservedSharedMemPerBlock,              "reservedSharedMemPerBlock",              "J")) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_hostRegisterSupported                  , "hostRegisterSupported"                 , "I"                      )) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_sparseCudaArraySupported               , "sparseCudaArraySupported"              , "I"                      )) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_hostRegisterReadOnlySupported          , "hostRegisterReadOnlySupported"         , "I"                      )) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_timelineSemaphoreInteropSupported      , "timelineSemaphoreInteropSupported"     , "I"                      )) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_memoryPoolsSupported                   , "memoryPoolsSupported"                  , "I"                      )) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_gpuDirectRDMASupported                 , "gpuDirectRDMASupported"                , "I"                      )) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_gpuDirectRDMAFlushWritesOptions        , "gpuDirectRDMAFlushWritesOptions"       , "I"                      )) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_gpuDirectRDMAWritesOrdering            , "gpuDirectRDMAWritesOrdering"           , "I"                      )) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_memoryPoolSupportedHandleTypes         , "memoryPoolSupportedHandleTypes"        , "I"                      )) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_deferredMappingCudaArraySupported      , "deferredMappingCudaArraySupported"     , "I"                      )) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_ipcEventSupported                      , "ipcEventSupported"                     , "I"                      )) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_clusterLaunch                          , "clusterLaunch"                         , "I"                      )) return JNI_ERR;
+    if (!init(env, cls, cudaDeviceProp_unifiedFunctionPointers                , "unifiedFunctionPointers"               , "I"                      )) return JNI_ERR;
 
     // Obtain the fieldIDs of the cudaPitchedPtr class
     if (!init(env, cls, "jcuda/runtime/cudaPitchedPtr")) return JNI_ERR;
@@ -455,16 +489,23 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
 
     // Obtain the fieldIDs of the cudaFuncAttributes class
     if (!init(env, cls, "jcuda/runtime/cudaFuncAttributes")) return JNI_ERR;
-    if (!init(env, cls, cudaFuncAttributes_sharedSizeBytes,           "sharedSizeBytes",           "J")) return JNI_ERR;
-    if (!init(env, cls, cudaFuncAttributes_constSizeBytes,            "constSizeBytes",            "J")) return JNI_ERR;
-    if (!init(env, cls, cudaFuncAttributes_localSizeBytes,            "localSizeBytes",            "J")) return JNI_ERR;
-    if (!init(env, cls, cudaFuncAttributes_maxThreadsPerBlock,        "maxThreadsPerBlock",        "I")) return JNI_ERR;
-    if (!init(env, cls, cudaFuncAttributes_numRegs,                   "numRegs",                   "I")) return JNI_ERR;
-    if (!init(env, cls, cudaFuncAttributes_ptxVersion,                "ptxVersion",                "I")) return JNI_ERR;
-    if (!init(env, cls, cudaFuncAttributes_binaryVersion,             "binaryVersion",             "I")) return JNI_ERR;
-    if (!init(env, cls, cudaFuncAttributes_cacheModeCA,               "cacheModeCA",               "I")) return JNI_ERR;
-    if (!init(env, cls, cudaFuncAttributes_maxDynamicSharedSizeBytes, "maxDynamicSharedSizeBytes", "I")) return JNI_ERR;
-    if (!init(env, cls, cudaFuncAttributes_preferredShmemCarveout,    "preferredShmemCarveout",    "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_sharedSizeBytes,                   "sharedSizeBytes",                   "J")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_constSizeBytes,                    "constSizeBytes",                    "J")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_localSizeBytes,                    "localSizeBytes",                    "J")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_maxThreadsPerBlock,                "maxThreadsPerBlock",                "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_numRegs,                           "numRegs",                           "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_ptxVersion,                        "ptxVersion",                        "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_binaryVersion,                     "binaryVersion",                     "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_cacheModeCA,                       "cacheModeCA",                       "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_maxDynamicSharedSizeBytes,         "maxDynamicSharedSizeBytes",         "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_preferredShmemCarveout,            "preferredShmemCarveout",            "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_clusterDimMustBeSet,               "clusterDimMustBeSet",               "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_requiredClusterWidth,              "requiredClusterWidth",              "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_requiredClusterHeight,             "requiredClusterHeight",             "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_requiredClusterDepth,              "requiredClusterDepth",              "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_clusterSchedulingPolicyPreference, "clusterSchedulingPolicyPreference", "I")) return JNI_ERR;
+    if (!init(env, cls, cudaFuncAttributes_nonPortableClusterSizeAllowed,     "nonPortableClusterSizeAllowed",     "I")) return JNI_ERR;
+
 
     // Obtain the fieldIDs of the cudaPointerAttributes class
     if (!init(env, cls, "jcuda/runtime/cudaPointerAttributes")) return JNI_ERR;
@@ -974,6 +1015,20 @@ void setCudaDeviceProp(JNIEnv *env, jobject prop, cudaDeviceProp &nativeProp)
     env->SetIntField(prop,  cudaDeviceProp_accessPolicyMaxWindowSize,              (jint)nativeProp.accessPolicyMaxWindowSize);
     env->SetLongField(prop, cudaDeviceProp_reservedSharedMemPerBlock,              (jlong)nativeProp.reservedSharedMemPerBlock);
 
+    env->SetIntField (prop, cudaDeviceProp_hostRegisterSupported                 , (jint )nativeProp.hostRegisterSupported                 );
+    env->SetIntField (prop, cudaDeviceProp_sparseCudaArraySupported              , (jint )nativeProp.sparseCudaArraySupported              );
+    env->SetIntField (prop, cudaDeviceProp_hostRegisterReadOnlySupported         , (jint )nativeProp.hostRegisterReadOnlySupported         );
+    env->SetIntField (prop, cudaDeviceProp_timelineSemaphoreInteropSupported     , (jint )nativeProp.timelineSemaphoreInteropSupported     );
+    env->SetIntField (prop, cudaDeviceProp_memoryPoolsSupported                  , (jint )nativeProp.memoryPoolsSupported                  );
+    env->SetIntField (prop, cudaDeviceProp_gpuDirectRDMASupported                , (jint )nativeProp.gpuDirectRDMASupported                );
+    env->SetIntField (prop, cudaDeviceProp_gpuDirectRDMAFlushWritesOptions       , (jint )nativeProp.gpuDirectRDMAFlushWritesOptions       );
+    env->SetIntField (prop, cudaDeviceProp_gpuDirectRDMAWritesOrdering           , (jint )nativeProp.gpuDirectRDMAWritesOrdering           );
+    env->SetIntField (prop, cudaDeviceProp_memoryPoolSupportedHandleTypes        , (jint )nativeProp.memoryPoolSupportedHandleTypes        );
+    env->SetIntField (prop, cudaDeviceProp_deferredMappingCudaArraySupported     , (jint )nativeProp.deferredMappingCudaArraySupported     );
+    env->SetIntField (prop, cudaDeviceProp_ipcEventSupported                     , (jint )nativeProp.ipcEventSupported                     );
+    env->SetIntField (prop, cudaDeviceProp_clusterLaunch                         , (jint )nativeProp.clusterLaunch                         );
+    env->SetIntField (prop, cudaDeviceProp_unifiedFunctionPointers               , (jint )nativeProp.unifiedFunctionPointers               );
+
 }
 
 
@@ -1136,101 +1191,6 @@ void setCudaChannelFormatDesc(JNIEnv *env, jobject desc, cudaChannelFormatDesc &
 }
 
 
-
-/**
- * Returns the native representation of the given Java object
- */
-textureReference getTextureReference(JNIEnv *env, jobject texref)
-{
-    textureReference nativeTexref;
-    nativeTexref.normalized  = (int)                   env->GetIntField(texref, textureReference_normalized);
-    nativeTexref.filterMode  = (cudaTextureFilterMode) env->GetIntField(texref, textureReference_filterMode);
-
-    jintArray addressMode = (jintArray)env->GetObjectField(texref, textureReference_addressMode);
-    jint *nativeAddressMode = (jint*)env->GetPrimitiveArrayCritical(addressMode, NULL);
-     if (nativeAddressMode == NULL)
-    {
-       return nativeTexref;
-    }
-    for (int i=0; i<3; i++)
-    {
-        nativeTexref.addressMode[i] = (cudaTextureAddressMode)nativeAddressMode[i];
-    }
-    env->ReleasePrimitiveArrayCritical(addressMode, nativeAddressMode, JNI_ABORT);
-
-    jobject channelDesc = env->GetObjectField(texref, textureReference_channelDesc);
-    nativeTexref.channelDesc = getCudaChannelFormatDesc(env, channelDesc);
-    nativeTexref.sRGB                = (int)                   env->GetIntField(texref, textureReference_sRGB);
-    nativeTexref.maxAnisotropy       = (unsigned int)          env->GetIntField(texref, textureReference_maxAnisotropy);
-    nativeTexref.mipmapFilterMode    = (cudaTextureFilterMode) env->GetIntField(texref, textureReference_mipmapFilterMode);
-    nativeTexref.mipmapLevelBias     = (float)                 env->GetIntField(texref, textureReference_mipmapLevelBias);
-    nativeTexref.minMipmapLevelClamp = (float)                 env->GetIntField(texref, textureReference_minMipmapLevelClamp);
-    nativeTexref.maxMipmapLevelClamp = (float)                 env->GetIntField(texref, textureReference_maxMipmapLevelClamp);
-    nativeTexref.disableTrilinearOptimization = (int)env->GetIntField(texref, textureReference_disableTrilinearOptimization);
-    return nativeTexref;
-}
-
-
-/**
- * Assigns the properties of the given native structure to the given
- * Java Object
- */
-void setTextureReference(JNIEnv *env, jobject texref, textureReference &nativeTexref)
-{
-    env->SetIntField(texref, textureReference_normalized, (jint)nativeTexref.normalized);
-    env->SetIntField(texref, textureReference_filterMode, (jint)nativeTexref.filterMode);
-
-    jintArray addressMode = (jintArray)env->GetObjectField(texref, textureReference_addressMode);
-    jint *nativeAddressMode = (jint*)env->GetPrimitiveArrayCritical(addressMode, NULL);
-     if (nativeAddressMode == NULL)
-    {
-       return;
-    }
-    for (int i=0; i<3; i++)
-    {
-        nativeAddressMode[i] = (jint)nativeTexref.addressMode[i];
-    }
-    env->ReleasePrimitiveArrayCritical(addressMode, nativeAddressMode, 0);
-
-    jobject channelDesc = env->GetObjectField(texref, textureReference_channelDesc);
-    setCudaChannelFormatDesc(env, channelDesc, nativeTexref.channelDesc);
-
-    env->SetIntField(texref,   textureReference_sRGB,                (jint) nativeTexref.sRGB);
-    env->SetIntField(texref,   textureReference_maxAnisotropy,       (jint) nativeTexref.maxAnisotropy);
-    env->SetIntField(texref,   textureReference_mipmapFilterMode,    (jint) nativeTexref.mipmapFilterMode);
-    env->SetFloatField(texref, textureReference_mipmapLevelBias,     (jfloat)nativeTexref.mipmapLevelBias);
-    env->SetFloatField(texref, textureReference_minMipmapLevelClamp, (jfloat)nativeTexref.minMipmapLevelClamp);
-    env->SetFloatField(texref, textureReference_maxMipmapLevelClamp, (jfloat)nativeTexref.maxMipmapLevelClamp);
-    env->SetIntField(texref,   textureReference_disableTrilinearOptimization, (jint)nativeTexref.disableTrilinearOptimization);
-
-}
-
-
-
-/**
- * Returns the native representation of the given Java object
- */
-surfaceReference getSurfaceReference(JNIEnv *env, jobject surfref)
-{
-    surfaceReference nativeSurfref;
-    jobject channelDesc = env->GetObjectField(surfref, surfaceReference_channelDesc);
-    nativeSurfref.channelDesc = getCudaChannelFormatDesc(env, channelDesc);
-    return nativeSurfref;
-}
-
-
-/**
- * Assigns the properties of the given native structure to the given
- * Java Object
- */
-void setSurfaceReference(JNIEnv *env, jobject surfref, surfaceReference &nativeSurfref)
-{
-    jobject channelDesc = env->GetObjectField(surfref, surfaceReference_channelDesc);
-    setCudaChannelFormatDesc(env, channelDesc, nativeSurfref.channelDesc);
-}
-
-
-
 /**
  * Returns the native representation of the given Java object
  */
@@ -1242,9 +1202,6 @@ dim3 getDim3(JNIEnv *env, jobject dim)
     nativeDim.z  = (unsigned int)env->GetIntField(dim, dim3_z);
     return nativeDim;
 }
-
-
-
 
 
 /**
@@ -1266,6 +1223,13 @@ void setCudaFuncAttributes(JNIEnv *env, jobject attr, cudaFuncAttributes &native
 
     env->SetIntField(attr, cudaFuncAttributes_maxDynamicSharedSizeBytes, (jint)nativeAttr.maxDynamicSharedSizeBytes);
     env->SetIntField(attr, cudaFuncAttributes_preferredShmemCarveout,    (jint)nativeAttr.preferredShmemCarveout);
+
+    env->SetIntField (attr, cudaFuncAttributes_clusterDimMustBeSet              , (jint )nativeAttr.clusterDimMustBeSet              );
+    env->SetIntField (attr, cudaFuncAttributes_requiredClusterWidth             , (jint )nativeAttr.requiredClusterWidth             );
+    env->SetIntField (attr, cudaFuncAttributes_requiredClusterHeight            , (jint )nativeAttr.requiredClusterHeight            );
+    env->SetIntField (attr, cudaFuncAttributes_requiredClusterDepth             , (jint )nativeAttr.requiredClusterDepth             );
+    env->SetIntField (attr, cudaFuncAttributes_clusterSchedulingPolicyPreference, (jint )nativeAttr.clusterSchedulingPolicyPreference);
+    env->SetIntField (attr, cudaFuncAttributes_nonPortableClusterSizeAllowed    , (jint )nativeAttr.nonPortableClusterSizeAllowed    );
 
 }
 
@@ -1543,102 +1507,6 @@ void setCudaResourceViewDesc(JNIEnv *env, jobject resourceViewDesc, cudaResource
     env->SetIntField(resourceViewDesc, cudaResourceViewDesc_firstLayer, (jint)nativeResourceViewDesc.firstLayer);
     env->SetIntField(resourceViewDesc, cudaResourceViewDesc_lastLayer, (jint)nativeResourceViewDesc.lastLayer);
 }
-
-
-
-/**
- * Returns the native representation of the given Java object
- */
-cudaTextureDesc_v2 getCudaTextureDesc(JNIEnv *env, jobject texDesc)
-{
-    cudaTextureDesc_v2 nativeTexDesc;
-    memset(&nativeTexDesc,0,sizeof(cudaTextureDesc));
-
-    jintArray addressMode = (jintArray)env->GetObjectField(texDesc, cudaTextureDesc_addressMode);
-    jint *nativeAddressMode = (jint*)env->GetPrimitiveArrayCritical(addressMode, NULL);
-    if (nativeAddressMode == NULL)
-    {
-        return nativeTexDesc;
-    }
-    for (int i=0; i<3; i++)
-    {
-        nativeTexDesc.addressMode[i] = (cudaTextureAddressMode)nativeAddressMode[i];
-    }
-    env->ReleasePrimitiveArrayCritical(addressMode, nativeAddressMode, JNI_ABORT);
-
-    nativeTexDesc.filterMode = (cudaTextureFilterMode) env->GetIntField(texDesc, cudaTextureDesc_filterMode);
-    nativeTexDesc.readMode = (cudaTextureReadMode) env->GetIntField(texDesc, cudaTextureDesc_readMode);
-    nativeTexDesc.sRGB = (int) env->GetIntField(texDesc, cudaTextureDesc_sRGB);
-
-    jfloatArray borderColor = (jfloatArray)env->GetObjectField(texDesc, cudaTextureDesc_borderColor);
-    jfloat *nativeBorderColor = (jfloat*)env->GetPrimitiveArrayCritical(borderColor, NULL);
-    if (nativeBorderColor == NULL)
-    {
-        return nativeTexDesc;
-    }
-    for (int i = 0; i<4; i++)
-    {
-        nativeTexDesc.borderColor[i] = (float)nativeBorderColor[i];
-    }
-    env->ReleasePrimitiveArrayCritical(borderColor, nativeBorderColor, JNI_ABORT);
-
-    nativeTexDesc.normalizedCoords = (int) env->GetIntField(texDesc, cudaTextureDesc_normalizedCoords);
-    nativeTexDesc.maxAnisotropy = (unsigned int) env->GetIntField(texDesc, cudaTextureDesc_maxAnisotropy);
-    nativeTexDesc.mipmapFilterMode = (cudaTextureFilterMode) env->GetIntField(texDesc, cudaTextureDesc_mipmapFilterMode);
-    nativeTexDesc.mipmapLevelBias = (float)env->GetFloatField(texDesc, cudaTextureDesc_mipmapLevelBias);
-    nativeTexDesc.minMipmapLevelClamp = (float)env->GetFloatField(texDesc, cudaTextureDesc_minMipmapLevelClamp);
-    nativeTexDesc.maxMipmapLevelClamp = (float)env->GetFloatField(texDesc, cudaTextureDesc_maxMipmapLevelClamp);
-    nativeTexDesc.disableTrilinearOptimization = (int)env->GetIntField(texDesc, cudaTextureDesc_disableTrilinearOptimization);
-    nativeTexDesc.seamlessCubemap = (int)env->GetIntField(texDesc, cudaTextureDesc_seamlessCubemap);
-
-    return nativeTexDesc;
-}
-
-
-/**
- * Assigns the properties of the given native structure to the given
- * Java Object
- */
-void setCudaTextureDesc(JNIEnv *env, jobject texDesc, cudaTextureDesc_v2 &nativeTexDesc)
-{
-    jintArray addressMode = (jintArray)env->GetObjectField(texDesc, cudaTextureDesc_addressMode);
-    jint *nativeAddressMode = (jint*)env->GetPrimitiveArrayCritical(addressMode, NULL);
-    if (nativeAddressMode == NULL)
-    {
-        return;
-    }
-    for (int i=0; i<3; i++)
-    {
-         nativeAddressMode[i] = (jint)nativeTexDesc.addressMode[i];
-    }
-    env->ReleasePrimitiveArrayCritical(addressMode, nativeAddressMode, 0);
-
-    env->SetIntField(texDesc, cudaTextureDesc_filterMode, (jint)nativeTexDesc.filterMode);
-    env->SetIntField(texDesc, cudaTextureDesc_readMode, (jint)nativeTexDesc.readMode);
-    env->SetIntField(texDesc, cudaTextureDesc_sRGB, (jint)nativeTexDesc.sRGB);
-
-    jfloatArray borderColor = (jfloatArray)env->GetObjectField(texDesc, cudaTextureDesc_borderColor);
-    jfloat *nativeBorderColor = (jfloat*)env->GetPrimitiveArrayCritical(borderColor, NULL);
-    if (nativeBorderColor == NULL)
-    {
-        return;
-    }
-    for (int i = 0; i<4; i++)
-    {
-        nativeBorderColor[i] = (jfloat)nativeTexDesc.borderColor[i];
-    }
-    env->ReleasePrimitiveArrayCritical(borderColor, nativeBorderColor, 0);
-
-    env->SetIntField(texDesc, cudaTextureDesc_normalizedCoords, (jint)nativeTexDesc.normalizedCoords);
-    env->SetIntField(texDesc, cudaTextureDesc_maxAnisotropy, (jint)nativeTexDesc.maxAnisotropy);
-    env->SetIntField(texDesc, cudaTextureDesc_mipmapFilterMode, (jint)nativeTexDesc.mipmapFilterMode);
-    env->SetFloatField(texDesc, cudaTextureDesc_mipmapLevelBias, (jfloat)nativeTexDesc.mipmapLevelBias);
-    env->SetFloatField(texDesc, cudaTextureDesc_minMipmapLevelClamp, (jfloat)nativeTexDesc.minMipmapLevelClamp);
-    env->SetFloatField(texDesc, cudaTextureDesc_maxMipmapLevelClamp, (jfloat)nativeTexDesc.maxMipmapLevelClamp);
-    env->SetIntField(texDesc, cudaTextureDesc_disableTrilinearOptimization, (jint)nativeTexDesc.disableTrilinearOptimization);
-    env->SetIntField(texDesc, cudaTextureDesc_seamlessCubemap, (jint)nativeTexDesc.seamlessCubemap);
-}
-
 
 
 /**
@@ -2406,6 +2274,17 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaChooseDeviceNative
     return result;
 }
 
+/*
+ * Class:     jcuda_runtime_JCuda
+ * Method:    cudaInitDeviceNative
+ * Signature: (III)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaInitDeviceNative
+  (JNIEnv *env, jclass cls, jint device, jint deviceFlags, jint flags) {
+    Logger::log(LOG_TRACE, "Executing cudaInitDevice\n");
+    int result = cudaInitDevice(device, deviceFlags, flags);
+    return result;
+}
 
 
 
@@ -4418,6 +4297,33 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaStreamGetFlagsNative
     return result;
 }
 
+/*
+ * Class:     jcuda_runtime_JCuda
+ * Method:    cudaStreamGetIdNative
+ * Signature: (Ljcuda/runtime/cudaStream_t;[J)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaStreamGetIdNative
+  (JNIEnv *env, jclass cls, jobject hStream, jlongArray streamId) 
+{
+    if (hStream == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hStream' is null for cudaStreamGetId");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (streamId == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'flags' is null for cudaStreamGetId");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cudaStreamGetId\n");
+
+    cudaStream_t nativeHStream = (cudaStream_t)getNativePointerValue(env, hStream);
+    unsigned long long nativeStreamId;
+    int result = cudaStreamGetId(nativeHStream, &nativeStreamId);
+    if (!set(env, streamId, 0, (jint)nativeStreamId)) return JCUDA_INTERNAL_ERROR;
+    return result;
+}
+
 
 /*
  * Class:     jcuda_runtime_JCuda
@@ -5148,286 +5054,6 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemRangeGetAttributesNative
     return result;
 }
 
-
-
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaBindTextureNative
- * Signature: ([JLjcuda/runtime/textureReference;Ljcuda/Pointer;Ljcuda/runtime/cudaChannelFormatDesc;J)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaBindTextureNative
-  (JNIEnv *env, jclass cls, jlongArray offset, jobject texRef, jobject devPtr, jobject desc, jlong size)
-{
-    /* May be null
-    if (offset == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'offset' is null for cudaBindTexture");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    */
-    if (texRef == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'texRef' is null for cudaBindTexture");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (devPtr == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'devPtr' is null for cudaBindTexture");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (desc == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'desc' is null for cudaBindTexture");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    Logger::log(LOG_TRACE, "Executing cudaBindTexture\n");
-
-    size_t nativeOffset;
-    textureReference nativeTexRef = getTextureReference(env, texRef);
-    void *nativeDevPtr = getPointer(env, devPtr);
-    cudaChannelFormatDesc nativeDesc = getCudaChannelFormatDesc(env, desc);
-    int result = cudaBindTexture(&nativeOffset, &nativeTexRef, nativeDevPtr, &nativeDesc, (size_t)size);
-    if (offset != NULL)
-    {
-        if (!set(env, offset, 0, (long)nativeOffset)) return JCUDA_INTERNAL_ERROR;
-    }
-    return result;
-}
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaBindTexture2DNative
- * Signature: ([JLjcuda/runtime/textureReference;Ljcuda/Pointer;Ljcuda/runtime/cudaChannelFormatDesc;JJJ)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaBindTexture2DNative
-  (JNIEnv *env, jclass cls, jlongArray offset, jobject texRef, jobject devPtr, jobject desc, jlong width, jlong height, jlong pitch)
-{
-    if (texRef == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'texRef' is null for cudaBindTexture2D");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (devPtr == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'devPtr' is null for cudaBindTexture2D");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (desc == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'desc' is null for cudaBindTexture2D");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    Logger::log(LOG_TRACE, "Executing cudaBindTexture2D\n");
-
-
-    textureReference nativeTexRef = getTextureReference(env, texRef);
-    cudaChannelFormatDesc nativeDesc = getCudaChannelFormatDesc(env, desc);
-    void *nativeDevPtr = getPointer(env, devPtr);
-    size_t nativeOffset;
-    int result = cudaBindTexture2D(&nativeOffset, &nativeTexRef, nativeDevPtr, &nativeDesc, (size_t)width, (size_t)height, (size_t)pitch);
-    if (!set(env, offset, 0, (long)nativeOffset)) return JCUDA_INTERNAL_ERROR;
-    return result;
-}
-
-
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaBindTextureToArrayNative
- * Signature: (Ljcuda/runtime/textureReference;Ljcuda/runtime/cudaArray;Ljcuda/runtime/cudaChannelFormatDesc;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaBindTextureToArrayNative
-  (JNIEnv *env, jclass cls, jobject texref, jobject array, jobject desc)
-{
-    if (texref == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'texref' is null for cudaBindTextureToArray");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (array == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'array' is null for cudaBindTextureToArray");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (desc == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'desc' is null for cudaBindTextureToArray");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    Logger::log(LOG_TRACE, "Executing cudaBindTextureToArray\n");
-
-    textureReference nativeTexref = getTextureReference(env, texref);
-    cudaArray *nativeArray = (cudaArray*)getNativePointerValue(env, array);
-    cudaChannelFormatDesc nativeDesc = getCudaChannelFormatDesc(env, desc);
-    int result = cudaBindTextureToArray(&nativeTexref, nativeArray, &nativeDesc);
-    return result;
-}
-
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaBindTextureToMipmappedArrayNative
- * Signature: (Ljcuda/runtime/textureReference;Ljcuda/runtime/cudaMipmappedArray;Ljcuda/runtime/cudaChannelFormatDesc;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaBindTextureToMipmappedArrayNative
-  (JNIEnv *env, jclass cls, jobject texref, jobject mipmappedArray, jobject desc)
-{
-    if (texref == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'texref' is null for cudaBindTextureToMipmappedArray");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (mipmappedArray == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'mipmappedArray' is null for cudaBindTextureToMipmappedArray");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (desc == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'desc' is null for cudaBindTextureToMipmappedArray");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    Logger::log(LOG_TRACE, "Executing cudaBindTextureToMipmappedArray\n");
-
-    textureReference nativeTexref = getTextureReference(env, texref);
-    cudaMipmappedArray *nativeMipmappedArray = (cudaMipmappedArray*)getNativePointerValue(env, mipmappedArray);
-    cudaChannelFormatDesc nativeDesc = getCudaChannelFormatDesc(env, desc);
-    int result = cudaBindTextureToMipmappedArray(&nativeTexref, nativeMipmappedArray, &nativeDesc);
-    return result;
-}
-
-
-
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaUnbindTextureNative
- * Signature: (Ljcuda/runtime/textureReference;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaUnbindTextureNative
-  (JNIEnv *env, jclass cls, jobject texref)
-{
-    if (texref == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'texref' is null for cudaUnbindTexture");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    Logger::log(LOG_TRACE, "Executing cudaUnbindTexture\n");
-
-    textureReference nativeTexref = getTextureReference(env, texref);
-    int result = cudaUnbindTexture(&nativeTexref);
-    return result;
-}
-
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaGetTextureAlignmentOfNativefset
- * Signature: ([JLjcuda/runtime/textureReference;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGetTextureAlignmentOffsetNative
-  (JNIEnv *env, jclass cls, jlongArray offset, jobject texref)
-{
-    if (offset == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'offset' is null for cudaGetTextureAlignmentOffset");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (texref == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'texref' is null for cudaGetTextureAlignmentOffset");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    Logger::log(LOG_TRACE, "Executing cudaGetTextureAlignmentOffset\n");
-
-    size_t nativeOffset;
-    textureReference nativeTexref = getTextureReference(env, texref);
-    int result = cudaGetTextureAlignmentOffset(&nativeOffset, &nativeTexref);
-    if (!set(env, offset, 0, (long)nativeOffset)) return JCUDA_INTERNAL_ERROR;
-    return result;
-}
-
-
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaBindSurfaceToArrayNative
- * Signature: (Ljcuda/runtime/surfaceReference;Ljcuda/runtime/cudaArray;Ljcuda/runtime/cudaChannelFormatDesc;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaBindSurfaceToArrayNative
-  (JNIEnv *env, jclass cls, jobject surfref, jobject array, jobject desc)
-{
-    if (surfref == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'surfref' is null for cudaBindSurfaceToArray");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (array == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'array' is null for cudaBindSurfaceToArray");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (desc == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'desc' is null for cudaBindSurfaceToArray");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    Logger::log(LOG_TRACE, "Executing cudaBindSurfacetureToArray\n");
-
-    surfaceReference nativeSurfref = getSurfaceReference(env, surfref);
-    cudaArray *nativeArray = (cudaArray*)getNativePointerValue(env, array);
-    cudaChannelFormatDesc nativeDesc = getCudaChannelFormatDesc(env, desc);
-    int result = cudaBindSurfaceToArray(&nativeSurfref, nativeArray, &nativeDesc);
-    return result;
-}
-
-
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaCreateTextureObjectNative
- * Signature: (Ljcuda/runtime/cudaTextureObject;Ljcuda/runtime/cudaResourceDesc;Ljcuda/runtime/cudaTextureDesc;Ljcuda/runtime/cudaResourceViewDesc;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaCreateTextureObjectNative
-  (JNIEnv *env, jclass cls, jobject pTexObject, jobject pResDesc, jobject pTexDesc, jobject pResViewDesc)
-{
-    if (pTexObject == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'pTexObject' is null for cudaCreateTextureObject");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (pResDesc == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'pResDesc' is null for cudaCreateTextureObject");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (pTexDesc == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'pTexDesc' is null for cudaCreateTextureObject");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    // pResViewDesc may be NULL
-    Logger::log(LOG_TRACE, "Executing cudaCreateTextureObject\n");
-
-    cudaTextureObject_t nativePTexObject;
-    cudaResourceDesc nativePResDesc = getCudaResourceDesc(env, pResDesc);
-    cudaTextureDesc_v2 nativePTexDesc = getCudaTextureDesc(env, pTexDesc);
-    cudaResourceViewDesc nativePResViewDesc;
-    cudaResourceViewDesc *nativePResViewDescPointer = NULL;
-    if (pResViewDesc != NULL)
-    {
-        nativePResViewDesc = getCudaResourceViewDesc(env, pResViewDesc);
-        nativePResViewDescPointer = &nativePResViewDesc;
-    }
-
-    int result = cudaCreateTextureObject_v2(&nativePTexObject, &nativePResDesc, &nativePTexDesc, nativePResViewDescPointer);
-
-    setNativePointerValue(env, pTexObject, (jlong)nativePTexObject);
-    return result;
-}
-
-
 /*
  * Class:     jcuda_runtime_JCuda
  * Method:    cudaDestroyTextureObjectNative
@@ -5472,33 +5098,6 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGetTextureObjectResourceDesc
     cudaResourceDesc nativePResDesc;
     int result = cudaGetTextureObjectResourceDesc(&nativePResDesc, nativeTexObject);
     setCudaResourceDesc(env, pResDesc, nativePResDesc);
-    return result;
-}
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaGetTextureObjectTextureDescNative
- * Signature: (Ljcuda/runtime/cudaTextureDesc;Ljcuda/runtime/cudaTextureObject;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGetTextureObjectTextureDescNative
-  (JNIEnv *env, jclass cls, jobject pTexDesc, jobject texObject)
-{
-    if (pTexDesc == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'pTexDesc' is null for cudaGetTextureObjectTextureDesc");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (texObject == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'texObject' is null for cudaGetTextureObjectTextureDesc");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    Logger::log(LOG_TRACE, "Executing cudaGetTextureObjectTextureDesc\n");
-
-    cudaTextureObject_t nativeTexObject = (cudaTextureObject_t)getNativePointerValue(env, texObject);
-    cudaTextureDesc_v2 nativePTexDesc;
-    int result = cudaGetTextureObjectTextureDesc_v2(&nativePTexDesc, nativeTexObject);
-    setCudaTextureDesc(env, pTexDesc, nativePTexDesc);
     return result;
 }
 
@@ -6195,37 +5794,6 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGraphicsResourceGetMappedMip
     return result;
 }
 
-
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaProfilerInitializeNative
- * Signature: (Ljava/lang/String;Ljava/lang/String;I)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaProfilerInitializeNative
-  (JNIEnv *env, jclass cls, jstring configFile, jstring outputFile, jint outputMode)
-{
-    if (configFile == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'configFile' is null for cudaProfilerInitialize");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (outputFile == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'outputFile' is null for cudaProfilerInitialize");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    Logger::log(LOG_TRACE, "Executing cudaProfilerInitialize\n");
-
-    char *nativeConfigFile = convertString(env, configFile);
-    char *nativeOutputFile = convertString(env, outputFile);
-
-    int result = cudaProfilerInitialize(nativeConfigFile, nativeOutputFile, (cudaOutputMode_t)outputMode);
-
-    delete[] nativeConfigFile;
-    delete[] nativeOutputFile;
-    return result;
-}
 
 /*
  * Class:     jcuda_runtime_JCuda

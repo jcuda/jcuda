@@ -45,7 +45,7 @@ import jcuda.runtime.JCuda;
 public class JCudaDriver
 {
     /** The CUDA version */
-    public static final int CUDA_VERSION = 11080;
+    public static final int CUDA_VERSION = 12000;
 
     /**
      * If set, host memory is portable between CUDA contexts.
@@ -260,6 +260,11 @@ public class JCudaDriver
      * Flag for ::cuTexRefSetFlags() and ::cuTexObjectCreate()
      */
     public static final int CU_TRSF_DISABLE_TRILINEAR_OPTIMIZATION = 0x20;
+    
+    /**
+     * Indicates that compute device class supports accelerated features.
+     */
+    public static final int CU_COMPUTE_ACCELERATED_TARGET_BASE = 0x10000;    
     
     /**
      * Private inner class for the constant pointer values
@@ -2386,6 +2391,41 @@ public class JCudaDriver
         return checkResult(cuCtxGetFlagsNative(flags));
     }
     private static native int cuCtxGetFlagsNative(int flags[]);
+    
+    /**
+     * Returns the unique Id associated with the context supplied
+     *
+     * Returns in \p ctxId the unique Id which is associated with a given context.
+     * The Id is unique for the life of the program for this instance of CUDA.
+     * If context is supplied as NULL and there is one current, the Id of the
+     * current context is returned.
+     *
+     * @param ctx - Context for which to obtain the Id
+     * @param ctxId - Pointer to store the Id of the context
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_CONTEXT_IS_DESTROYED,
+     * CUDA_ERROR_DEINITIALIZED,
+     * CUDA_ERROR_NOT_INITIALIZED,
+     * CUDA_ERROR_INVALID_CONTEXT,
+     * CUDA_ERROR_INVALID_VALUE
+     *
+     * @see JCudaDriver#cuCtxCreate,
+     * @see JCudaDriver#cuCtxDestroy,
+     * @see JCudaDriver#cuCtxGetApiVersion,
+     * @see JCudaDriver#cuCtxGetCacheConfig,
+     * @see JCudaDriver#cuCtxGetDevice,
+     * @see JCudaDriver#cuCtxGetFlags,
+     * @see JCudaDriver#cuCtxGetLimit,
+     * @see JCudaDriver#cuCtxPushCurrent
+     */
+    public static final int cuCtxGetId(CUcontext ctx, long ctxId[]) 
+    {
+        return checkResult(cuCtxGetIdNative(ctx, ctxId));
+    }
+    private static native int cuCtxGetIdNative(CUcontext ctx, long ctxId[]); 
+    
 
     /**
      * Block for a context's tasks to complete.
@@ -2996,6 +3036,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuModuleLoadDataEx
      * @see JCudaDriver#cuModuleLoadFatBinary
      * @see JCudaDriver#cuModuleUnload
+     * 
+     * @deprecated As of CUDA 12
      */
     public static int cuModuleGetTexRef(CUtexref pTexRef, CUmodule hmod, String name)
     {
@@ -3047,6 +3089,8 @@ public class JCudaDriver
      * @see JCudaDriver#cuModuleLoadDataEx
      * @see JCudaDriver#cuModuleLoadFatBinary
      * @see JCudaDriver#cuModuleUnload
+     * 
+     * @deprecated As of CUDA 12
      */
     public static int cuModuleGetSurfRef(CUsurfref pSurfRef, CUmodule hmod, String name)
     {
@@ -14115,42 +14159,80 @@ public class JCudaDriver
     
 
     /**
-     * Creates an executable graph from a graph.<br>
-     * <br>
+     * <code><pre>
+     * \brief Creates an executable graph from a graph
+     *
      * Instantiates \p hGraph as an executable graph. The graph is validated for any
      * structural constraints or intra-node constraints which were not previously
      * validated. If instantiation is successful, a handle to the instantiated graph
-     * is returned in \p graphExec.<br>
-     * <br>
-     * If there are any errors, diagnostic information may be returned in \p errorNode and
-     * \p logBuffer. This is the primary way to inspect instantiation errors. The output
-     * will be null terminated unless the diagnostics overflow
-     * the buffer. In this case, they will be truncated, and the last byte can be
-     * inspected to determine if truncation occurred.<br>
+     * is returned in \p phGraphExec.
      *
-     * @param phGraphExec - Returns instantiated graph
-     * @param hGraph      - Graph to instantiate
-     * @param phErrorNode - In case of an instantiation error, this may be modified to
-     *                      indicate a node contributing to the error
-     * @param logBuffer   - A character buffer to store diagnostic messages
-     * @param bufferSize  - Size of the log buffer in bytes
+     * The \p flags parameter controls the behavior of instantiation and subsequent
+     * graph launches.  Valid flags are:
      *
-     * @return
-     * CUDA_SUCCESS,
-     * CUDA_ERROR_DEINITIALIZED,
-     * CUDA_ERROR_NOT_INITIALIZED,
-     * CUDA_ERROR_INVALID_VALUE
+     * - ::CUDA_GRAPH_INSTANTIATE_FLAG_AUTO_FREE_ON_LAUNCH, which configures a
+     * graph containing memory allocation nodes to automatically free any
+     * unfreed memory allocations before the graph is relaunched.
      *
-     * 
-     * @see JCudaDriver#cuGraphCreate
-     * @see JCudaDriver#cuGraphLaunch
-     * @see JCudaDriver#cuGraphExecDestroy
+     * - ::CUDA_GRAPH_INSTANTIATE_FLAG_DEVICE_LAUNCH, which configures the graph for launch
+     * from the device. If this flag is passed, the executable graph handle returned can be
+     * used to launch the graph from both the host and device. This flag can only be used
+     * on platforms which support unified addressing. This flag cannot be used in
+     * conjunction with ::CUDA_GRAPH_INSTANTIATE_FLAG_AUTO_FREE_ON_LAUNCH.
+     *
+     * - ::CUDA_GRAPH_INSTANTIATE_FLAG_USE_NODE_PRIORITY, which causes the graph
+     * to use the priorities from the per-node attributes rather than the priority
+     * of the launch stream during execution. Note that priorities are only available
+     * on kernel nodes, and are copied from stream priority during stream capture.
+     *
+     * If \p hGraph contains any allocation or free nodes, there can be at most one
+     * executable graph in existence for that graph at a time. An attempt to instantiate
+     * a second executable graph before destroying the first with ::cuGraphExecDestroy
+     * will result in an error.
+     *
+     * If \p hGraph contains kernels which call device-side cudaGraphLaunch() from multiple
+     * contexts, this will result in an error.
+     *
+     * Graphs instantiated for launch on the device have additional restrictions which do not
+     * apply to host graphs:
+     *
+     * - The graph's nodes must reside on a single context.
+     * - The graph can only contain kernel nodes, memcpy nodes, memset nodes, and child graph nodes.
+     *   Operation-specific restrictions are outlined below.
+     * - Kernel nodes:
+     *   - Use of CUDA Dynamic Parallelism is not permitted.
+     *   - Cooperative launches are permitted as long as MPS is not in use.
+     * - Memcpy nodes:
+     *   - Only copies involving device memory and/or pinned device-mapped host memory are permitted.
+     *   - Copies involving CUDA arrays are not permitted.
+     *   - Both operands must be accessible from the current context, and the current context must
+     *     match the context of other nodes in the graph.
+     *
+     * \param phGraphExec - Returns instantiated graph
+     * \param hGraph      - Graph to instantiate
+     * \param flags       - Flags to control instantiation.  See ::CUgraphInstantiate_flags.
+     *
+     * \return
+     * ::CUDA_SUCCESS,
+     * ::CUDA_ERROR_DEINITIALIZED,
+     * ::CUDA_ERROR_NOT_INITIALIZED,
+     * ::CUDA_ERROR_INVALID_VALUE
+     * \note_graph_thread_safety
+     * \notefnerr
+     *
+     * \sa
+     * ::cuGraphInstantiate,
+     * ::cuGraphCreate,
+     * ::cuGraphUpload,
+     * ::cuGraphLaunch,
+     * ::cuGraphExecDestroy
+     * </pre></code>
      */
-    public static int cuGraphInstantiate(CUgraphExec phGraphExec, CUgraph hGraph, CUgraphNode phErrorNode, byte logBuffer[], long bufferSize) 
+    public static int cuGraphInstantiate(CUgraphExec phGraphExec, CUgraph hGraph, long flags) 
     {
-        return checkResult(cuGraphInstantiateNative(phGraphExec, hGraph, phErrorNode, logBuffer, bufferSize));
+        return checkResult(cuGraphInstantiateNative(phGraphExec, hGraph, flags));
     }
-    private static native int cuGraphInstantiateNative(CUgraphExec phGraphExec, CUgraph hGraph, CUgraphNode phErrorNode, byte logBuffer[], long bufferSize);
+    private static native int cuGraphInstantiateNative(CUgraphExec phGraphExec, CUgraph hGraph, long flags);
 
     
     /**
@@ -14653,10 +14735,9 @@ public class JCudaDriver
      */
     public static int cuGraphExecUpdate(CUgraphExec hGraphExec, CUgraph hGraph, CUgraphNode hErrorNode_out, int updateResult_out[])
     {
-        return checkResult(cuGraphExecUpdateNative(hGraphExec, hGraph, hErrorNode_out, updateResult_out));
+        // There's another function that ~"does something similar", but not passed through here
+        throw new UnsupportedOperationException("This function no longer exists in CUDA 12");
     }
-    private static native int cuGraphExecUpdateNative(CUgraphExec hGraphExec, CUgraph hGraph, CUgraphNode hErrorNode_out, int updateResult_out[]);
-    
     
     /**
      * Copies attributes from source node to destination node.
@@ -16317,6 +16398,42 @@ public class JCudaDriver
     private static native int cuStreamGetFlagsNative(CUstream hStream, int flags[]);
 
     /**
+     * Returns the unique Id associated with the stream handle supplied
+     *
+     * Returns in streamId the unique Id which is associated with the given stream handle.
+     * The Id is unique for the life of the program for this instance of CUDA.
+     * 
+     * The stream handle hStream can refer to any of the following:
+     * <ul>
+     *   <li>a stream created via any of the CUDA driver APIs such as ::cuStreamCreate
+     *   and ::cuStreamCreateWithPriority, or their runtime API equivalents such as
+     *   ::cudaStreamCreate, ::cudaStreamCreateWithFlags and ::cudaStreamCreateWithPriority.
+     *   Passing an invalid handle will result in undefined behavior.</li>
+     *   <li>any of the special streams such as the NULL stream, ::CU_STREAM_LEGACY and
+     *   ::CU_STREAM_PER_THREAD. The runtime API equivalents of these are also accepted,
+     *   which are NULL, ::cudaStreamLegacy and ::cudaStreamPerThread respectively.</li>
+     * </ul>
+     *
+     * @param hStream    - Handle to the stream to be queried
+     * @param streamId   - Pointer to store the Id of the stream
+     *
+     * @return
+     * CUDA_SUCCESS,
+     * CUDA_ERROR_INVALID_VALUE,
+     * CUDA_ERROR_INVALID_HANDLE
+     *
+     * @see JCudaDriver#cuStreamDestroy
+     * @see JCudaDriver#cuStreamCreate
+     * @see JCudaDriver#cuStreamGetPriority
+     * @see JCudaDriver#cudaStreamGetId
+     */
+    public static int cuStreamGetId(CUstream hStream, long streamId[]) 
+    {
+        return checkResult(cuStreamGetIdNative(hStream, streamId));
+    }
+    private static native int cuStreamGetIdNative(CUstream hStream, long streamId[]);
+    
+    /**
      * Query the context associated with a stream.
      *
      * Returns the CUDA context that the stream is associated with. 
@@ -16696,9 +16813,9 @@ public class JCudaDriver
      */
      public static int cuStreamGetCaptureInfo(CUstream hStream, int captureStatus[], long id[])
      {
-         return checkResult(cuStreamGetCaptureInfoNative(hStream, captureStatus, id));
+         // There's another function that ~"does something similar", but not passed through here
+         throw new UnsupportedOperationException("This function no longer exists in CUDA 12");
      }
-     private static native int cuStreamGetCaptureInfoNative(CUstream hStream, int captureStatus[], long id[]);
     
     
     /**

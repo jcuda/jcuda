@@ -34,6 +34,8 @@ import jcuda.NativePointerObject;
  * <br />
  * Most comments are taken from the CUDA reference manual or CUDA
  * programming guide.
+ * 
+ * @deprecated As of CUDA 12
  */
 public class textureReference extends NativePointerObject
 {

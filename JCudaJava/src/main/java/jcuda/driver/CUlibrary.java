@@ -1,7 +1,7 @@
 /*
  * JCuda - Java bindings for NVIDIA CUDA driver and runtime API
  *
- * Copyright (c) 2009-2015 Marco Hutter - http://www.jcuda.org
+ * Copyright (c) 2009-2020 Marco Hutter - http://www.jcuda.org
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -24,55 +24,34 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-package jcuda;
+package jcuda.driver;
 
-import jcuda.driver.JCudaDriver;
+import jcuda.NativePointerObject;
 
 /**
- * Utility methods for determining the JCuda version. This class is not 
- * part of the public API. 
+ * Java port of a CUlibrary
  */
-public class JCudaVersion
+public class CUlibrary extends NativePointerObject
 {
     /**
-     * Returns an unspecified string that will be appended to native 
-     * library names for disambiguation
-     * 
-     * @return The JCuda version  
+     * Creates a new, uninitialized CUlibrary
      */
-    public static String get()
+    public CUlibrary()
     {
-        return "12.0.0";
+        // Default constructor
     }
-    
-    /**
-     * Tests whether JCuda is available on this platform. 
-     * 
-     * This method can be used to check whether the native libraries for 
-     * accessing CUDA via JCuda can be loaded on this platform, and the
-     * driver library can be initialized.
-     *  
-     * @return Whether JCuda is available.
+
+     /**
+     * Returns a String representation of this object.
+     *
+     * @return A String representation of this object.
      */
-    public static boolean isAvailable()
+    @Override
+    public String toString()
     {
-        try
-        {
-            JCudaDriver.cuInit(0);
-            return true;
-        }
-        catch (Throwable t)
-        {
-            return false;
-        }
-        
+        return "CUlibrary["+
+            "nativePointer=0x"+Long.toHexString(getNativePointer())+"]";
     }
-    
-    /**
-     * Private constructor to prevent instantiation 
-     */
-    private JCudaVersion()
-    {
-    }
-    
 }
+
+

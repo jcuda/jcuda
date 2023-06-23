@@ -31,6 +31,8 @@ import jcuda.NativePointerObject;
 
 /**
  * Java port of a surfaceReference.<br />
+ * 
+ * @deprecated As of CUDA 12
  */
 public class surfaceReference extends NativePointerObject
 {

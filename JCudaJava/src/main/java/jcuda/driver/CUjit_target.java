@@ -165,6 +165,11 @@ public class CUjit_target
     public static final int CU_TARGET_COMPUTE_90 = 90;
     
     /**
+     * Compute device class 9.0. with accelerated features.
+     */
+    public static final int CU_TARGET_COMPUTE_90A = JCudaDriver.CU_COMPUTE_ACCELERATED_TARGET_BASE + CU_TARGET_COMPUTE_90;
+    
+    /**
      * Returns the String identifying the given CUjit_target
      *
      * @param n The CUjit_target
@@ -199,6 +204,7 @@ public class CUjit_target
             case CU_TARGET_COMPUTE_87: return "CU_TARGET_COMPUTE_87";
             case CU_TARGET_COMPUTE_89: return "CU_TARGET_COMPUTE_89";
             case CU_TARGET_COMPUTE_90: return "CU_TARGET_COMPUTE_90";
+            case CU_TARGET_COMPUTE_90A: return "CU_TARGET_COMPUTE_90A";
         }
         return "INVALID CUjit_target: "+n;
     }

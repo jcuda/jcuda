@@ -3079,6 +3079,31 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuCtxGetFlagsNative
 }
 
 
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuCtxGetIdNative
+ * Signature: (Ljcuda/driver/CUcontext;[J)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuCtxGetIdNative
+  (JNIEnv *env, jclass cls, jobject ctx, jlongArray ctxId) {
+    if (ctx == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'ctx' is null for cuCtxGetId");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (ctxId == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'ctxId' is null for cuCtxGetId");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuCtxGetId\n");
+
+    CUcontext nativeCtx = (CUcontext)getNativePointerValue(env, ctx);
+    unsigned long long nativeCtxId = 0;
+    int result = cuCtxGetId(nativeCtx, &nativeCtxId);
+    if (!set(env, ctxId, 0, nativeCtxId)) return JCUDA_INTERNAL_ERROR;
+    return result;
+}
 
 
 /*
@@ -9438,7 +9463,7 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphDestroyNodeNative(JN
 * Method:    cuGraphInstantiateNative
 * Signature: (Ljcuda/driver/CUgraphExec;Ljcuda/driver/CUgraph;Ljcuda/driver/CUgraphNode;[BJ)I
 */
-JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphInstantiateNative(JNIEnv *env, jclass cls, jobject phGraphExec, jobject hGraph, jobject phErrorNode, jbyteArray logBuffer, jlong bufferSize)
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphInstantiateNative(JNIEnv *env, jclass cls, jobject phGraphExec, jobject hGraph, jlong flags)
 {
 	if (phGraphExec == NULL)
 	{
@@ -9450,37 +9475,18 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphInstantiateNative(JN
 		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraph' is null for cuGraphInstantiate");
 		return JCUDA_INTERNAL_ERROR;
 	}
-	if (phErrorNode == NULL)
-	{
-		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'phErrorNode' is null for cuGraphInstantiate");
-		return JCUDA_INTERNAL_ERROR;
-	}
-	if (logBuffer == NULL)
-	{
-		ThrowByName(env, "java/lang/NullPointerException", "Parameter 'logBuffer' is null for cuGraphInstantiate");
-		return JCUDA_INTERNAL_ERROR;
-	}
 
 	Logger::log(LOG_TRACE, "Executing cuGraphInstantiate\n");
 
 	CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
-	jsize logBufferLen = env->GetArrayLength(logBuffer);
-	char* nativeLogBuffer = new char[logBufferLen];
 
 	CUgraphExec nativePhGraphExec = NULL;
 	CUgraphNode nativePhErrorNode = NULL;
-	size_t nativeBufferSize = (size_t)bufferSize;
+	unsigned long long nativeFlags = (unsigned long long)flags;
 
-	int result = cuGraphInstantiate(&nativePhGraphExec, nativeHGraph, &nativePhErrorNode, nativeLogBuffer, nativeBufferSize);
+	int result = cuGraphInstantiate(&nativePhGraphExec, nativeHGraph, nativeFlags);
 
 	setNativePointerValue(env, phGraphExec, (jlong)nativePhGraphExec);
-	setNativePointerValue(env, phErrorNode, (jlong)nativePhErrorNode);
-	jbyte* logBufferElements = env->GetByteArrayElements(logBuffer, NULL);
-	for (int i = 0; i < logBufferLen; i++)
-	{
-		logBufferElements[i] = (jbyte)nativeLogBuffer[i];
-	}
-	env->ReleaseByteArrayElements(logBuffer, logBufferElements, 0);
 
 	return result;
 }
@@ -9878,50 +9884,6 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphDestroyNative(JNIEnv
 }
 
 
-/*
-* Class:     jcuda_driver_JCudaDriver
-* Method:    cuGraphExecUpdateNative
-* Signature: (Ljcuda/driver/CUgraphExec;Ljcuda/driver/CUgraph;Ljcuda/driver/CUgraphNode;[I)I
-*/
-JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphExecUpdateNative
-    (JNIEnv *env, jclass cls, jobject hGraphExec, jobject hGraph, jobject hErrorNode_out, jintArray updateResult_out)
-{
-    if (hGraphExec == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraphExec' is null for cuGraphExecUpdate");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (hGraph == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hGraph' is null for cuGraphExecUpdate");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (hErrorNode_out == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hErrorNode_out' is null for cuGraphExecUpdate");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (hErrorNode_out == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'updateResult_out' is null for cuGraphExecUpdate");
-        return JCUDA_INTERNAL_ERROR;
-    }
-
-    Logger::log(LOG_TRACE, "Executing cuGraphExecUpdate\n");
-
-    CUgraphExec nativeHGraphExec = (CUgraphExec)getNativePointerValue(env, hGraphExec);
-    CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
-    CUgraphNode nativeHErrorNode_out = NULL;
-    CUgraphExecUpdateResult nativeUpdateResult_out;
-
-    int result = cuGraphExecUpdate(nativeHGraphExec, nativeHGraph, &nativeHErrorNode_out, &nativeUpdateResult_out);
-
-    setNativePointerValue(env, hErrorNode_out, (jlong)nativeHErrorNode_out);
-    if (!set(env, updateResult_out, 0, (jint)nativeUpdateResult_out)) return JCUDA_INTERNAL_ERROR;
-
-    return result;
-
-}
 
 /*
  * Class:     jcuda_driver_JCudaDriver
@@ -10972,6 +10934,32 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamGetFlagsNative
     return result;
 }
 
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuStreamGetIdNative
+ * Signature: (Ljcuda/driver/CUstream;[J)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamGetIdNative
+  (JNIEnv *env, jclass cls, jobject hStream, jlongArray streamId) {
+    if (hStream == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hStream' is null for cuStreamGetId");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (streamId == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'streamId' is null for cuStreamGetId");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    Logger::log(LOG_TRACE, "Executing cuStreamGetId\n");
+
+    CUstream nativeHStream = (CUstream)getNativePointerValue(env, hStream);
+    unsigned long long nativeStreamId;
+    int result = cuStreamGetId(nativeHStream, &nativeStreamId);
+    if (!set(env, streamId, 0, nativeStreamId)) return JCUDA_INTERNAL_ERROR;
+    return result;
+}
+
 
 /*
 * Class:     jcuda_driver_JCudaDriver
@@ -11171,41 +11159,6 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamIsCapturingNative
 	int result = cuStreamIsCapturing(nativeHStream, &nativeCaptureStatus);
 	if (!set(env, captureStatus, 0, (jint)nativeCaptureStatus)) return JCUDA_INTERNAL_ERROR;
 	return result;
-}
-
-/*
-* Class:     jcuda_driver_JCudaDriver
-* Method:    cuStreamGetCaptureInfoNative
-* Signature: (Ljcuda/driver/CUstream;[I[J)I
-*/
-JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuStreamGetCaptureInfoNative
-    (JNIEnv *env, jclass cls, jobject hStream, jintArray captureStatus, jlongArray id)
-{
-    if (hStream == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hStream' is null for cuStreamGetCaptureInfo");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (captureStatus == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'captureStatus' is null for cuStreamGetCaptureInfo");
-        return JCUDA_INTERNAL_ERROR;
-    }
-    if (id == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'id' is null for cuStreamGetCaptureInfo");
-        return JCUDA_INTERNAL_ERROR;
-    }
-
-    Logger::log(LOG_TRACE, "Executing cuStreamGetCaptureInfo\n");
-
-    CUstream nativeHStream = (CUstream)getNativePointerValue(env, hStream);
-    CUstreamCaptureStatus nativeCaptureStatus;
-    cuuint64_t nativeId;
-    int result = cuStreamGetCaptureInfo(nativeHStream, &nativeCaptureStatus, &nativeId);
-    if (!set(env, captureStatus, 0, (jint)nativeCaptureStatus)) return JCUDA_INTERNAL_ERROR;
-    if (!set(env, id, 0, (jlong)nativeId)) return JCUDA_INTERNAL_ERROR;
-    return result;
 }
 
 /*

@@ -35,7 +35,7 @@
 extern "C" {
 #endif
 #undef jcuda_runtime_JCuda_CUDART_VERSION
-#define jcuda_runtime_JCuda_CUDART_VERSION 11060L
+#define jcuda_runtime_JCuda_CUDART_VERSION 12000L
 #undef jcuda_runtime_JCuda_cudaHostAllocDefault
 #define jcuda_runtime_JCuda_cudaHostAllocDefault 0L
 #undef jcuda_runtime_JCuda_cudaHostAllocPortable
@@ -249,6 +249,14 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaDeviceGetP2PAttributeNative
  */
 JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaChooseDeviceNative
   (JNIEnv *, jclass, jintArray, jobject);
+
+/*
+ * Class:     jcuda_runtime_JCuda
+ * Method:    cudaInitDeviceNative
+ * Signature: (III)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaInitDeviceNative
+  (JNIEnv *, jclass, jint, jint, jint);
 
 /*
  * Class:     jcuda_runtime_JCuda
@@ -740,6 +748,14 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaStreamGetFlagsNative
 
 /*
  * Class:     jcuda_runtime_JCuda
+ * Method:    cudaStreamGetIdNative
+ * Signature: (Ljcuda/runtime/cudaStream_t;[J)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaStreamGetIdNative
+  (JNIEnv *, jclass, jobject, jlongArray);
+
+/*
+ * Class:     jcuda_runtime_JCuda
  * Method:    cudaCtxResetPersistingL2CacheNative
  * Signature: ()I
  */
@@ -1100,70 +1116,6 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemRangeGetAttributesNative
 
 /*
  * Class:     jcuda_runtime_JCuda
- * Method:    cudaBindTextureNative
- * Signature: ([JLjcuda/runtime/textureReference;Ljcuda/Pointer;Ljcuda/runtime/cudaChannelFormatDesc;J)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaBindTextureNative
-  (JNIEnv *, jclass, jlongArray, jobject, jobject, jobject, jlong);
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaBindTexture2DNative
- * Signature: ([JLjcuda/runtime/textureReference;Ljcuda/Pointer;Ljcuda/runtime/cudaChannelFormatDesc;JJJ)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaBindTexture2DNative
-  (JNIEnv *, jclass, jlongArray, jobject, jobject, jobject, jlong, jlong, jlong);
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaBindTextureToArrayNative
- * Signature: (Ljcuda/runtime/textureReference;Ljcuda/runtime/cudaArray;Ljcuda/runtime/cudaChannelFormatDesc;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaBindTextureToArrayNative
-  (JNIEnv *, jclass, jobject, jobject, jobject);
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaBindTextureToMipmappedArrayNative
- * Signature: (Ljcuda/runtime/textureReference;Ljcuda/runtime/cudaMipmappedArray;Ljcuda/runtime/cudaChannelFormatDesc;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaBindTextureToMipmappedArrayNative
-  (JNIEnv *, jclass, jobject, jobject, jobject);
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaUnbindTextureNative
- * Signature: (Ljcuda/runtime/textureReference;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaUnbindTextureNative
-  (JNIEnv *, jclass, jobject);
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaGetTextureAlignmentOffsetNative
- * Signature: ([JLjcuda/runtime/textureReference;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGetTextureAlignmentOffsetNative
-  (JNIEnv *, jclass, jlongArray, jobject);
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaBindSurfaceToArrayNative
- * Signature: (Ljcuda/runtime/surfaceReference;Ljcuda/runtime/cudaArray;Ljcuda/runtime/cudaChannelFormatDesc;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaBindSurfaceToArrayNative
-  (JNIEnv *, jclass, jobject, jobject, jobject);
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaCreateTextureObjectNative
- * Signature: (Ljcuda/runtime/cudaTextureObject;Ljcuda/runtime/cudaResourceDesc;Ljcuda/runtime/cudaTextureDesc;Ljcuda/runtime/cudaResourceViewDesc;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaCreateTextureObjectNative
-  (JNIEnv *, jclass, jobject, jobject, jobject, jobject);
-
-/*
- * Class:     jcuda_runtime_JCuda
  * Method:    cudaDestroyTextureObjectNative
  * Signature: (Ljcuda/runtime/cudaTextureObject;)I
  */
@@ -1176,14 +1128,6 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaDestroyTextureObjectNative
  * Signature: (Ljcuda/runtime/cudaResourceDesc;Ljcuda/runtime/cudaTextureObject;)I
  */
 JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGetTextureObjectResourceDescNative
-  (JNIEnv *, jclass, jobject, jobject);
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaGetTextureObjectTextureDescNative
- * Signature: (Ljcuda/runtime/cudaTextureDesc;Ljcuda/runtime/cudaTextureObject;)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGetTextureObjectTextureDescNative
   (JNIEnv *, jclass, jobject, jobject);
 
 /*
@@ -1409,14 +1353,6 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGraphicsSubResourceGetMapped
  */
 JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaGraphicsResourceGetMappedMipmappedArrayNative
   (JNIEnv *, jclass, jobject, jobject);
-
-/*
- * Class:     jcuda_runtime_JCuda
- * Method:    cudaProfilerInitializeNative
- * Signature: (Ljava/lang/String;Ljava/lang/String;I)I
- */
-JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaProfilerInitializeNative
-  (JNIEnv *, jclass, jstring, jstring, jint);
 
 /*
  * Class:     jcuda_runtime_JCuda

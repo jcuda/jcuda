@@ -817,6 +817,15 @@ public class cudaError
      */
     public static final int cudaErrorMpsClientTerminated          =     810;
 
+    /**
+     * This error indicates, that the program is using CUDA Dynamic Parallelism, but the current configuration, like MPS, does not support it.
+     */
+    public static final int cudaErrorCdpNotSupported              =     811;
+
+    /**
+     * This error indicates, that the program contains an unsupported interaction between different versions of CUDA Dynamic Parallelism.
+     */
+    public static final int cudaErrorCdpVersionMismatch           =     812;
       
     
     /**
@@ -1037,6 +1046,8 @@ public class cudaError
             case cudaErrorMpsMaxClientsReached: return "cudaErrorMpsMaxClientsReached";
             case cudaErrorMpsMaxConnectionsReached: return "cudaErrorMpsMaxConnectionsReached";
             case cudaErrorMpsClientTerminated: return "cudaErrorMpsClientTerminated";
+            case cudaErrorCdpNotSupported: return "cudaErrorCdpNotSupported";
+            case cudaErrorCdpVersionMismatch: return "cudaErrorCdpVersionMismatch";
             case cudaErrorStreamCaptureUnsupported: return "cudaErrorStreamCaptureUnsupported";
             case cudaErrorStreamCaptureInvalidated: return "cudaErrorStreamCaptureInvalidated";
             case cudaErrorStreamCaptureMerge: return "cudaErrorStreamCaptureMerge";

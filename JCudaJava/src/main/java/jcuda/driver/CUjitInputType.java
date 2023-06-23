@@ -64,6 +64,8 @@ public class CUjitInputType
     /**
      * High-level intermediate code for link-time optimization\n
      * Applicable options: NVVM compiler options, PTX compiler options
+     * 
+     * @deprecated As of CUDA 12
      */
     public static final int CU_JIT_INPUT_NVVM = 5;
     

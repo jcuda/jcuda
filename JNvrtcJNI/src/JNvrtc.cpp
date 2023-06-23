@@ -529,6 +529,134 @@ JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetNVVMNative
 }
 
 
+
+/*
+ * Class:     jcuda_nvrtc_JNvrtc
+ * Method:    nvrtcGetLTOIRSizeNative
+ * Signature: (Ljcuda/nvrtc/nvrtcProgram;[J)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetLTOIRSizeNative
+  (JNIEnv *env, jclass cls, jobject prog, jlongArray LTOIRSizeRet) 
+{
+    if (prog == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'prog' is null for nvrtcGetLTOIRSize");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (LTOIRSizeRet == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'LTOIRSizeRet' is null for nvrtcGetLTOIRSize");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing nvrtcGetLTOIRSize\n");
+
+    nvrtcProgram nativeProg = (nvrtcProgram)(intptr_t)getNativePointerValue(env, prog);
+    size_t nativeLTOIRSizeRet = 0;
+    int result = nvrtcGetLTOIRSize(nativeProg, &nativeLTOIRSizeRet);
+    if (!set(env, LTOIRSizeRet, 0, nativeLTOIRSizeRet)) return JCUDA_INTERNAL_ERROR;
+    return result;
+}
+
+/*
+ * Class:     jcuda_nvrtc_JNvrtc
+ * Method:    nvrtcGetLTOIRNative
+ * Signature: (Ljcuda/nvrtc/nvrtcProgram;[B)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetLTOIRNative
+  (JNIEnv *env, jclass cls, jobject prog, jbyteArray LTOIR) 
+{
+    if (prog == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'prog' is null for nvrtcGetLTOIR");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (LTOIR == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'LTOIR' is null for nvrtcGetLTOIR");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing nvrtcGetLTOIR\n");
+
+    int length = env->GetArrayLength(LTOIR);
+    nvrtcProgram nativeProg = (nvrtcProgram)(intptr_t)getNativePointerValue(env, prog);
+    char* nativeLTOIR = (char*)env->GetPrimitiveArrayCritical(LTOIR, NULL);
+    int result = nvrtcGetLTOIR(nativeProg, nativeLTOIR);
+    env->ReleasePrimitiveArrayCritical(LTOIR, nativeLTOIR, 0);
+    return result;
+}
+
+/*
+ * Class:     jcuda_nvrtc_JNvrtc
+ * Method:    nvrtcGetOptiXIRSizeNative
+ * Signature: (Ljcuda/nvrtc/nvrtcProgram;[J)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetOptiXIRSizeNative
+  (JNIEnv *env, jclass cls, jobject prog, jlongArray optixirSizeRet) 
+{
+    if (prog == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'prog' is null for nvrtcGetOptiXIRSize");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (optixirSizeRet == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'optixirSizeRet' is null for nvrtcGetOptiXIRSize");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing nvrtcGetOptiXIRSize\n");
+
+    nvrtcProgram nativeProg = (nvrtcProgram)(intptr_t)getNativePointerValue(env, prog);
+    size_t nativeOptixirSizeRet = 0;
+    int result = nvrtcGetOptiXIRSize(nativeProg, &nativeOptixirSizeRet);
+    if (!set(env, optixirSizeRet, 0, nativeOptixirSizeRet)) return JCUDA_INTERNAL_ERROR;
+    return result;
+
+}
+
+/*
+ * Class:     jcuda_nvrtc_JNvrtc
+ * Method:    nvrtcGetOptiXIRNative
+ * Signature: (Ljcuda/nvrtc/nvrtcProgram;[B)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetOptiXIRNative
+  (JNIEnv *env, jclass cls, jobject prog, jbyteArray optixir) 
+{
+    if (prog == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'prog' is null for nvrtcGetOptiXIR");
+        return JCUDA_INTERNAL_ERROR;
+    }
+    if (optixir == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException",
+            "Parameter 'LTOIR' is null for nvrtcGetOptiXIR");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing nvrtcGetOptiXIR\n");
+
+    int length = env->GetArrayLength(optixir);
+    nvrtcProgram nativeProg = (nvrtcProgram)(intptr_t)getNativePointerValue(env, prog);
+    char* nativeOptixir = (char*)env->GetPrimitiveArrayCritical(optixir, NULL);
+    int result = nvrtcGetOptiXIR(nativeProg, nativeOptixir);
+    env->ReleasePrimitiveArrayCritical(optixir, nativeOptixir, 0);
+    return result;
+
+}
+
+
+
+
 /*
 * Class:     jcuda_nvrtc_JNvrtc
 * Method:    nvrtcGetProgramLogSizeNative

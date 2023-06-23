@@ -148,6 +148,38 @@ JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetNVVMNative
 
 /*
  * Class:     jcuda_nvrtc_JNvrtc
+ * Method:    nvrtcGetLTOIRSizeNative
+ * Signature: (Ljcuda/nvrtc/nvrtcProgram;[J)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetLTOIRSizeNative
+  (JNIEnv *, jclass, jobject, jlongArray);
+
+/*
+ * Class:     jcuda_nvrtc_JNvrtc
+ * Method:    nvrtcGetLTOIRNative
+ * Signature: (Ljcuda/nvrtc/nvrtcProgram;[B)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetLTOIRNative
+  (JNIEnv *, jclass, jobject, jbyteArray);
+
+/*
+ * Class:     jcuda_nvrtc_JNvrtc
+ * Method:    nvrtcGetOptiXIRSizeNative
+ * Signature: (Ljcuda/nvrtc/nvrtcProgram;[J)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetOptiXIRSizeNative
+  (JNIEnv *, jclass, jobject, jlongArray);
+
+/*
+ * Class:     jcuda_nvrtc_JNvrtc
+ * Method:    nvrtcGetOptiXIRNative
+ * Signature: (Ljcuda/nvrtc/nvrtcProgram;[B)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetOptiXIRNative
+  (JNIEnv *, jclass, jobject, jbyteArray);
+
+/*
+ * Class:     jcuda_nvrtc_JNvrtc
  * Method:    nvrtcGetProgramLogSizeNative
  * Signature: (Ljcuda/nvrtc/nvrtcProgram;[J)I
  */

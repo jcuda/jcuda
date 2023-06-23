@@ -536,17 +536,17 @@ public class CUdevice_attribute
     /**
      * ::cuStreamBatchMemOp and related APIs are supported. 
      */
-    public static final int CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_MEM_OPS = 92;
+    public static final int CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_MEM_OPS_V1 = 92;
     
     /**
      * 64-bit operations are supported in ::cuStreamBatchMemOp and related APIs. 
      */
-    public static final int CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS = 93;
+    public static final int CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS_V1 = 93;
     
     /**
      * ::CU_STREAM_WAIT_VALUE_NOR is supported. 
      */
-    public static final int CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR = 94;
+    public static final int CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR_V1 = 94;
     
     /**
      * Device supports launching cooperative kernels via ::cuLaunchCooperativeKernel 
@@ -704,17 +704,37 @@ public class CUdevice_attribute
     /**
      * 64-bit operations are supported in ::cuStreamBatchMemOp_v2 and related v2 MemOp APIs. 
      */
-    public static final int CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS_V2 = 122;
+    public static final int CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS = 122;
     
     /** 
      * ::CU_STREAM_WAIT_VALUE_NOR is supported by v2 MemOp APIs. 
      */
-    public static final int CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR_V2 = 123;
+    public static final int CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR = 123;
 
     /**
      * Device supports buffer sharing with dma_buf mechanism. 
      */
     public static final int CU_DEVICE_ATTRIBUTE_DMA_BUF_SUPPORTED = 124; 
+    
+    /** 
+     * Device supports IPC Events. 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_IPC_EVENT_SUPPORTED = 125;      
+    
+    /** 
+     * Number of memory domains the device supports. 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_MEM_SYNC_DOMAIN_COUNT = 126;
+    
+    /** 
+     * Device supports accessing memory using Tensor Map. 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_TENSOR_MAP_ACCESS_SUPPORTED = 127;
+    
+    /** 
+     * Device supports unified function pointers. 
+     */
+    public static final int CU_DEVICE_ATTRIBUTE_UNIFIED_FUNCTION_POINTERS = 129;
     
     /**
      * Returns the String identifying the given CUdevice_attribute
@@ -817,9 +837,9 @@ public class CUdevice_attribute
             case CU_DEVICE_ATTRIBUTE_CONCURRENT_MANAGED_ACCESS : return "CU_DEVICE_ATTRIBUTE_CONCURRENT_MANAGED_ACCESS";
             case CU_DEVICE_ATTRIBUTE_COMPUTE_PREEMPTION_SUPPORTED : return "CU_DEVICE_ATTRIBUTE_COMPUTE_PREEMPTION_SUPPORTED";
             case CU_DEVICE_ATTRIBUTE_CAN_USE_HOST_POINTER_FOR_REGISTERED_MEM: return "CU_DEVICE_ATTRIBUTE_CAN_USE_HOST_POINTER_FOR_REGISTERED_MEM";
-            case CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_MEM_OPS: return "CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_MEM_OPS";
-            case CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS: return "CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS";
-            case CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR: return "CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR";
+            case CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_MEM_OPS_V1: return "CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_MEM_OPS_V1";
+            case CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS_V1: return "CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS_V1";
+            case CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR_V1: return "CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR_V1";
             case CU_DEVICE_ATTRIBUTE_COOPERATIVE_LAUNCH: return "CU_DEVICE_ATTRIBUTE_COOPERATIVE_LAUNCH";
             case CU_DEVICE_ATTRIBUTE_COOPERATIVE_MULTI_DEVICE_LAUNCH: return "CU_DEVICE_ATTRIBUTE_COOPERATIVE_MULTI_DEVICE_LAUNCH";
             case CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK_OPTIN: return "CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK_OPTIN";
@@ -847,9 +867,13 @@ public class CUdevice_attribute
             case CU_DEVICE_ATTRIBUTE_MEMPOOL_SUPPORTED_HANDLE_TYPES: return "CU_DEVICE_ATTRIBUTE_MEMPOOL_SUPPORTED_HANDLE_TYPES";
             case CU_DEVICE_ATTRIBUTE_CLUSTER_LAUNCH: return "CU_DEVICE_ATTRIBUTE_CLUSTER_LAUNCH";
             case CU_DEVICE_ATTRIBUTE_DEFERRED_MAPPING_CUDA_ARRAY_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_DEFERRED_MAPPING_CUDA_ARRAY_SUPPORTED";
-            case CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS_V2: return "CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS_V2";
-            case CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR_V2: return "CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR_V2";
+            case CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS: return "CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS";
+            case CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR: return "CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR";
             case CU_DEVICE_ATTRIBUTE_DMA_BUF_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_DMA_BUF_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_IPC_EVENT_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_IPC_EVENT_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_MEM_SYNC_DOMAIN_COUNT: return "CU_DEVICE_ATTRIBUTE_MEM_SYNC_DOMAIN_COUNT";
+            case CU_DEVICE_ATTRIBUTE_TENSOR_MAP_ACCESS_SUPPORTED: return "CU_DEVICE_ATTRIBUTE_TENSOR_MAP_ACCESS_SUPPORTED";
+            case CU_DEVICE_ATTRIBUTE_UNIFIED_FUNCTION_POINTERS: return "CU_DEVICE_ATTRIBUTE_UNIFIED_FUNCTION_POINTERS";
         }
         return "INVALID CUdevice_attribute: "+n;
     }

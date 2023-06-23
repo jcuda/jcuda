@@ -571,6 +571,18 @@ public class CUresult
     public static final int CUDA_ERROR_MPS_CLIENT_TERMINATED          = 810;
      
     /**
+     * This error indicates that the module is using CUDA Dynamic Parallelism, 
+     * but the current configuration, like MPS, does not support it.
+     */
+    public static final int CUDA_ERROR_CDP_NOT_SUPPORTED              = 811;
+
+    /**
+     * This error indicates that a module contains an unsupported interaction 
+     * between different versions of CUDA Dynamic Parallelism.
+     */
+    public static final int CUDA_ERROR_CDP_VERSION_MISMATCH           = 812;
+    
+    /**
      * This error indicates that the operation is not permitted when
      * the stream is capturing.
      */
@@ -746,6 +758,8 @@ public class CUresult
             case CUDA_ERROR_MPS_MAX_CLIENTS_REACHED        : return "CUDA_ERROR_MPS_MAX_CLIENTS_REACHED";
             case CUDA_ERROR_MPS_MAX_CONNECTIONS_REACHED    : return "CUDA_ERROR_MPS_MAX_CONNECTIONS_REACHED";
             case CUDA_ERROR_MPS_CLIENT_TERMINATED          : return "CUDA_ERROR_MPS_CLIENT_TERMINATED";
+            case CUDA_ERROR_CDP_NOT_SUPPORTED              : return "CUDA_ERROR_CDP_NOT_SUPPORTED";
+            case CUDA_ERROR_CDP_VERSION_MISMATCH           : return "CUDA_ERROR_CDP_VERSION_MISMATCH";
             case CUDA_ERROR_STREAM_CAPTURE_UNSUPPORTED     : return "CUDA_ERROR_STREAM_CAPTURE_UNSUPPORTED";
             case CUDA_ERROR_STREAM_CAPTURE_INVALIDATED     : return "CUDA_ERROR_STREAM_CAPTURE_INVALIDATED";
             case CUDA_ERROR_STREAM_CAPTURE_MERGE           : return "CUDA_ERROR_STREAM_CAPTURE_MERGE";
