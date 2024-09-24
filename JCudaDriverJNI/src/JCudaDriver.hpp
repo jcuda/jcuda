@@ -2600,6 +2600,47 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuProfilerStartNative
 JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuProfilerStopNative
   (JNIEnv *, jclass);
 
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuMemAllocAsyncNative
+ * Signature: (Ljcuda/driver/CUdeviceptr;Jjcuda/driver/CUstream;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemAllocAsyncNative
+  (JNIEnv *, jclass, jobject, jlong, jobject);
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuMemAllocFromPoolAsyncNative
+ * Signature: (Ljcuda/driver/CUdeviceptr;Jjcuda/driver/CUmemoryPool;Ljcuda/driver/CUstream;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemAllocFromPoolAsyncNative
+  (JNIEnv *, jclass, jobject, jlong, jobject, jobject);
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuMemPoolCreateNative
+ * Signature: (Ljcuda/driver/CUmemoryPool;Ljcuda/driver/CUmemPoolProps;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemPoolCreateNative
+  (JNIEnv *, jclass, jobject, jobject);
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuMemPoolDestroyNative
+ * Signature: (Ljcuda/driver/CUmemoryPool;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemPoolDestroyNative
+  (JNIEnv *, jclass, jobject);
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuMemPoolTrimToNative
+ * Signature: (Ljcuda/driver/CUmemoryPool;J)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemPoolTrimToNative
+  (JNIEnv *, jclass, jobject, jlong);
+
 #ifdef __cplusplus
 }
 #endif

@@ -334,7 +334,7 @@ public class JCudaDriver
      */
     public static final CUstream CU_STREAM_PER_THREAD = new CUstream(0x2);
 
-
+    
     /**
      * Whether a CudaException should be thrown if a method is about
      * to return a result code that is not CUresult.CUDA_SUCCESS
@@ -19758,12 +19758,39 @@ public class JCudaDriver
     private static native int cuProfilerStopNative();
 
 
+    
+    public static int cuMemAllocAsync(CUdeviceptr dptr, long bytesize, CUstream hStream) {
+        return checkResult(cuMemAllocAsyncNative(dptr, bytesize, hStream));
+    }
+
+    private static native int cuMemAllocAsyncNative(CUdeviceptr dptr, long bytesize, CUstream hStream);
+
+    
+    public static int cuMemAllocFromPoolAsync(CUdeviceptr dptr, long bytesize, CUmemoryPool pool, CUstream hStream) {
+        return checkResult(cuMemAllocFromPoolAsyncNative(dptr, bytesize, pool, hStream));
+    }
+
+    private static native int cuMemAllocFromPoolAsyncNative(CUdeviceptr dptr, long bytesize, CUmemoryPool pool, CUstream hStream);
+
+    
+    public static int cuMemPoolCreate(CUmemoryPool pool, CUmemPoolProps poolProps) {
+        return checkResult(cuMemPoolCreateNative(pool, poolProps));
+    }
+
+    private static native int cuMemPoolCreateNative(CUmemoryPool pool, CUmemPoolProps poolProps);
 
 
+    public static int cuMemPoolDestroy(CUmemoryPool pool) {
+        return checkResult(cuMemPoolDestroyNative(pool));
+    }
+
+    private static native int cuMemPoolDestroyNative(CUmemoryPool pool);
 
 
+    public static int cuMemPoolTrimTo(CUmemoryPool pool, long minBytesToKeep) {
+        return checkResult(cuMemPoolTrimToNative(pool, minBytesToKeep));
+    }
+
+    private static native int cuMemPoolTrimToNative(CUmemoryPool pool, long minBytesToKeep);
 
 }
-
-
-

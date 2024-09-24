@@ -275,6 +275,11 @@ jfieldID CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_depth; // unsigned int
 jfieldID CUDA_ARRAY_MEMORY_REQUIREMENTS_size; // size_t
 jfieldID CUDA_ARRAY_MEMORY_REQUIREMENTS_alignment; // size_t
 
+// Field IDs for the CUmemPoolProps class
+jfieldID CUmemPoolProps_allocType;               // unsigned int
+jfieldID CUmemPoolProps_handleTypes;             // unsigned int
+jfieldID CUmemPoolProps_location;                // (struct) CUmemLocation
+jfieldID CUmemPoolProps_win32SecurityAttributes; // Pointer
 
 /**
  * Called when the library is loaded. Will initialize all
@@ -641,6 +646,13 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
     if (!init(env, cls, "jcuda/driver/CUDA_ARRAY_MEMORY_REQUIREMENTS")) return JNI_ERR;
     if (!init(env, cls, CUDA_ARRAY_MEMORY_REQUIREMENTS_size      , "size"     , "J" )) return JNI_ERR;
     if (!init(env, cls, CUDA_ARRAY_MEMORY_REQUIREMENTS_alignment , "alignment", "J" )) return JNI_ERR;
+
+    // Initialize fields for CUmemPoolProps class
+    if (!init(env, cls, "jcuda/driver/CUmemPoolProps")) return JNI_ERR;
+    if (!init(env, cls, CUmemPoolProps_allocType,               "allocType",               "I")) return JNI_ERR; // unsigned int
+    if (!init(env, cls, CUmemPoolProps_handleTypes,             "handleTypes",             "I")) return JNI_ERR; // unsigned int
+    if (!init(env, cls, CUmemPoolProps_location,                "location",                "Ljcuda/driver/CUmemLocation;")) return JNI_ERR; // struct CUmemLocation
+    if (!init(env, cls, CUmemPoolProps_win32SecurityAttributes, "win32SecurityAttributes", "Ljcuda/Pointer;")) return JNI_ERR; // Pointer
 
     return JNI_VERSION_1_4;
 }
@@ -12150,3 +12162,151 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuProfilerStopNative
 
 
 
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuMemAllocAsyncNative
+ * Signature: (Ljcuda/driver/CUdeviceptr;J)Ljcuda/driver/CUstream;I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemAllocAsyncNative
+  (JNIEnv *env, jclass cls, jobject dptr, jlong bytesize, jobject hStream)
+{
+    if (dptr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'dptr' is null for cuMemAllocAsync");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    if (hStream == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'hStream' is null for cuMemAllocAsync");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing cuMemAllocAsync of %ld bytes\n", (long)bytesize);
+
+    CUdeviceptr nativeDptr;
+    CUstream nativeStream = (CUstream)getNativePointerValue(env, hStream);
+    int result = cuMemAllocAsync(&nativeDptr, (size_t)bytesize, nativeStream);
+    
+    setPointer(env, dptr, (jlong)nativeDptr);
+    return result;
+}
+
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuMemAllocFromPoolAsyncNative
+ * Signature: (Ljcuda/driver/CUdeviceptr;JLjcuda/driver/CUmemoryPool;Ljcuda/driver/CUstream;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemAllocFromPoolAsyncNative
+  (JNIEnv *env, jclass cls, jobject dptr, jlong bytesize, jobject pool, jobject hStream)
+{
+    if (dptr == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'dptr' is null for cuMemAllocFromPoolAsync");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    if (pool == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'pool' is null for cuMemAllocFromPoolAsync");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing cuMemAllocFromPoolAsync of %ld bytes\n", (long)bytesize);
+
+    CUdeviceptr nativeDptr;
+    CUmemoryPool nativePool = (CUmemoryPool)getNativePointerValue(env, pool);
+    CUstream nativeStream = (CUstream)getNativePointerValue(env, hStream);
+    
+    int result = cuMemAllocFromPoolAsync(&nativeDptr, (size_t)bytesize, nativePool, nativeStream);
+    
+    setPointer(env, dptr, (jlong)nativeDptr);
+    return result;
+}
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuMemPoolCreateNative
+ * Signature: (Ljcuda/driver/CUmemoryPool;Ljcuda/driver/CUmemPoolProps;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemPoolCreateNative
+  (JNIEnv *env, jclass cls, jobject pool, jobject poolProps)
+{
+    if (pool == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'pool' is null for cuMemPoolCreate");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    if (poolProps == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'poolProps' is null for cuMemPoolCreate");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing cuMemPoolCreate\n");
+
+    // Initialize native CUmemPoolProps structure to zero
+    // nativePoolProps.reserved must be 0
+    CUmemPoolProps nativePoolProps = {};
+
+    nativePoolProps.allocType = (CUmemAllocationType)env->GetIntField(poolProps, CUmemPoolProps_allocType);
+    nativePoolProps.handleTypes = (CUmemAllocationHandleType)env->GetIntField(poolProps, CUmemPoolProps_handleTypes);
+
+    
+    jobject locationObject = env->GetObjectField(poolProps, CUmemPoolProps_location);
+    if (locationObject != NULL)
+    {
+        nativePoolProps.location.id = (int)env->GetIntField(locationObject, CUmemLocation_id);
+        nativePoolProps.location.type = (CUmemLocationType)env->GetIntField(locationObject, CUmemLocation_type);
+    }
+
+    jobject win32SecurityAttributesPointer = env->GetObjectField(poolProps, CUmemPoolProps_win32SecurityAttributes);
+    nativePoolProps.win32SecurityAttributes = (void*)getPointer(env, win32SecurityAttributesPointer);
+
+    CUmemoryPool nativePool;
+    int result = cuMemPoolCreate(&nativePool, &nativePoolProps);
+
+    setPointer(env, pool, (jlong)nativePool);
+
+    return result;
+}
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuMemPoolDestroyNative
+ * Signature: (Ljcuda/driver/CUmemoryPool;)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemPoolDestroyNative
+  (JNIEnv *env, jclass cls, jobject pool) 
+{
+    CUmemoryPool nativePool = (CUmemoryPool)getNativePointerValue(env, pool);
+    
+    int result = cuMemPoolDestroy(nativePool);
+    
+    return result;
+}
+
+/*
+ * Class:     jcuda_driver_JCudaDriver
+ * Method:    cuMemPoolTrimToNative
+ * Signature: (Ljcuda/driver/CUmemoryPool;J)I
+ */
+JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemPoolTrimToNative
+  (JNIEnv *env, jclass cls, jobject pool, jlong minBytesToKeep)
+{
+    if (pool == NULL)
+    {
+        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'pool' is null for cuMemPoolTrimTo");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
+    Logger::log(LOG_TRACE, "Executing cuMemPoolTrimTo\n");
+
+    CUmemoryPool nativePool = (CUmemoryPool)getNativePointerValue(env, pool);
+
+    int result = cuMemPoolTrimTo(nativePool, (size_t)minBytesToKeep);
+
+    return result;
+}
