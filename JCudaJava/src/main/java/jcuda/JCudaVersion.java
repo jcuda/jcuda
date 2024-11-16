@@ -42,7 +42,7 @@ public class JCudaVersion
      */
     public static String get()
     {
-        return "12.0.0";
+        return "12.6.0";
     }
     
     /**
