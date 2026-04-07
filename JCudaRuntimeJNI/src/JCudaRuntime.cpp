@@ -1584,7 +1584,7 @@ bool writeStreamAttributeValueToNative(JNIEnv* env, cudaStreamAttrID attr, jobje
         jobject javaWindow = env->GetObjectField(javaObject, cudaStreamAttrValue_accessPolicyWindow);
         if (javaWindow != NULL)
         {
-            nativeObject.accessPolicyWindow = getCudaAccessPolicyWindow(env, javaObject);
+            nativeObject.accessPolicyWindow = getCudaAccessPolicyWindow(env, javaWindow);
         }
         return true;
     }

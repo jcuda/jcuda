@@ -2145,7 +2145,7 @@ bool writeStreamAttributeValueToNative(JNIEnv* env, CUstreamAttrID attr, jobject
         jobject javaWindow = env->GetObjectField(javaObject, CUstreamAttrValue_accessPolicyWindow);
         if (javaWindow != NULL)
         {
-            nativeObject.accessPolicyWindow = getCUaccessPolicyWindow(env, javaObject);
+            nativeObject.accessPolicyWindow = getCUaccessPolicyWindow(env, javaWindow);
         }
         return true;
     }
