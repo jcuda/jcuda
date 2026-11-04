@@ -2457,6 +2457,13 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDeviceGetNameNative
         return JCUDA_INTERNAL_ERROR;
     }
 
+    if (len < 0 || len > env->GetArrayLength(name))
+    {
+        ThrowByName(env, "java/lang/IllegalArgumentException",
+            "Parameter 'len' must be between 0 and name.length for cuDeviceGetName");
+        return JCUDA_INTERNAL_ERROR;
+    }
+
     Logger::log(LOG_TRACE, "Executing cuDeviceGetName\n");
 
     jboolean isCopy = JNI_FALSE;
