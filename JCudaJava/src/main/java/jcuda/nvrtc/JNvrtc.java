@@ -318,6 +318,8 @@ public class JNvrtc
      * NVRTC_ERROR_INVALID_PROGRAM
      *
      * @see JNvrtc#nvrtcGetCUBINSize
+     * @throws IllegalArgumentException if the output array is smaller than
+     * the size reported by {@link #nvrtcGetCUBINSize}
      */
     public static int nvrtcGetCUBIN(nvrtcProgram prog, byte cubin[])
     {
@@ -357,6 +359,8 @@ public class JNvrtc
      * NVRTC_SUCCESS
      * NVRTC_ERROR_INVALID_INPUT
      * NVRTC_ERROR_INVALID_PROGRAM
+     * @throws IllegalArgumentException if the output array is smaller than
+     * the size reported by {@link #nvrtcGetNVVMSize}
      */
     public static int nvrtcGetNVVM(nvrtcProgram prog, byte nvvm[])
     {
@@ -397,6 +401,8 @@ public class JNvrtc
     * NVRTC_SUCCESS
     * NVRTC_ERROR_INVALID_INPUT
     * NVRTC_ERROR_INVALID_PROGRAM
+    * @throws IllegalArgumentException if the output array is smaller than
+    * the size reported by {@link #nvrtcGetLTOIRSize}
     */
    public static int nvrtcGetLTOIR(nvrtcProgram prog, byte LTOIR[])
    {
@@ -436,6 +442,8 @@ public class JNvrtc
     * NVRTC_SUCCESS
     * NVRTC_ERROR_INVALID_INPUT
     * NVRTC_ERROR_INVALID_PROGRAM
+    * @throws IllegalArgumentException if the output array is smaller than
+    * the size reported by {@link #nvrtcGetOptiXIRSize}
     */
     public static int nvrtcGetOptiXIR(nvrtcProgram prog, byte optixir[]) 
     {
