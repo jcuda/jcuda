@@ -1537,10 +1537,10 @@ void setCudaAccessPolicyWindow(JNIEnv* env, jobject javaObject, cudaAccessPolicy
     setNativePointerValue(env, javaBase_ptr, (jlong)nativeObject.base_ptr);
     env->SetObjectField(javaObject, cudaAccessPolicyWindow_base_ptr, javaBase_ptr);
 
-    env->SetLongField(javaObject, cudaAccessPolicyWindow_num_bytes, (jint)nativeObject.num_bytes);
-    env->SetFloatField(javaObject, cudaAccessPolicyWindow_hitRatio, (jint)nativeObject.hitRatio);
+    env->SetLongField(javaObject, cudaAccessPolicyWindow_num_bytes, (jlong)nativeObject.num_bytes);
+    env->SetFloatField(javaObject, cudaAccessPolicyWindow_hitRatio, (jfloat)nativeObject.hitRatio);
     env->SetIntField(javaObject, cudaAccessPolicyWindow_hitProp, (jint)nativeObject.hitProp);
-    env->SetIntField(javaObject, cudaAccessPolicyWindow_hitProp, (jint)nativeObject.missProp);
+    env->SetIntField(javaObject, cudaAccessPolicyWindow_missProp, (jint)nativeObject.missProp);
 }
 
 bool writeStreamAttributeValueToJava(JNIEnv* env, cudaStreamAttrID attr, jobject javaObject, cudaStreamAttrValue& nativeObject)
@@ -1564,7 +1564,7 @@ bool writeStreamAttributeValueToJava(JNIEnv* env, cudaStreamAttrID attr, jobject
             }
             env->SetObjectField(javaObject, cudaStreamAttrValue_accessPolicyWindow, javaWindow);
         }
-        setCudaAccessPolicyWindow(env, javaObject, nativeObject.accessPolicyWindow);
+        setCudaAccessPolicyWindow(env, javaWindow, nativeObject.accessPolicyWindow);
         return true;
     }
     ThrowByName(env, "java/lang/IllegalArgumentException",
