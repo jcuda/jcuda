@@ -267,6 +267,8 @@ jfieldID CUDA_ARRAY_SPARSE_PROPERTIES_miptailFirstLevel; // unsigned int
 jfieldID CUDA_ARRAY_SPARSE_PROPERTIES_miptailSize; // unsigned long long
 jfieldID CUDA_ARRAY_SPARSE_PROPERTIES_flags; // unsigned int
 
+jclass CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_class;
+jmethodID CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_constructor;
 jfieldID CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_width; // unsigned int
 jfieldID CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_height; // unsigned int
 jfieldID CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_depth; // unsigned int
@@ -638,6 +640,13 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *jvm, void *reserved)
 
     // Initialize the field IDs for the CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent class
     if (!init(env, cls, "jcuda/driver/CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent")) return JNI_ERR;
+    CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_class = (jclass)env->NewGlobalRef(cls);
+    if (CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_class == NULL)
+    {
+        Logger::log(LOG_ERROR, "Failed to create reference to sparse tile extent class\n");
+        return JNI_ERR;
+    }
+    if (!init(env, cls, CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_constructor, "<init>", "()V")) return JNI_ERR;
     if (!init(env, cls, CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_width,  "width",  "I")) return JNI_ERR;
     if (!init(env, cls, CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_height, "height", "I")) return JNI_ERR;
     if (!init(env, cls, CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_depth,  "depth",  "I")) return JNI_ERR;
@@ -2233,12 +2242,19 @@ CUDA_ARRAY_SPARSE_PROPERTIES getCUDA_ARRAY_SPARSE_PROPERTIES(JNIEnv* env, jobjec
 void setCUDA_ARRAY_SPARSE_PROPERTIES(JNIEnv* env, jobject javaObject, CUDA_ARRAY_SPARSE_PROPERTIES &nativeObject)
 {
     jobject javaTileExtent = env->GetObjectField(javaObject, CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent);
-    if (javaTileExtent != NULL)
+    if (javaTileExtent == NULL)
     {
-        env->SetIntField(javaTileExtent, CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_width, (jint)nativeObject.tileExtent.width);
-        env->SetIntField(javaTileExtent, CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_height, (jint)nativeObject.tileExtent.height);
-        env->SetIntField(javaTileExtent, CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_depth, (jint)nativeObject.tileExtent.depth);
+        javaTileExtent = env->NewObject(CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_class,
+            CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_constructor);
+        if (javaTileExtent == NULL)
+        {
+            return;
+        }
+        env->SetObjectField(javaObject, CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent, javaTileExtent);
     }
+    env->SetIntField(javaTileExtent, CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_width, (jint)nativeObject.tileExtent.width);
+    env->SetIntField(javaTileExtent, CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_height, (jint)nativeObject.tileExtent.height);
+    env->SetIntField(javaTileExtent, CUDA_ARRAY_SPARSE_PROPERTIES_tileExtent_depth, (jint)nativeObject.tileExtent.depth);
     env->SetIntField(javaObject, CUDA_ARRAY_SPARSE_PROPERTIES_miptailFirstLevel, (jint)nativeObject.miptailFirstLevel);
     env->SetLongField(javaObject, CUDA_ARRAY_SPARSE_PROPERTIES_miptailSize, (jlong)nativeObject.miptailSize);
     env->SetIntField(javaObject, CUDA_ARRAY_SPARSE_PROPERTIES_flags, (jint)nativeObject.flags);
