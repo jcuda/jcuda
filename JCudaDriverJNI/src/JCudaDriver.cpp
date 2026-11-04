@@ -3011,13 +3011,9 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuCtxPopCurrentNative
 JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuCtxSetCurrentNative
   (JNIEnv *env, jclass cls, jobject ctx)
 {
-    if (ctx == NULL)
-    {
-        ThrowByName(env, "java/lang/NullPointerException", "Parameter 'ctx' is null for cuCtxSetCurrent");
-        return JCUDA_INTERNAL_ERROR;
-    }
     Logger::log(LOG_TRACE, "Executing cuCtxSetCurrent\n");
 
+    // A null context unbinds the calling thread's current context.
     CUcontext nativeCtx = (CUcontext)getNativePointerValue(env, ctx);
     int result = cuCtxSetCurrent(nativeCtx);
     return result;
