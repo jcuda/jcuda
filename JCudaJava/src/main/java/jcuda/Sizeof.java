@@ -80,19 +80,33 @@ public class Sizeof
     private static int computePointerSize()
     {
         String bits = System.getProperty("sun.arch.data.model");
-        if (bits.equals("32"))
+        if ("32".equals(bits))
         {
             return 4;
         }
-        else if (bits.equals("64"))
+        else if ("64".equals(bits))
         {
             return 8;
         }
-        else
+        // The implementation-specific data-model property is not required
+        // on every JVM. Use the known architecture before guessing a size.
+        switch (LibUtils.calculateArch())
         {
-            System.err.println(
-                "Unknown value for sun.arch.data.model - assuming 32 bits");
-            return 4;
+            case X86_64:
+            case PPC_64:
+            case ARM64:
+            case AARCH64:
+            case MIPS64:
+                return 8;
+            case X86:
+            case PPC:
+            case ARM:
+            case MIPS:
+                return 4;
+            default:
+                System.err.println(
+                    "Unknown value for sun.arch.data.model and architecture - assuming 32 bits");
+                return 4;
         }
     }
 
