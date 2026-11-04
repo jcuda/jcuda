@@ -1998,6 +1998,7 @@ void setCUmemLocation(JNIEnv *env, jobject javaObject, CUmemLocation &nativeObje
 CUmemAllocationProp getCUmemAllocationProp(JNIEnv *env, jobject javaObject)
 {
     CUmemAllocationProp nativeObject;
+    memset(&nativeObject, 0, sizeof(CUmemAllocationProp));
 
     jobject javaLocation = env->GetObjectField(javaObject, CUmemAllocationProp_location);
     if (javaLocation != NULL)
@@ -2012,9 +2013,9 @@ CUmemAllocationProp getCUmemAllocationProp(JNIEnv *env, jobject javaObject)
     nativeObject.win32HandleMetaData = getPointer(env, javaWin32HandleMetaData);
 
     jobject javaAllocFlags = env->GetObjectField(javaObject, CUmemAllocationProp_allocFlags);
-    nativeObject.allocFlags.compressionType = (unsigned char)env->GetByteField(javaObject, CUmemAllocationProp_allocFlags_compressionType);
-    nativeObject.allocFlags.gpuDirectRDMACapable = (unsigned char)env->GetByteField(javaObject, CUmemAllocationProp_allocFlags_gpuDirectRDMACapable);
-    nativeObject.allocFlags.usage = (unsigned short)env->GetShortField(javaObject, CUmemAllocationProp_allocFlags_usage);
+    nativeObject.allocFlags.compressionType = (unsigned char)env->GetByteField(javaAllocFlags, CUmemAllocationProp_allocFlags_compressionType);
+    nativeObject.allocFlags.gpuDirectRDMACapable = (unsigned char)env->GetByteField(javaAllocFlags, CUmemAllocationProp_allocFlags_gpuDirectRDMACapable);
+    nativeObject.allocFlags.usage = (unsigned short)env->GetShortField(javaAllocFlags, CUmemAllocationProp_allocFlags_usage);
 
     return nativeObject;
 }
@@ -2026,6 +2027,7 @@ CUmemAllocationProp getCUmemAllocationProp(JNIEnv *env, jobject javaObject)
 void setCUmemAllocationProp(JNIEnv *env, jobject javaObject, CUmemAllocationProp &nativeObject)
 {
     jobject javaLocation = env->NewObject(CUmemLocation_class, CUmemLocation_constructor);
+    setCUmemLocation(env, javaLocation, nativeObject.location);
     env->SetObjectField(javaObject, CUmemAllocationProp_location, javaLocation);
 
     env->SetIntField(javaObject, CUmemAllocationProp_requestedHandleTypes, (jint)nativeObject.requestedHandleTypes);
@@ -6361,7 +6363,7 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuMemCreateNative
     CUmemAllocationProp nativeProp = getCUmemAllocationProp(env, prop);
 
     int result = cuMemCreate(&nativeHandle, (size_t)size, &nativeProp, (unsigned long long)flags);
-    setPointer(env, handle, (jlong)nativeHandle);
+    setNativePointerValue(env, handle, (jlong)nativeHandle);
 
     return result;
 }
