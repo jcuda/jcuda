@@ -2250,6 +2250,39 @@ void setCUDA_ARRAY_SPARSE_PROPERTIES(JNIEnv* env, jobject javaObject, CUDA_ARRAY
 
 
 /**
+ * Read a graph query's in/out count and bound it by its Java output arrays.
+ * A count-only query does not consume the initial count value.
+ */
+bool getGraphQueryCapacity(JNIEnv* env, jlongArray count, jobjectArray first,
+    jobjectArray second, size_t &capacity)
+{
+    capacity = 0;
+    if (env->GetArrayLength(count) == 0)
+    {
+        ThrowByName(env, "java/lang/IllegalArgumentException",
+            "Graph query count array must contain at least one element");
+        return false;
+    }
+    if (first == NULL && second == NULL)
+    {
+        return true;
+    }
+    jlong requested = 0;
+    env->GetLongArrayRegion(count, 0, 1, &requested);
+    if (env->ExceptionCheck()) return false;
+    if (requested < 0 ||
+        (first != NULL && requested > env->GetArrayLength(first)) ||
+        (second != NULL && requested > env->GetArrayLength(second)))
+    {
+        ThrowByName(env, "java/lang/IllegalArgumentException",
+            "Graph query capacity must fit the Java output arrays");
+        return false;
+    }
+    capacity = (size_t)requested;
+    return true;
+}
+
+/**
  * Initialize the given nativeDependencies from the given java object,
  * and return whether this initialization succeeded.
  * The caller is responsible to delete[] the native array later.
@@ -9063,20 +9096,25 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphGetNodesNative(JNIEn
 
 	CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
 
-	size_t nativeNumNodes;
+	size_t nativeNumNodes = 0;
+	if (!getGraphQueryCapacity(env, numNodes, nodes, NULL, nativeNumNodes)) return JCUDA_INTERNAL_ERROR;
+	const size_t nativeCapacity = nativeNumNodes;
 	CUgraphNode* nativeNodes = NULL;
 	if (nodes != NULL)
 	{
-		jsize len = env->GetArrayLength(nodes);
-		nativeNodes = new CUgraphNode[len];
+		nativeNodes = new CUgraphNode[nativeCapacity];
 	}
 
 	int result = cuGraphGetNodes(nativeHGraph, nativeNodes, &nativeNumNodes);
+	if (result != CUDA_SUCCESS)
+	{
+		delete[] nativeNodes;
+		return result;
+	}
 
 	if (nodes != NULL)
 	{
-		jsize len = env->GetArrayLength(nodes);
-		for (jsize i = 0; i < len; i++) 
+		for (jsize i = 0; i < (jsize)nativeCapacity; i++)
 		{
 			if (i < nativeNumNodes)
 			{
@@ -9120,20 +9158,25 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphGetRootNodesNative(J
 
 	CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
 
-	size_t nativeNumRootNodes;
+	size_t nativeNumRootNodes = 0;
+	if (!getGraphQueryCapacity(env, numRootNodes, rootNodes, NULL, nativeNumRootNodes)) return JCUDA_INTERNAL_ERROR;
+	const size_t nativeCapacity = nativeNumRootNodes;
 	CUgraphNode* nativeRootNodes = NULL;
 	if (rootNodes != NULL)
 	{
-		jsize len = env->GetArrayLength(rootNodes);
-		nativeRootNodes = new CUgraphNode[len];
+		nativeRootNodes = new CUgraphNode[nativeCapacity];
 	}
 
 	int result = cuGraphGetRootNodes(nativeHGraph, nativeRootNodes, &nativeNumRootNodes);
+	if (result != CUDA_SUCCESS)
+	{
+		delete[] nativeRootNodes;
+		return result;
+	}
 
 	if (rootNodes != NULL)
 	{
-		jsize len = env->GetArrayLength(rootNodes);
-		for (jsize i = 0; i < len; i++)
+		for (jsize i = 0; i < (jsize)nativeCapacity; i++)
 		{
 			if (i < nativeNumRootNodes)
 			{
@@ -9178,26 +9221,31 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphGetEdgesNative(JNIEn
 
 	CUgraph nativeHGraph = (CUgraph)getNativePointerValue(env, hGraph);
 
-	size_t nativeNumEdges;
+	size_t nativeNumEdges = 0;
+	if (!getGraphQueryCapacity(env, numEdges, from, to, nativeNumEdges)) return JCUDA_INTERNAL_ERROR;
+	const size_t nativeCapacity = nativeNumEdges;
 	CUgraphNode* nativeFrom = NULL;
 	if (from != NULL)
 	{
-		jsize len = env->GetArrayLength(from);
-		nativeFrom = new CUgraphNode[len];
+		nativeFrom = new CUgraphNode[nativeCapacity];
 	}
 	CUgraphNode* nativeTo = NULL;
 	if (to != NULL)
 	{
-		jsize len = env->GetArrayLength(to);
-		nativeTo = new CUgraphNode[len];
+		nativeTo = new CUgraphNode[nativeCapacity];
 	}
 
 	int result = cuGraphGetEdges(nativeHGraph, nativeFrom, nativeTo, &nativeNumEdges);
+	if (result != CUDA_SUCCESS)
+	{
+		delete[] nativeFrom;
+		delete[] nativeTo;
+		return result;
+	}
 
 	if (from != NULL)
 	{
-		jsize len = env->GetArrayLength(from);
-		for (jsize i = 0; i < len; i++)
+		for (jsize i = 0; i < (jsize)nativeCapacity; i++)
 		{
 			if (i < nativeNumEdges)
 			{
@@ -9213,8 +9261,7 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphGetEdgesNative(JNIEn
 	}
 	if (to != NULL)
 	{
-		jsize len = env->GetArrayLength(to);
-		for (jsize i = 0; i < len; i++)
+		for (jsize i = 0; i < (jsize)nativeCapacity; i++)
 		{
 			if (i < nativeNumEdges)
 			{
@@ -9259,20 +9306,25 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphNodeGetDependenciesN
 
 	CUgraphNode nativeHGraphNode = (CUgraphNode)getNativePointerValue(env, hNode);
 
-	size_t nativeNumDependencies;
+	size_t nativeNumDependencies = 0;
+	if (!getGraphQueryCapacity(env, numDependencies, dependencies, NULL, nativeNumDependencies)) return JCUDA_INTERNAL_ERROR;
+	const size_t nativeCapacity = nativeNumDependencies;
 	CUgraphNode* nativeDependencies = NULL;
 	if (dependencies != NULL)
 	{
-		jsize len = env->GetArrayLength(dependencies);
-		nativeDependencies = new CUgraphNode[len];
+		nativeDependencies = new CUgraphNode[nativeCapacity];
 	}
 
 	int result = cuGraphNodeGetDependencies(nativeHGraphNode, nativeDependencies, &nativeNumDependencies);
+	if (result != CUDA_SUCCESS)
+	{
+		delete[] nativeDependencies;
+		return result;
+	}
 
 	if (dependencies != NULL)
 	{
-		jsize len = env->GetArrayLength(dependencies);
-		for (jsize i = 0; i < len; i++)
+		for (jsize i = 0; i < (jsize)nativeCapacity; i++)
 		{
 			if (i < nativeNumDependencies)
 			{
@@ -9316,20 +9368,25 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuGraphNodeGetDependentNode
 
 	CUgraphNode nativeHGraphNode = (CUgraphNode)getNativePointerValue(env, hNode);
 
-	size_t nativeNumDependentNodes;
+	size_t nativeNumDependentNodes = 0;
+	if (!getGraphQueryCapacity(env, numDependentNodes, dependentNodes, NULL, nativeNumDependentNodes)) return JCUDA_INTERNAL_ERROR;
+	const size_t nativeCapacity = nativeNumDependentNodes;
 	CUgraphNode* nativeDependentNodes = NULL;
 	if (dependentNodes != NULL)
 	{
-		jsize len = env->GetArrayLength(dependentNodes);
-		nativeDependentNodes = new CUgraphNode[len];
+		nativeDependentNodes = new CUgraphNode[nativeCapacity];
 	}
 
 	int result = cuGraphNodeGetDependentNodes(nativeHGraphNode, nativeDependentNodes, &nativeNumDependentNodes);
+	if (result != CUDA_SUCCESS)
+	{
+		delete[] nativeDependentNodes;
+		return result;
+	}
 
 	if (dependentNodes != NULL)
 	{
-		jsize len = env->GetArrayLength(dependentNodes);
-		for (jsize i = 0; i < len; i++)
+		for (jsize i = 0; i < (jsize)nativeCapacity; i++)
 		{
 			if (i < nativeNumDependentNodes)
 			{
