@@ -1288,7 +1288,7 @@ CUDA_RESOURCE_DESC getCUDA_RESOURCE_DESC(JNIEnv *env, jobject resourceDesc)
 
         case CU_RESOURCE_TYPE_LINEAR:
             linear_devPtr = env->GetObjectField(resourceDesc, CUDA_RESOURCE_DESC_linear_devPtr);
-            nativeResourceDesc.res.linear.devPtr = (CUdeviceptr)getNativePointerValue(env, linear_devPtr);
+            nativeResourceDesc.res.linear.devPtr = (CUdeviceptr)getPointer(env, linear_devPtr);
             nativeResourceDesc.res.linear.format = (CUarray_format)env->GetIntField(resourceDesc, CUDA_RESOURCE_DESC_linear_format);
             nativeResourceDesc.res.linear.numChannels = (unsigned int)env->GetIntField(resourceDesc, CUDA_RESOURCE_DESC_linear_numChannels);
             nativeResourceDesc.res.linear.sizeInBytes = (size_t)env->GetLongField(resourceDesc, CUDA_RESOURCE_DESC_linear_sizeInBytes);
@@ -1296,7 +1296,7 @@ CUDA_RESOURCE_DESC getCUDA_RESOURCE_DESC(JNIEnv *env, jobject resourceDesc)
 
         case CU_RESOURCE_TYPE_PITCH2D:
             pitch2D_devPtr = env->GetObjectField(resourceDesc, CUDA_RESOURCE_DESC_pitch2D_devPtr);
-            nativeResourceDesc.res.pitch2D.devPtr = (CUdeviceptr)getNativePointerValue(env, pitch2D_devPtr);
+            nativeResourceDesc.res.pitch2D.devPtr = (CUdeviceptr)getPointer(env, pitch2D_devPtr);
             nativeResourceDesc.res.pitch2D.format = (CUarray_format)env->GetIntField(resourceDesc, CUDA_RESOURCE_DESC_pitch2D_format);
             nativeResourceDesc.res.pitch2D.numChannels = (unsigned int)env->GetIntField(resourceDesc, CUDA_RESOURCE_DESC_pitch2D_numChannels);
             nativeResourceDesc.res.pitch2D.width = (size_t)env->GetLongField(resourceDesc, CUDA_RESOURCE_DESC_pitch2D_width);
@@ -1335,7 +1335,7 @@ void setCUDA_RESOURCE_DESC(JNIEnv *env, jobject resourceDesc, CUDA_RESOURCE_DESC
 
         case CU_RESOURCE_TYPE_LINEAR:
             linear_devPtr = env->GetObjectField(resourceDesc, CUDA_RESOURCE_DESC_linear_devPtr);
-            setNativePointerValue(env, linear_devPtr, (jlong)nativeResourceDesc.res.linear.devPtr);
+            setPointer(env, linear_devPtr, (jlong)nativeResourceDesc.res.linear.devPtr);
             env->SetIntField(resourceDesc, CUDA_RESOURCE_DESC_linear_format, (jint)nativeResourceDesc.res.linear.format);
             env->SetIntField(resourceDesc, CUDA_RESOURCE_DESC_linear_numChannels, (jint)nativeResourceDesc.res.linear.numChannels);
             env->SetLongField(resourceDesc, CUDA_RESOURCE_DESC_linear_sizeInBytes, (jlong)nativeResourceDesc.res.linear.sizeInBytes);
@@ -1343,7 +1343,7 @@ void setCUDA_RESOURCE_DESC(JNIEnv *env, jobject resourceDesc, CUDA_RESOURCE_DESC
 
         case CU_RESOURCE_TYPE_PITCH2D:
             pitch2D_devPtr = env->GetObjectField(resourceDesc, CUDA_RESOURCE_DESC_pitch2D_devPtr);
-            setNativePointerValue(env, pitch2D_devPtr, (jlong)nativeResourceDesc.res.pitch2D.devPtr);
+            setPointer(env, pitch2D_devPtr, (jlong)nativeResourceDesc.res.pitch2D.devPtr);
             env->SetIntField(resourceDesc, CUDA_RESOURCE_DESC_pitch2D_format, (jint)nativeResourceDesc.res.pitch2D.format);
             env->SetIntField(resourceDesc, CUDA_RESOURCE_DESC_pitch2D_numChannels, (jint)nativeResourceDesc.res.pitch2D.numChannels);
             env->SetLongField(resourceDesc, CUDA_RESOURCE_DESC_pitch2D_width, (jlong)nativeResourceDesc.res.pitch2D.width);
