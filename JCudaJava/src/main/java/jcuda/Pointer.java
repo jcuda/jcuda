@@ -178,6 +178,7 @@ public class Pointer extends NativePointerObject
      * <br />
      * Note that this method takes into account the array offset and position
      * of the given buffer, in contrast to the {@link #to(Buffer)} method.
+     * The position, limit, and mark of the given buffer are not modified.
      *
      * @param buffer The buffer
      * @return The new pointer
@@ -234,11 +235,11 @@ public class Pointer extends NativePointerObject
         Pointer result = null;
         if (buffer.isDirect())
         {
+            buffer = buffer.duplicate();
             int oldPosition = buffer.position();
             buffer.position(0);
             result = Pointer.to(buffer.slice()).withByteOffset(
                 oldPosition * Sizeof.BYTE);
-            buffer.position(oldPosition);
         }
         else if (buffer.hasArray())
         {
@@ -265,11 +266,11 @@ public class Pointer extends NativePointerObject
         Pointer result = null;
         if (buffer.isDirect())
         {
+            buffer = buffer.duplicate();
             int oldPosition = buffer.position();
             buffer.position(0);
             result = Pointer.to(buffer.slice()).withByteOffset(
                 oldPosition * Sizeof.SHORT);
-            buffer.position(oldPosition);
         }
         else if (buffer.hasArray())
         {
@@ -296,11 +297,11 @@ public class Pointer extends NativePointerObject
         Pointer result = null;
         if (buffer.isDirect())
         {
+            buffer = buffer.duplicate();
             int oldPosition = buffer.position();
             buffer.position(0);
             result = Pointer.to(buffer.slice()).withByteOffset(
                 oldPosition * Sizeof.INT);
-            buffer.position(oldPosition);
         }
         else if (buffer.hasArray())
         {
@@ -327,11 +328,11 @@ public class Pointer extends NativePointerObject
         Pointer result = null;
         if (buffer.isDirect())
         {
+            buffer = buffer.duplicate();
             int oldPosition = buffer.position();
             buffer.position(0);
             result = Pointer.to(buffer.slice()).withByteOffset(
                 oldPosition * Sizeof.LONG);
-            buffer.position(oldPosition);
         }
         else if (buffer.hasArray())
         {
@@ -358,11 +359,11 @@ public class Pointer extends NativePointerObject
         Pointer result = null;
         if (buffer.isDirect())
         {
+            buffer = buffer.duplicate();
             int oldPosition = buffer.position();
             buffer.position(0);
             result = Pointer.to(buffer.slice()).withByteOffset(
                 oldPosition * Sizeof.FLOAT);
-            buffer.position(oldPosition);
         }
         else if (buffer.hasArray())
         {
@@ -389,11 +390,11 @@ public class Pointer extends NativePointerObject
         Pointer result = null;
         if (buffer.isDirect())
         {
+            buffer = buffer.duplicate();
             int oldPosition = buffer.position();
             buffer.position(0);
             result = Pointer.to(buffer.slice()).withByteOffset(
                 oldPosition * Sizeof.DOUBLE);
-            buffer.position(oldPosition);
         }
         else if (buffer.hasArray())
         {
