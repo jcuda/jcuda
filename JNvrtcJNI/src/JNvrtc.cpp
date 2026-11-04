@@ -460,8 +460,18 @@ JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetCUBINNative
 
     int length = env->GetArrayLength(cubin);
     nvrtcProgram nativeProg = (nvrtcProgram)(intptr_t)getNativePointerValue(env, prog);
+    size_t requiredSize = 0;
+    int result = nvrtcGetCUBINSize(nativeProg, &requiredSize);
+    if (result != NVRTC_SUCCESS) return result;
+    if (requiredSize > (size_t)length)
+    {
+        ThrowByName(env, "java/lang/IllegalArgumentException",
+            "Output array is too small for nvrtcGetCUBIN");
+        return JCUDA_INTERNAL_ERROR;
+    }
     char* nativeCubin = (char*)env->GetPrimitiveArrayCritical(cubin, NULL);
-    int result = nvrtcGetCUBIN(nativeProg, nativeCubin);
+    if (nativeCubin == NULL) return JCUDA_INTERNAL_ERROR;
+    result = nvrtcGetCUBIN(nativeProg, nativeCubin);
     env->ReleasePrimitiveArrayCritical(cubin, nativeCubin, 0);
     return result;
 
@@ -522,8 +532,18 @@ JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetNVVMNative
 
     int length = env->GetArrayLength(nvvm);
     nvrtcProgram nativeProg = (nvrtcProgram)(intptr_t)getNativePointerValue(env, prog);
+    size_t requiredSize = 0;
+    int result = nvrtcGetNVVMSize(nativeProg, &requiredSize);
+    if (result != NVRTC_SUCCESS) return result;
+    if (requiredSize > (size_t)length)
+    {
+        ThrowByName(env, "java/lang/IllegalArgumentException",
+            "Output array is too small for nvrtcGetNVVM");
+        return JCUDA_INTERNAL_ERROR;
+    }
     char* nativeNvvm = (char*)env->GetPrimitiveArrayCritical(nvvm, NULL);
-    int result = nvrtcGetNVVM(nativeProg, nativeNvvm);
+    if (nativeNvvm == NULL) return JCUDA_INTERNAL_ERROR;
+    result = nvrtcGetNVVM(nativeProg, nativeNvvm);
     env->ReleasePrimitiveArrayCritical(nvvm, nativeNvvm, 0);
     return result;
 }
@@ -585,8 +605,18 @@ JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetLTOIRNative
 
     int length = env->GetArrayLength(LTOIR);
     nvrtcProgram nativeProg = (nvrtcProgram)(intptr_t)getNativePointerValue(env, prog);
+    size_t requiredSize = 0;
+    int result = nvrtcGetLTOIRSize(nativeProg, &requiredSize);
+    if (result != NVRTC_SUCCESS) return result;
+    if (requiredSize > (size_t)length)
+    {
+        ThrowByName(env, "java/lang/IllegalArgumentException",
+            "Output array is too small for nvrtcGetLTOIR");
+        return JCUDA_INTERNAL_ERROR;
+    }
     char* nativeLTOIR = (char*)env->GetPrimitiveArrayCritical(LTOIR, NULL);
-    int result = nvrtcGetLTOIR(nativeProg, nativeLTOIR);
+    if (nativeLTOIR == NULL) return JCUDA_INTERNAL_ERROR;
+    result = nvrtcGetLTOIR(nativeProg, nativeLTOIR);
     env->ReleasePrimitiveArrayCritical(LTOIR, nativeLTOIR, 0);
     return result;
 }
@@ -647,8 +677,18 @@ JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetOptiXIRNative
 
     int length = env->GetArrayLength(optixir);
     nvrtcProgram nativeProg = (nvrtcProgram)(intptr_t)getNativePointerValue(env, prog);
+    size_t requiredSize = 0;
+    int result = nvrtcGetOptiXIRSize(nativeProg, &requiredSize);
+    if (result != NVRTC_SUCCESS) return result;
+    if (requiredSize > (size_t)length)
+    {
+        ThrowByName(env, "java/lang/IllegalArgumentException",
+            "Output array is too small for nvrtcGetOptiXIR");
+        return JCUDA_INTERNAL_ERROR;
+    }
     char* nativeOptixir = (char*)env->GetPrimitiveArrayCritical(optixir, NULL);
-    int result = nvrtcGetOptiXIR(nativeProg, nativeOptixir);
+    if (nativeOptixir == NULL) return JCUDA_INTERNAL_ERROR;
+    result = nvrtcGetOptiXIR(nativeProg, nativeOptixir);
     env->ReleasePrimitiveArrayCritical(optixir, nativeOptixir, 0);
     return result;
 
