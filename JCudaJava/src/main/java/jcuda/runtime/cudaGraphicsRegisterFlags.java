@@ -58,7 +58,8 @@ public class cudaGraphicsRegisterFlags
     public static final int cudaGraphicsRegisterFlagsTextureGather    = 8;
 
     /**
-     * Returns the String identifying the given cudaGraphicsRegisterFlags
+     * Returns the String identifying the given cudaGraphicsRegisterFlags combination.
+     * This describes the bits, not whether a CUDA operation supports them.
      *
      * @param n The cudaGraphicsRegisterFlags
      * @return The String identifying the given cudaGraphicsRegisterFlags
@@ -72,6 +73,21 @@ public class cudaGraphicsRegisterFlags
             case cudaGraphicsRegisterFlagsWriteDiscard: return "cudaGraphicsRegisterFlagsWriteDiscard";
             case cudaGraphicsRegisterFlagsSurfaceLoadStore: return "cudaGraphicsRegisterFlagsSurfaceLoadStore";
             case cudaGraphicsRegisterFlagsTextureGather: return "cudaGraphicsRegisterFlagsTextureGather";
+        }
+        // Keep special constants above and reject bits unknown to this binding.
+        int knownFlags =
+            cudaGraphicsRegisterFlagsReadOnly |
+            cudaGraphicsRegisterFlagsWriteDiscard |
+            cudaGraphicsRegisterFlagsSurfaceLoadStore |
+            cudaGraphicsRegisterFlagsTextureGather;
+        if ((n & ~knownFlags) == 0)
+        {
+            String result = "";
+            if ((n & cudaGraphicsRegisterFlagsReadOnly) != 0) result += "cudaGraphicsRegisterFlagsReadOnly ";
+            if ((n & cudaGraphicsRegisterFlagsWriteDiscard) != 0) result += "cudaGraphicsRegisterFlagsWriteDiscard ";
+            if ((n & cudaGraphicsRegisterFlagsSurfaceLoadStore) != 0) result += "cudaGraphicsRegisterFlagsSurfaceLoadStore ";
+            if ((n & cudaGraphicsRegisterFlagsTextureGather) != 0) result += "cudaGraphicsRegisterFlagsTextureGather ";
+            return result.trim();
         }
         return "INVALID cudaGraphicsRegisterFlags: "+n;
     }
