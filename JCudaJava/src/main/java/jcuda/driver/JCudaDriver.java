@@ -699,6 +699,7 @@ public class JCudaDriver
      * @see JCudaDriver#cuDeviceGetCount
      * @see JCudaDriver#cuDeviceGet
      * @see JCudaDriver#cuDeviceTotalMem
+     * @throws IllegalArgumentException If len is negative or exceeds name.length
      */
     public static int cuDeviceGetName(byte name[], int len, CUdevice dev)
     {
