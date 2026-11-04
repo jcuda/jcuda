@@ -541,14 +541,17 @@ public class Pointer extends NativePointerObject
      * <br>
      * For other pointer types, <code>null</code> is returned.
      *
-     * @param byteOffset The offset in bytes
+     * The range is relative to this pointer, including any offset added
+     * with {@link #withByteOffset(long)}.
+     *
+     * @param byteOffset The offset in bytes relative to this pointer
      * @param byteSize The size of the byte buffer, in bytes
      * @return The byte buffer
      * @throws IllegalArgumentException If the <code>byteOffset</code> and
      * <code>byteSize</code> describe an invalid memory range (for example,
      * when the <code>byteOffset</code> is negative)
-     * @throws ArithmeticException If the <code>byteOffset</code> or 
-     * <code>byteOffset + byteSize</code> overflows an <code>int</code>.
+     * @throws ArithmeticException If computing the memory range overflows
+     * a <code>long</code>, or its start or end overflows an <code>int</code>.
      */
     public ByteBuffer getByteBuffer(long byteOffset, long byteSize)
     {
@@ -562,8 +565,15 @@ public class Pointer extends NativePointerObject
         }
         ByteBuffer internalByteBuffer = (ByteBuffer)buffer;
         ByteBuffer byteBuffer = internalByteBuffer.slice();
-        byteBuffer.limit(Math.toIntExact(byteOffset + byteSize));
-        byteBuffer.position(Math.toIntExact(byteOffset));
+        if (byteOffset < 0 || byteSize < 0)
+        {
+            throw new IllegalArgumentException(
+                "Byte offset and size must be non-negative");
+        }
+        long start = Math.addExact(this.byteOffset, byteOffset);
+        long end = Math.addExact(start, byteSize);
+        byteBuffer.limit(Math.toIntExact(end));
+        byteBuffer.position(Math.toIntExact(start));
         return byteBuffer.slice().order(ByteOrder.nativeOrder());
     }
 
@@ -591,7 +601,15 @@ public class Pointer extends NativePointerObject
      * <br>
      * For other pointer types, <code>null</code> is returned.
      * 
+     * Any offset added with {@link #withByteOffset(long)} is taken into
+     * account. The returned buffer covers the remaining memory from this
+     * pointer to the end of the internally stored buffer's remaining region.
+     *
      * @return The byte buffer
+     * @throws IllegalArgumentException If this pointer's offset is outside
+     * the internally stored buffer's remaining region
+     * @throws ArithmeticException If this pointer's offset overflows an
+     * <code>int</code>
      */
     public ByteBuffer getByteBuffer()
     {
@@ -605,7 +623,8 @@ public class Pointer extends NativePointerObject
         }
         ByteBuffer internalByteBuffer = (ByteBuffer)buffer;
         ByteBuffer byteBuffer = internalByteBuffer.slice();
-        return byteBuffer.order(ByteOrder.nativeOrder());
+        byteBuffer.position(Math.toIntExact(this.byteOffset));
+        return byteBuffer.slice().order(ByteOrder.nativeOrder());
     }
     
 
