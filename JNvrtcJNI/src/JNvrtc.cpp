@@ -817,9 +817,18 @@ JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetLoweredNameNative
 
     nvrtcProgram nativeProg = (nvrtcProgram)(intptr_t)getNativePointerValue(env, prog);
     char *nativeName_expression = convertString(env, name_expression);
-    const char *nativeLowered_name;
+    if (nativeName_expression == NULL)
+    {
+        return JCUDA_INTERNAL_ERROR;
+    }
+    const char *nativeLowered_name = NULL;
 
     int result = nvrtcGetLoweredName(nativeProg, nativeName_expression, &nativeLowered_name);
+    delete[] nativeName_expression;
+    if (result != NVRTC_SUCCESS)
+    {
+        return result;
+    }
 
     jstring lowered_nameElement = env->NewStringUTF(nativeLowered_name);
     if (lowered_nameElement == NULL)
@@ -830,7 +839,6 @@ JNIEXPORT jint JNICALL Java_jcuda_nvrtc_JNvrtc_nvrtcGetLoweredNameNative
     }
     env->SetObjectArrayElement(lowered_name, 0, lowered_nameElement);
 
-    delete[] nativeName_expression;
     return result;
 }
 
