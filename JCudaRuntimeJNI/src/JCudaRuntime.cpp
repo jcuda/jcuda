@@ -895,7 +895,7 @@ void setCudaDeviceProp(JNIEnv *env, jobject prop, cudaDeviceProp &nativeProp)
        return;
     }
     memcpy(propNameMemory, nativeProp.name, 256);
-    env->ReleasePrimitiveArrayCritical(propName, propNameMemory, JNI_ABORT);
+    env->ReleasePrimitiveArrayCritical(propName, propNameMemory, 0);
 
     jobject propUuid = env->GetObjectField(prop, cudaDeviceProp_uuid);
     if (propUuid == NULL)
@@ -909,7 +909,7 @@ void setCudaDeviceProp(JNIEnv *env, jobject prop, cudaDeviceProp &nativeProp)
         return;
     }
     memcpy(propUuidBytesMemory, nativeProp.uuid.bytes, 16);
-    env->ReleasePrimitiveArrayCritical(propUuidBytes, propUuidBytesMemory, JNI_ABORT);
+    env->ReleasePrimitiveArrayCritical(propUuidBytes, propUuidBytesMemory, 0);
 
     jbyteArray propLuid = (jbyteArray)env->GetObjectField(prop, cudaDeviceProp_luid);
     char *propLuidMemory = (char*)env->GetPrimitiveArrayCritical(propLuid, NULL);
@@ -918,7 +918,7 @@ void setCudaDeviceProp(JNIEnv *env, jobject prop, cudaDeviceProp &nativeProp)
         return;
     }
     memcpy(propLuidMemory, nativeProp.luid, 8);
-    env->ReleasePrimitiveArrayCritical(propLuid, propLuidMemory, JNI_ABORT);
+    env->ReleasePrimitiveArrayCritical(propLuid, propLuidMemory, 0);
 
     env->SetIntField(prop, cudaDeviceProp_luidDeviceNodeMask,   (jint)nativeProp.luidDeviceNodeMask);
 

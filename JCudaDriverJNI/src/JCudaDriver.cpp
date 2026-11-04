@@ -2467,7 +2467,7 @@ JNIEXPORT jint JNICALL Java_jcuda_driver_JCudaDriver_cuDeviceGetNameNative
         return JCUDA_INTERNAL_ERROR;
     }
     int result = cuDeviceGetName(nativeName, len, nativeDev);
-    env->ReleasePrimitiveArrayCritical(name, nativeName, (isCopy==JNI_TRUE)?0:JNI_ABORT);
+    env->ReleasePrimitiveArrayCritical(name, nativeName, 0);
     return result;
 }
 
