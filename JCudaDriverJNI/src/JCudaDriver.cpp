@@ -2058,8 +2058,8 @@ CUmemAccessDesc* getCUmemAccessDescs(JNIEnv *env, jobjectArray javaObjects)
             jobject javaLocation = env->GetObjectField(javaObject, CUmemAccessDesc_location);
             if (javaLocation != NULL)
             {
-                nativeObjects[i].location.id = (int)env->GetIntField(javaObject, CUmemLocation_id);
-                nativeObjects[i].location.type = (CUmemLocationType)env->GetIntField(javaObject, CUmemLocation_type);
+                nativeObjects[i].location.id = (int)env->GetIntField(javaLocation, CUmemLocation_id);
+                nativeObjects[i].location.type = (CUmemLocationType)env->GetIntField(javaLocation, CUmemLocation_type);
             }
         }
         nativeObjects[i].flags = (CUmemAccess_flags)env->GetIntField(javaObject, CUmemAccessDesc_flags);
