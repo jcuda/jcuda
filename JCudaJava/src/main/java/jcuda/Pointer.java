@@ -195,6 +195,10 @@ public class Pointer extends NativePointerObject
         {
             return computePointer((ByteBuffer)buffer);
         }
+        if (buffer instanceof CharBuffer)
+        {
+            return computePointer((CharBuffer)buffer);
+        }
         if (buffer instanceof ShortBuffer)
         {
             return computePointer((ShortBuffer)buffer);
@@ -248,6 +252,32 @@ public class Pointer extends NativePointerObject
                 elementOffset * Sizeof.BYTE);
         }
         return result;
+    }
+
+
+    /**
+     * Creates a new Pointer to the given buffer, taking into
+     * account the position and array offset of the given buffer.
+     * The buffer is assumed to be non-<code>null</code>, and
+     * be either direct or have a backing array.
+     *
+     * @param buffer The buffer
+     * @return The pointer
+     */
+    private static Pointer computePointer(CharBuffer buffer)
+    {
+        if (buffer.isDirect())
+        {
+            CharBuffer duplicate = buffer.duplicate();
+            int position = duplicate.position();
+            duplicate.position(0);
+            return Pointer.to(duplicate.slice()).withByteOffset(
+                (long)position * Sizeof.CHAR);
+        }
+        CharBuffer arrayBuffer = CharBuffer.wrap(buffer.array());
+        long elementOffset = (long)buffer.position() + buffer.arrayOffset();
+        return Pointer.to(arrayBuffer).withByteOffset(
+            elementOffset * Sizeof.CHAR);
     }
 
 
