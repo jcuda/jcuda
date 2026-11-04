@@ -4913,7 +4913,7 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemPrefetchAsyncNative
     Logger::log(LOG_TRACE, "Executing cudaMemPrefetchAsync\n");
 
     void *nativeDevPtr = getPointer(env, devPtr);
-    long nativeCount = (long)count;
+    size_t nativeCount = (size_t)count;
     int nativeDstDevice = (int)dstDevice;
     cudaStream_t nativeStream = (cudaStream_t)getNativePointerValue(env, stream);
 
@@ -4938,7 +4938,7 @@ JNIEXPORT jint JNICALL Java_jcuda_runtime_JCuda_cudaMemAdviseNative
     Logger::log(LOG_TRACE, "Executing cudaMemAdvise\n");
 
     void *nativeDevPtr = getPointer(env, devPtr);
-    long nativeCount = (long)count;
+    size_t nativeCount = (size_t)count;
     cudaMemoryAdvise nativeAdvice = (cudaMemoryAdvise)advice;
     int nativeDevice = (int)device;
 
