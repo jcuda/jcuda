@@ -349,6 +349,7 @@ public final class LibUtils
                 "No resource found with name '"+resourceName+"'");
         }
         OutputStream outputStream = null;
+        boolean completed = false;
         try
         {
             outputStream = new FileOutputStream(file);
@@ -363,6 +364,7 @@ public final class LibUtils
                 outputStream.write(buffer, 0, read);    
             }
             outputStream.flush();
+            completed = true;
         }
         finally 
         {
@@ -384,6 +386,12 @@ public final class LibUtils
             catch (IOException e)
             {
                 logger.log(Level.SEVERE, e.getMessage(), e);
+            }
+            if (!completed && outputStream != null &&
+                file.exists() && !file.delete())
+            {
+                logger.log(Level.WARNING,
+                    "Could not delete incomplete extracted resource: " + file);
             }
         }
     }
