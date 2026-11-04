@@ -58,9 +58,11 @@ public class CUmemAllocationHandleType
     }
 
     /**
-     * Returns a string representation of the given constant
+     * Returns a string representation of the given constant or flag combination.
+     * This describes the bits, not whether a CUDA operation supports them.
      *
-     * @return A string representation of the given constant
+     * @param n The constant or flag combination
+     * @return A string representation of the given constant or flag combination
      */
     public static String stringFor(int n)
     {
@@ -71,6 +73,19 @@ public class CUmemAllocationHandleType
             case CU_MEM_HANDLE_TYPE_WIN32: return "CU_MEM_HANDLE_TYPE_WIN32";
             case CU_MEM_HANDLE_TYPE_WIN32_KMT: return "CU_MEM_HANDLE_TYPE_WIN32_KMT";
             case CU_MEM_HANDLE_TYPE_MAX: return "CU_MEM_HANDLE_TYPE_MAX";
+        }
+        // Keep special constants above and reject bits unknown to this binding.
+        int knownFlags =
+            CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR |
+            CU_MEM_HANDLE_TYPE_WIN32 |
+            CU_MEM_HANDLE_TYPE_WIN32_KMT;
+        if ((n & ~knownFlags) == 0)
+        {
+            String result = "";
+            if ((n & CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR) != 0) result += "CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR ";
+            if ((n & CU_MEM_HANDLE_TYPE_WIN32) != 0) result += "CU_MEM_HANDLE_TYPE_WIN32 ";
+            if ((n & CU_MEM_HANDLE_TYPE_WIN32_KMT) != 0) result += "CU_MEM_HANDLE_TYPE_WIN32_KMT ";
+            return result.trim();
         }
         return "INVALID CUmemAllocationHandleType: "+n;
     }
